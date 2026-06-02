@@ -3,17 +3,18 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model Customer {
-  id        String        @id @default(cuid())
-  name      String
-  phone     String
-  notes     String        @default("")
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
+  id           String        @id @default(cuid())
+  name         String
+  phone        String
+  notes        String        @default("")
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
   appointments Appointment[]
 
   @@index([phone])
@@ -21,27 +22,27 @@ model Customer {
 }
 
 model Staff {
-  id        String        @id @default(cuid())
-  name      String
-  phone     String        @default("")
-  role      String        @default("stylist") // stylist, receptionist
-  active    Boolean       @default(true)
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
+  id           String        @id @default(cuid())
+  name         String
+  phone        String        @default("")
+  role         String        @default("stylist") // stylist, receptionist
+  active       Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
   appointments Appointment[]
-  users     User[]
+  users        User[]
 
   @@index([role])
 }
 
 model Service {
-  id        String        @id @default(cuid())
-  name      String
-  price     Float         // in RWF
-  duration  Int           // in minutes
-  active    Boolean       @default(true)
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
+  id           String        @id @default(cuid())
+  name         String
+  price        Float        // in RWF
+  duration     Int           // in minutes
+  active       Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
   appointments Appointment[]
 
   @@index([name])
@@ -78,7 +79,7 @@ model Payment {
   id            String      @id @default(cuid())
   status        String      @default("unpaid") // unpaid, partial, paid
   method        String      @default("cash") // cash, mtn_momo, airtel_money
-  amount        Float       @default(0) // amount paid in RWF
+  amount        Float      @default(0) // amount paid in RWF
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 
