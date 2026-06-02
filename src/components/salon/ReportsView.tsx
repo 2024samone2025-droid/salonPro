@@ -314,7 +314,7 @@ export default function ReportsView() {
                   <Sparkline data={sparklineData} />
                 </div>
                 {trendPercent !== null && (
-                  <div className={`flex items-center gap-0.5 text-xs font-medium ${trendPercent >= 0 ? 'text-primary' : 'text-red-600'}`}>
+                  <div className={`flex items-center gap-0.5 text-xs font-medium ${trendPercent >= 0 ? 'text-primary' : 'text-red-600 dark:text-red-400'}`}>
                     {trendPercent >= 0 ? (
                       <ArrowUpRight className="size-3" />
                     ) : (
@@ -334,11 +334,11 @@ export default function ReportsView() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center size-10 rounded-xl bg-green-100 shrink-0">
-                <CheckCircle2 className="size-5 text-green-700" />
+              <div className="flex items-center justify-center size-10 rounded-xl bg-green-100 dark:bg-green-950 shrink-0">
+                <CheckCircle2 className="size-5 text-green-700 dark:text-green-300" />
               </div>
               <div className="min-w-0">
-                <p className="text-base sm:text-lg font-bold text-green-700 truncate">{formatRWF(data.totalCollected)}</p>
+                <p className="text-base sm:text-lg font-bold text-green-700 dark:text-green-300 truncate">{formatRWF(data.totalCollected)}</p>
                 <p className="text-xs text-muted-foreground">{collectionRate}% collection rate</p>
               </div>
             </div>
@@ -351,11 +351,11 @@ export default function ReportsView() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center size-10 rounded-xl bg-amber-100 shrink-0">
-                <AlertCircle className="size-5 text-amber-700" />
+              <div className="flex items-center justify-center size-10 rounded-xl bg-amber-100 dark:bg-amber-950 shrink-0">
+                <AlertCircle className="size-5 text-amber-700 dark:text-amber-300" />
               </div>
               <div className="min-w-0">
-                <p className="text-base sm:text-lg font-bold text-amber-700 truncate">{formatRWF(data.totalOutstanding)}</p>
+                <p className="text-base sm:text-lg font-bold text-amber-700 dark:text-amber-300 truncate">{formatRWF(data.totalOutstanding)}</p>
                 <p className="text-xs text-muted-foreground">Pending payments</p>
               </div>
             </div>
@@ -368,8 +368,8 @@ export default function ReportsView() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center size-10 rounded-xl bg-teal-100 shrink-0">
-                <TrendingUp className="size-5 text-teal-700" />
+              <div className="flex items-center justify-center size-10 rounded-xl bg-teal-100 dark:bg-teal-950 shrink-0">
+                <TrendingUp className="size-5 text-teal-700 dark:text-teal-300" />
               </div>
               <div className="min-w-0">
                 <p className="text-base sm:text-lg font-bold truncate">{data.totalAppointments}</p>
@@ -659,8 +659,8 @@ export default function ReportsView() {
             <Card>
               <CardHeader>
                 <div className="flex items-center gap-2">
-                  <div className="flex items-center justify-center size-8 rounded-lg bg-teal-100">
-                    <Users className="size-4 text-teal-700" />
+                  <div className="flex items-center justify-center size-8 rounded-lg bg-teal-100 dark:bg-teal-950">
+                    <Users className="size-4 text-teal-700 dark:text-teal-300" />
                   </div>
                   <div>
                     <CardTitle className="text-lg">Top Customers</CardTitle>
@@ -686,7 +686,7 @@ export default function ReportsView() {
                         >
                           <div className="flex items-center justify-between mb-1.5">
                             <div className="flex items-center gap-2.5">
-                              <span className="text-sm font-bold text-teal-700 w-6 shrink-0">
+                              <span className="text-sm font-bold text-teal-700 dark:text-teal-300 w-6 shrink-0">
                                 #{i + 1}
                               </span>
                               <div className="min-w-0">
@@ -694,13 +694,13 @@ export default function ReportsView() {
                                 <p className="text-xs text-muted-foreground">{c.visits} visit{c.visits !== 1 ? 's' : ''}</p>
                               </div>
                             </div>
-                            <span className="text-sm font-bold text-teal-700 shrink-0 ml-2">
+                            <span className="text-sm font-bold text-teal-700 dark:text-teal-300 shrink-0 ml-2">
                               {formatRWF(c.spent)}
                             </span>
                           </div>
-                          <div className="w-full h-1.5 bg-teal-100 rounded-full overflow-hidden">
+                          <div className="w-full h-1.5 bg-teal-100 dark:bg-teal-950 rounded-full overflow-hidden">
                             <div
-                              className="h-full bg-teal-500 rounded-full transition-all"
+                              className="h-full bg-teal-500 dark:bg-teal-400 rounded-full transition-all"
                               style={{ width: `${barPercent}%` }}
                             />
                           </div>

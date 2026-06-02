@@ -15,6 +15,7 @@ import ReportsView from '@/components/salon/ReportsView'
 import CommandPalette from '@/components/salon/CommandPalette'
 import LoginPage from '@/components/salon/LoginPage'
 import { Sparkles, Loader2 } from 'lucide-react'
+import { ThemeToggle } from '@/components/theme-toggle'
 
 function MainContent() {
   const { activeTab } = useSalonStore()
@@ -49,6 +50,9 @@ function AuthenticatedApp() {
             <Sparkles className="size-4 text-primary" />
             <span className="text-sm font-medium text-muted-foreground hidden sm:inline">SalonPro Rwanda</span>
             <span className="text-sm font-medium text-muted-foreground sm:hidden">SalonPro</span>
+          </div>
+          <div className="ml-auto">
+            <ThemeToggle />
           </div>
         </header>
         <div className="flex-1 p-3 sm:p-4 md:p-6 overflow-auto min-w-0">

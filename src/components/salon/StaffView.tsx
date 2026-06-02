@@ -57,13 +57,13 @@ const roleBadgeVariant: Record<string, 'default' | 'secondary' | 'outline'> = {
 }
 
 const roleColors: Record<string, string> = {
-  stylist: 'bg-teal-100 text-teal-800 hover:bg-teal-100',
-  receptionist: 'bg-purple-100 text-purple-800 hover:bg-purple-100',
+  stylist: 'bg-teal-100 text-teal-800 hover:bg-teal-100 dark:bg-teal-950 dark:text-teal-300 dark:hover:bg-teal-950',
+  receptionist: 'bg-purple-100 text-purple-800 hover:bg-purple-100 dark:bg-purple-950 dark:text-purple-300 dark:hover:bg-purple-950',
 }
 
 const roleAvatarColors: Record<string, string> = {
-  stylist: 'bg-teal-50 text-teal-700',
-  receptionist: 'bg-purple-50 text-purple-700',
+  stylist: 'bg-teal-50 text-teal-700 dark:bg-teal-950 dark:text-teal-300',
+  receptionist: 'bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300',
 }
 
 const roleIcons: Record<string, React.ReactNode> = {
@@ -296,7 +296,7 @@ export default function StaffView() {
                       </div>
                     </CardHeader>
                     <CardContent className="pb-4 px-4 pt-1">
-                      <Badge className={`${roleColors[s.role] || 'bg-gray-100 text-gray-800'} border-0 text-xs gap-1`}>
+                      <Badge className={`${roleColors[s.role] || 'bg-muted text-muted-foreground'} border-0 text-xs gap-1`}>
                         {roleIcons[s.role]}
                         {roleLabels[s.role] || s.role}
                       </Badge>

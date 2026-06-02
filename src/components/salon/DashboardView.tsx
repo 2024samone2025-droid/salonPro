@@ -69,11 +69,11 @@ function formatRWF(amount: number) {
 }
 
 const statusConfig: Record<string, { label: string; bgClass: string; dotClass: string }> = {
-  booked: { label: 'Booked', bgClass: 'bg-sky-50 text-sky-700 hover:bg-sky-50', dotClass: 'bg-sky-500' },
-  confirmed: { label: 'Confirmed', bgClass: 'bg-emerald-50 text-emerald-700 hover:bg-emerald-50', dotClass: 'bg-emerald-500' },
-  in_progress: { label: 'In Progress', bgClass: 'bg-amber-50 text-amber-700 hover:bg-amber-50', dotClass: 'bg-amber-500' },
-  completed: { label: 'Completed', bgClass: 'bg-zinc-100 text-zinc-600 hover:bg-zinc-100', dotClass: 'bg-zinc-400' },
-  no_show: { label: 'No Show', bgClass: 'bg-red-50 text-red-700 hover:bg-red-50', dotClass: 'bg-red-500' },
+  booked: { label: 'Booked', bgClass: 'bg-sky-50 text-sky-700 hover:bg-sky-50 dark:bg-sky-950 dark:text-sky-300 dark:hover:bg-sky-950', dotClass: 'bg-sky-500' },
+  confirmed: { label: 'Confirmed', bgClass: 'bg-emerald-50 text-emerald-700 hover:bg-emerald-50 dark:bg-emerald-950 dark:text-emerald-300 dark:hover:bg-emerald-950', dotClass: 'bg-emerald-500' },
+  in_progress: { label: 'In Progress', bgClass: 'bg-amber-50 text-amber-700 hover:bg-amber-50 dark:bg-amber-950 dark:text-amber-300 dark:hover:bg-amber-950', dotClass: 'bg-amber-500' },
+  completed: { label: 'Completed', bgClass: 'bg-zinc-100 text-zinc-600 hover:bg-zinc-100 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800', dotClass: 'bg-zinc-400' },
+  no_show: { label: 'No Show', bgClass: 'bg-red-50 text-red-700 hover:bg-red-50 dark:bg-red-950 dark:text-red-300 dark:hover:bg-red-950', dotClass: 'bg-red-500' },
 }
 
 export default function DashboardView() {
@@ -255,7 +255,7 @@ export default function DashboardView() {
             <CardContent className="pt-4 pb-3 px-4">
               <div className="flex items-center gap-2 mb-2">
                 <div className="flex items-center justify-center size-8 rounded-lg bg-emerald-500/10 shrink-0 group-hover:bg-emerald-500/15 transition-colors">
-                  <TrendingUp className="size-4 text-emerald-600" />
+                  <TrendingUp className="size-4 text-emerald-600 dark:text-emerald-400" />
                 </div>
                 <CardDescription className="text-[11px] sm:text-xs leading-tight">Today&apos;s Revenue</CardDescription>
               </div>
@@ -273,7 +273,7 @@ export default function DashboardView() {
               <CardContent className="pt-4 pb-3 px-4">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="flex items-center justify-center size-8 rounded-lg bg-amber-500/10 shrink-0 group-hover:bg-amber-500/15 transition-colors">
-                    <AlertCircle className="size-4 text-amber-600" />
+                    <AlertCircle className="size-4 text-amber-600 dark:text-amber-400" />
                   </div>
                   <CardDescription className="text-[11px] sm:text-xs leading-tight">Pending Payments</CardDescription>
                 </div>
@@ -288,7 +288,7 @@ export default function DashboardView() {
               <CardContent className="pt-4 pb-3 px-4">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="flex items-center justify-center size-8 rounded-lg bg-red-500/10 shrink-0 group-hover:bg-red-500/15 transition-colors">
-                    <Clock className="size-4 text-red-600" />
+                    <Clock className="size-4 text-red-600 dark:text-red-400" />
                   </div>
                   <CardDescription className="text-[11px] sm:text-xs leading-tight">Outstanding</CardDescription>
                 </div>
@@ -347,8 +347,8 @@ export default function DashboardView() {
                     <div key={s.id} className="space-y-2">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <div className="flex items-center justify-center size-7 rounded-full bg-zinc-100">
-                            <UserCheck className="size-3.5 text-zinc-600" />
+                          <div className="flex items-center justify-center size-7 rounded-full bg-muted">
+                            <UserCheck className="size-3.5 text-muted-foreground" />
                           </div>
                           <span className="text-sm font-medium">{s.name}</span>
                         </div>
@@ -364,7 +364,7 @@ export default function DashboardView() {
                               ? '[&>[data-slot=progress-indicator]]:bg-amber-500'
                               : percentage > 50
                               ? '[&>[data-slot=progress-indicator]]:bg-primary'
-                              : '[&>[data-slot=progress-indicator]]:bg-zinc-300'
+                              : '[&>[data-slot=progress-indicator]]:bg-muted-foreground/30'
                           }`}
                         />
                         <span className="text-xs font-medium text-muted-foreground w-10 text-right">

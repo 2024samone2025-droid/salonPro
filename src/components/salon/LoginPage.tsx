@@ -16,11 +16,12 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Separator } from '@/components/ui/separator'
 import { Sparkles, Eye, EyeOff, LogIn, AlertCircle, Loader2, Shield, CalendarDays, Scissors } from 'lucide-react'
+import { ThemeToggle } from '@/components/theme-toggle'
 
 const demoAccounts = [
-  { name: 'Admin', pin: '1234', role: 'Admin', description: 'Full access to everything', icon: Shield, accent: 'text-amber-600' },
-  { name: 'Alice', pin: '5678', role: 'Receptionist', description: 'Appointments & customers', icon: CalendarDays, accent: 'text-violet-600' },
-  { name: 'Marie', pin: '9012', role: 'Stylist', description: 'Own appointments only', icon: Scissors, accent: 'text-teal-600' },
+  { name: 'Admin', pin: '1234', role: 'Admin', description: 'Full access to everything', icon: Shield, accent: 'text-amber-600 dark:text-amber-400' },
+  { name: 'Alice', pin: '5678', role: 'Receptionist', description: 'Appointments & customers', icon: CalendarDays, accent: 'text-violet-600 dark:text-violet-400' },
+  { name: 'Marie', pin: '9012', role: 'Stylist', description: 'Own appointments only', icon: Scissors, accent: 'text-teal-600 dark:text-teal-400' },
 ] as const
 
 export default function LoginPage() {
@@ -50,7 +51,11 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-primary/5 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-primary/5 p-4 relative">
+      {/* Theme toggle in top-right corner */}
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
       <div className="w-full max-w-md">
         {/* Logo Section */}
         <div className="text-center mb-6 sm:mb-8">

@@ -79,11 +79,11 @@ function getInitials(name: string) {
 }
 
 const statusColors: Record<string, string> = {
-  booked: 'bg-sky-50 text-sky-700',
-  confirmed: 'bg-emerald-50 text-emerald-700',
-  in_progress: 'bg-amber-50 text-amber-700',
-  completed: 'bg-zinc-100 text-zinc-600',
-  no_show: 'bg-red-50 text-red-700',
+  booked: 'bg-sky-50 text-sky-700 dark:bg-sky-950 dark:text-sky-300',
+  confirmed: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300',
+  in_progress: 'bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300',
+  completed: 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400',
+  no_show: 'bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300',
 }
 
 const statusLabels: Record<string, string> = {
@@ -113,9 +113,9 @@ const methodIcons: Record<string, React.ReactNode> = {
 }
 
 const paymentStatusColors: Record<string, string> = {
-  unpaid: 'bg-red-100 text-red-800',
-  partial: 'bg-amber-100 text-amber-800',
-  paid: 'bg-green-100 text-green-800',
+  unpaid: 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300',
+  partial: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300',
+  paid: 'bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300',
 }
 
 const paymentStatusLabels: Record<string, string> = {
@@ -293,7 +293,7 @@ export default function AppointmentDialog({ appointment, open, onClose, onUpdate
             </div>
             <div className="flex items-start gap-3">
               <Avatar className="size-9 border shrink-0">
-                <AvatarFallback className="bg-teal-50 text-teal-700 text-xs font-semibold">
+                <AvatarFallback className="bg-teal-50 text-teal-700 dark:bg-teal-950 dark:text-teal-300 text-xs font-semibold">
                   {getInitials(appointment.staff.name)}
                 </AvatarFallback>
               </Avatar>
@@ -444,7 +444,7 @@ export default function AppointmentDialog({ appointment, open, onClose, onUpdate
                   <CreditCard className="size-4" /> Payment Info
                 </Label>
                 <div className="flex items-center gap-3 mt-2 p-3 rounded-lg bg-muted/50">
-                  <Badge className={`${paymentStatusColors[appointment.payment.status] || 'bg-gray-100 text-gray-800'} border-0 text-xs`}>
+                  <Badge className={`${paymentStatusColors[appointment.payment.status] || 'bg-muted text-muted-foreground'} border-0 text-xs`}>
                     {paymentStatusLabels[appointment.payment.status] || appointment.payment.status}
                   </Badge>
                   {appointment.payment.status !== 'unpaid' && (

@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Input } from '@/components/ui/input'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import {
@@ -35,11 +35,11 @@ interface Appointment {
 }
 
 const statusConfig: Record<string, { label: string; cardClass: string; dotClass: string; borderClass: string }> = {
-  booked: { label: 'Booked', cardClass: 'bg-sky-50 text-sky-900 border-sky-200', dotClass: 'bg-sky-500', borderClass: 'border-l-sky-500' },
-  confirmed: { label: 'Confirmed', cardClass: 'bg-emerald-50 text-emerald-900 border-emerald-200', dotClass: 'bg-emerald-500', borderClass: 'border-l-emerald-500' },
-  in_progress: { label: 'In Progress', cardClass: 'bg-amber-50 text-amber-900 border-amber-200', dotClass: 'bg-amber-500', borderClass: 'border-l-amber-500' },
-  completed: { label: 'Completed', cardClass: 'bg-zinc-50 text-zinc-700 border-zinc-200', dotClass: 'bg-zinc-400', borderClass: 'border-l-zinc-400' },
-  no_show: { label: 'No Show', cardClass: 'bg-red-50 text-red-900 border-red-200', dotClass: 'bg-red-500', borderClass: 'border-l-red-500' },
+  booked: { label: 'Booked', cardClass: 'bg-sky-50 text-sky-900 border-sky-200 dark:bg-sky-950 dark:text-sky-100 dark:border-sky-800', dotClass: 'bg-sky-500', borderClass: 'border-l-sky-500' },
+  confirmed: { label: 'Confirmed', cardClass: 'bg-emerald-50 text-emerald-900 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-100 dark:border-emerald-800', dotClass: 'bg-emerald-500', borderClass: 'border-l-emerald-500' },
+  in_progress: { label: 'In Progress', cardClass: 'bg-amber-50 text-amber-900 border-amber-200 dark:bg-amber-950 dark:text-amber-100 dark:border-amber-800', dotClass: 'bg-amber-500', borderClass: 'border-l-amber-500' },
+  completed: { label: 'Completed', cardClass: 'bg-zinc-50 text-zinc-700 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700', dotClass: 'bg-zinc-400', borderClass: 'border-l-zinc-400' },
+  no_show: { label: 'No Show', cardClass: 'bg-red-50 text-red-900 border-red-200 dark:bg-red-950 dark:text-red-100 dark:border-red-800', dotClass: 'bg-red-500', borderClass: 'border-l-red-500' },
 }
 
 function formatRWF(amount: number) {
@@ -226,7 +226,7 @@ export default function AppointmentsView() {
             return (
               <div
                 key={apt.id}
-                className={`absolute rounded-lg border-l-[3px] p-1.5 cursor-pointer hover:opacity-80 transition-opacity overflow-hidden shadow-sm ${config?.cardClass || 'bg-gray-50 border-gray-200'} ${config?.borderClass || 'border-l-gray-400'}`}
+                className={`absolute rounded-lg border-l-[3px] p-1.5 cursor-pointer hover:opacity-80 transition-opacity overflow-hidden shadow-sm ${config?.cardClass || 'bg-muted border-border'} ${config?.borderClass || 'border-l-gray-400'}`}
                 style={{
                   top: `${top + 2}px`,
                   height: `${height - 4}px`,
@@ -317,7 +317,7 @@ export default function AppointmentsView() {
                     return (
                       <div
                         key={apt.id}
-                        className={`rounded-md border-l-[3px] p-1.5 cursor-pointer hover:opacity-80 transition-opacity text-xs shadow-sm ${config?.cardClass || 'bg-gray-50'} ${config?.borderClass || 'border-l-gray-400'}`}
+                        className={`rounded-md border-l-[3px] p-1.5 cursor-pointer hover:opacity-80 transition-opacity text-xs shadow-sm ${config?.cardClass || 'bg-muted'} ${config?.borderClass || 'border-l-gray-400'}`}
                         onClick={() => handleAppointmentClick(apt)}
                       >
                         <div className="flex items-center gap-1">
@@ -419,22 +419,15 @@ export default function AppointmentsView() {
                 </div>
               ))}
             </div>
+          ) : appointments.length === 0 && viewMode === 'day' ? (
+            <div className="text-center py-16">
+              <CalendarDays className="size-10 mx-auto text-muted-foreground/30 mb-3" />
+              <p className="text-muted-foreground text-sm">No appointments for this day.</p>
+            </div>
+          ) : viewMode === 'day' ? (
+            <DayView />
           ) : (
-            <>
-              <TabsContent value="day" className="mt-0">
-                {appointments.length === 0 ? (
-                  <div className="text-center py-16">
-                    <CalendarDays className="size-10 mx-auto text-muted-foreground/30 mb-3" />
-                    <p className="text-muted-foreground text-sm">No appointments for this day.</p>
-                  </div>
-                ) : (
-                  <DayView />
-                )}
-              </TabsContent>
-              <TabsContent value="week" className="mt-0">
-                <WeekView />
-              </TabsContent>
-            </>
+            <WeekView />
           )}
         </CardContent>
       </Card>
