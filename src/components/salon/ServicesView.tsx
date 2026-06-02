@@ -47,8 +47,9 @@ export default function ServicesView() {
     setLoading(true)
     try {
       const res = await fetch('/api/services')
+      if (!res.ok) throw new Error('Failed to fetch')
       const data = await res.json()
-      setServices(data)
+      setServices(Array.isArray(data) ? data : [])
     } catch (err) {
       console.error(err)
     } finally {

@@ -1,17 +1,17 @@
-import { verifySessionToken, ROLE_PERMISSIONS, type UserRole, type Permissions } from './auth'
+import { getSession, verifySessionToken, ROLE_PERMISSIONS, type UserRole, type Permissions, type SessionUser } from './auth'
 import { NextRequest, NextResponse } from 'next/server'
 
 interface AuthResult {
   authorized: boolean
-  user: Awaited<ReturnType<typeof getSessionFromRequest>>
+  user: SessionUser | null
   permissions: Permissions | null
   error?: NextResponse
 }
 
 /**
- * Get session from request cookies (instead of the cookies() API)
+ * Get session from request cookies (synchronous, faster)
  */
-export function getSessionFromRequest(req: NextRequest) {
+export function getSessionFromRequest(req: NextRequest): SessionUser | null {
   const token = req.cookies.get('salonpro_session')?.value
   if (!token) return null
   return verifySessionToken(token)
@@ -19,10 +19,17 @@ export function getSessionFromRequest(req: NextRequest) {
 
 /**
  * Check if the current request is authenticated and optionally check permissions.
- * Uses req.cookies instead of the cookies() API for better stability.
+ * If req is provided, uses req.cookies (synchronous). Otherwise falls back to
+ * the async cookies() API from next/headers.
  */
-export async function requireAuth(req: NextRequest, requiredPermission?: keyof Permissions): Promise<AuthResult> {
-  const user = getSessionFromRequest(req)
+export async function requireAuth(req?: NextRequest, requiredPermission?: keyof Permissions): Promise<AuthResult> {
+  let user: SessionUser | null = null
+
+  if (req) {
+    user = getSessionFromRequest(req)
+  } else {
+    user = await getSession()
+  }
 
   if (!user) {
     return {
@@ -58,7 +65,7 @@ export async function requireAuth(req: NextRequest, requiredPermission?: keyof P
  * Check if a user can modify a specific appointment (e.g., stylist can only modify their own)
  */
 export function canModifyAppointment(
-  user: NonNullable<ReturnType<typeof getSessionFromRequest>>,
+  user: SessionUser,
   appointmentStaffId: string
 ): boolean {
   // Admin and receptionist can modify any appointment

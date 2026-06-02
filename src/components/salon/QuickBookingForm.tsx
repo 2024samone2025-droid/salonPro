@@ -63,13 +63,13 @@ export default function QuickBookingForm({ selectedDate, onBookingCreated }: Qui
 
   useEffect(() => {
     Promise.all([
-      fetch('/api/customers').then((r) => r.json()),
-      fetch('/api/staff?active=true').then((r) => r.json()),
-      fetch('/api/services?active=true').then((r) => r.json()),
+      fetch('/api/customers').then((r) => r.ok ? r.json() : []),
+      fetch('/api/staff?active=true').then((r) => r.ok ? r.json() : []),
+      fetch('/api/services?active=true').then((r) => r.ok ? r.json() : []),
     ]).then(([c, s, sv]) => {
-      setCustomers(c)
-      setStaff(s)
-      setServices(sv)
+      setCustomers(Array.isArray(c) ? c : [])
+      setStaff(Array.isArray(s) ? s : [])
+      setServices(Array.isArray(sv) ? sv : [])
     })
   }, [])
 

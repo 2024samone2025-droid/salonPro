@@ -50,7 +50,10 @@ export default function Sidebar() {
   useEffect(() => {
     const today = new Date().toISOString().split('T')[0]
     fetch(`/api/appointments?date=${today}`)
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) return []
+        return r.json()
+      })
       .then((data) => {
         if (Array.isArray(data)) setTodayCount(data.length)
       })

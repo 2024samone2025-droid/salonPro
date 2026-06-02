@@ -75,13 +75,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       })
       const data = await res.json()
       if (res.ok) {
+        // Use login response data directly — no extra /api/auth/me call needed
         setUser(data.user)
-        // Fetch permissions after login
-        const meRes = await fetch('/api/auth/me')
-        if (meRes.ok) {
-          const meData = await meRes.json()
-          setPermissions(meData.permissions)
-        }
+        setPermissions(data.permissions)
         return { success: true }
       }
       return { success: false, error: data.error || 'Login failed' }

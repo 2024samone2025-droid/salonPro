@@ -1,5 +1,5 @@
 import { db } from '@/lib/db'
-import { verifyPin, createSessionToken } from '@/lib/auth'
+import { verifyPin, createSessionToken, ROLE_PERMISSIONS, type UserRole } from '@/lib/auth'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(req: NextRequest) {
@@ -34,9 +34,13 @@ export async function POST(req: NextRequest) {
 
     const token = createSessionToken(sessionUser)
 
+    // Get permissions for this role
+    const permissions = ROLE_PERMISSIONS[user.role as UserRole] || null
+
     // Set cookie via response header instead of cookies() API
     const response = NextResponse.json({
       user: sessionUser,
+      permissions,
       message: 'Login successful',
     })
 

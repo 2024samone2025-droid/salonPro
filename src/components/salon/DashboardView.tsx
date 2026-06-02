@@ -84,8 +84,12 @@ export default function DashboardView() {
 
   useEffect(() => {
     fetch('/api/dashboard')
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error('Failed to fetch')
+        return r.json()
+      })
       .then((d) => setData(d))
+      .catch(() => setData(null))
       .finally(() => setLoading(false))
   }, [])
 
@@ -159,7 +163,7 @@ export default function DashboardView() {
               <p className="text-xs text-muted-foreground">New client</p>
             </div>
           </Button>
-          {permissions?.canAccessModule?.('reports') !== false && (
+          {permissions && permissions.reports !== 'none' && (
             <Button
               variant="outline"
               className="h-auto py-3 px-4 justify-start gap-3 hover:bg-emerald-50 hover:border-emerald-300 transition-colors col-span-2 sm:col-span-1"

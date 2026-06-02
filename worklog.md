@@ -160,3 +160,34 @@ Stage Summary:
 - All API routes protected with auth guards
 - All frontend views respect role-based permissions
 - Demo accounts: Admin (1234), Alice-Receptionist (5678), Marie-Stylist (9012)
+
+---
+Task ID: 6
+Agent: Main Agent
+Task: Fix critical runtime errors (JSON.parse, TypeError, auth flow)
+
+Work Log:
+- Diagnosed root cause: `requireAuth()` called without `req` parameter in ALL API routes
+  - Caused `TypeError: Cannot read properties of undefined (reading 'cookies')` at auth-guard.ts:15
+  - This was the primary reason for all 500 errors on protected routes
+- Fixed auth-guard.ts: made `req` parameter optional, added `getSession()` fallback from `next/headers`
+  - When `req` is provided, uses synchronous `req.cookies` (faster)
+  - When `req` is omitted, uses async `getSession()` via `cookies()` API (works in all contexts)
+- Fixed login flow: login API now returns `permissions` in response
+  - Previously, auth-context.tsx made an extra `/api/auth/me` call after login
+  - That call returned 401 because the session cookie wasn't available yet
+  - Now, login response includes both `user` and `permissions` — no extra call needed
+- Fixed DashboardView.tsx: replaced `permissions?.canAccessModule?.('reports')` with `permissions && permissions.reports !== 'none'`
+  - The `canAccessModule` method doesn't exist on the Permissions interface
+- Added proper error handling to all frontend fetch calls:
+  - DashboardView, Sidebar, AppointmentsView, CustomersView, StaffView, ServicesView, ReportsView, QuickBookingForm, CommandPalette
+  - Now checks `r.ok` before calling `r.json()`
+  - Handles errors gracefully instead of crashing with JSON.parse errors
+- Verified all APIs return 200 with session cookie
+- ESLint: 0 errors
+
+Stage Summary:
+- All 500 errors fixed (requireAuth now works with/without req parameter)
+- Login flow works end-to-end (cookie set + permissions returned in one response)
+- Frontend handles API errors gracefully (no more JSON.parse crashes)
+- All 7 modules functional with role-based access control

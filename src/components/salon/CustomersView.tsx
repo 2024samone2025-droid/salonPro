@@ -92,8 +92,9 @@ export default function CustomersView() {
     try {
       const url = searchQuery ? `/api/customers?q=${encodeURIComponent(searchQuery)}` : '/api/customers'
       const res = await fetch(url)
+      if (!res.ok) throw new Error('Failed to fetch')
       const data = await res.json()
-      setCustomers(data)
+      setCustomers(Array.isArray(data) ? data : [])
     } catch (err) {
       console.error(err)
     } finally {

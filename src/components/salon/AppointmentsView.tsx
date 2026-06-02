@@ -95,8 +95,9 @@ export default function AppointmentsView() {
         url += `&staffId=${staffFilter}`
       }
       const res = await fetch(url)
+      if (!res.ok) throw new Error('Failed to fetch')
       const data = await res.json()
-      setAppointments(data)
+      setAppointments(Array.isArray(data) ? data : [])
     } catch (err) {
       console.error('Failed to fetch appointments', err)
     } finally {

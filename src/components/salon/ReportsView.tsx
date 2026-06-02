@@ -130,6 +130,7 @@ export default function ReportsView() {
     }
     try {
       const res = await fetch(`/api/reports?${params.toString()}`)
+      if (!res.ok) throw new Error('Failed to fetch')
       const d = await res.json()
       setData(d)
     } catch (err) {

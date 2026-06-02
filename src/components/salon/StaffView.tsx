@@ -62,8 +62,9 @@ export default function StaffView() {
     setLoading(true)
     try {
       const res = await fetch('/api/staff')
+      if (!res.ok) throw new Error('Failed to fetch')
       const data = await res.json()
-      setStaff(data)
+      setStaff(Array.isArray(data) ? data : [])
     } catch (err) {
       console.error(err)
     } finally {

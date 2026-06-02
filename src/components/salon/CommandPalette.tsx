@@ -53,11 +53,11 @@ export default function CommandPalette() {
     if (commandOpen) {
       // Load search data when palette opens
       Promise.all([
-        fetch('/api/customers').then((r) => r.json()),
-        fetch('/api/appointments?date=' + new Date().toISOString().split('T')[0]).then((r) => r.json()),
+        fetch('/api/customers').then((r) => r.ok ? r.json() : []),
+        fetch('/api/appointments?date=' + new Date().toISOString().split('T')[0]).then((r) => r.ok ? r.json() : []),
       ]).then(([custs, apts]) => {
-        setCustomers(custs || [])
-        setAppointments(apts || [])
+        setCustomers(Array.isArray(custs) ? custs : [])
+        setAppointments(Array.isArray(apts) ? apts : [])
       })
     }
   }, [commandOpen])
