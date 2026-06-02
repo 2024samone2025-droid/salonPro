@@ -35,11 +35,11 @@ interface Appointment {
 }
 
 const statusConfig: Record<string, { label: string; cardClass: string; dotClass: string; borderClass: string }> = {
-  booked: { label: 'Booked', cardClass: 'bg-sky-50 text-sky-900 border-sky-200 dark:bg-sky-950 dark:text-sky-100 dark:border-sky-800', dotClass: 'bg-sky-500', borderClass: 'border-l-sky-500' },
-  confirmed: { label: 'Confirmed', cardClass: 'bg-emerald-50 text-emerald-900 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-100 dark:border-emerald-800', dotClass: 'bg-emerald-500', borderClass: 'border-l-emerald-500' },
-  in_progress: { label: 'In Progress', cardClass: 'bg-amber-50 text-amber-900 border-amber-200 dark:bg-amber-950 dark:text-amber-100 dark:border-amber-800', dotClass: 'bg-amber-500', borderClass: 'border-l-amber-500' },
-  completed: { label: 'Completed', cardClass: 'bg-zinc-50 text-zinc-700 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700', dotClass: 'bg-zinc-400', borderClass: 'border-l-zinc-400' },
-  no_show: { label: 'No Show', cardClass: 'bg-red-50 text-red-900 border-red-200 dark:bg-red-950 dark:text-red-100 dark:border-red-800', dotClass: 'bg-red-500', borderClass: 'border-l-red-500' },
+  booked: { label: 'Booked', cardClass: 'bg-blue-500/8 text-blue-700 dark:text-blue-300 border-blue-500/20 dark:border-blue-500/30', dotClass: 'bg-blue-500', borderClass: 'border-l-blue-500' },
+  confirmed: { label: 'Confirmed', cardClass: 'bg-emerald-500/8 text-emerald-700 dark:text-emerald-300 border-emerald-500/20 dark:border-emerald-500/30', dotClass: 'bg-emerald-500', borderClass: 'border-l-emerald-500' },
+  in_progress: { label: 'In Progress', cardClass: 'bg-amber-500/8 text-amber-700 dark:text-amber-300 border-amber-500/20 dark:border-amber-500/30', dotClass: 'bg-amber-500', borderClass: 'border-l-amber-500' },
+  completed: { label: 'Completed', cardClass: 'bg-neutral-500/8 text-neutral-600 dark:text-neutral-400 border-neutral-500/20 dark:border-neutral-500/30', dotClass: 'bg-neutral-400', borderClass: 'border-l-neutral-400' },
+  no_show: { label: 'No Show', cardClass: 'bg-red-500/8 text-red-700 dark:text-red-300 border-red-500/20 dark:border-red-500/30', dotClass: 'bg-red-500', borderClass: 'border-l-red-500' },
 }
 
 function formatRWF(amount: number) {

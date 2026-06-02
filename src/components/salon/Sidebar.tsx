@@ -28,10 +28,9 @@ import {
   UserCog,
   Scissors,
   BarChart3,
-  Sparkles,
+  Triangle,
   Search,
   LogOut,
-  Shield,
 } from 'lucide-react'
 
 const allNavItems: { tab: ViewTab; label: string; icon: React.ElementType; roles: UserRole[] }[] = [
@@ -47,12 +46,6 @@ const roleLabels: Record<UserRole, string> = {
   admin: 'Admin',
   receptionist: 'Receptionist',
   stylist: 'Stylist',
-}
-
-const roleBadgeStyles: Record<UserRole, string> = {
-  admin: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800',
-  receptionist: 'bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-950 dark:text-violet-300 dark:border-violet-800',
-  stylist: 'bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-950 dark:text-teal-300 dark:border-teal-800',
 }
 
 export default function SalonSidebar() {
@@ -73,7 +66,6 @@ export default function SalonSidebar() {
       .catch(() => {})
   }, [activeTab, authFetch])
 
-  // Filter nav items based on user role
   const navItems = allNavItems.filter((item) => {
     if (!user) return false
     return item.roles.includes(user.role as UserRole)
@@ -97,40 +89,40 @@ export default function SalonSidebar() {
       collapsible="offcanvas"
       className="border-r-0"
     >
-      {/* Header: Logo */}
-      <SidebarHeader className="px-4 pt-5 pb-4">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center size-9 rounded-lg bg-primary shadow-lg shrink-0">
-            <Sparkles className="size-5 text-primary-foreground" />
+      {/* Header: Logo — Vercel-style minimal */}
+      <SidebarHeader className="px-4 pt-4 pb-3">
+        <div className="flex items-center gap-2.5">
+          <div className="flex items-center justify-center size-7 rounded-md bg-white shrink-0">
+            <Triangle className="size-4 text-black fill-black" />
           </div>
-          <div className="flex flex-col">
-            <span className="text-lg font-bold text-white leading-tight">SalonPro</span>
-            <span className="text-[11px] text-zinc-400 dark:text-zinc-500 leading-tight">Rwanda</span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-sm font-semibold text-white leading-none">SalonPro</span>
+            <span className="text-[10px] text-neutral-500 leading-none">Rwanda</span>
           </div>
         </div>
       </SidebarHeader>
 
-      <SidebarSeparator className="bg-zinc-800 dark:bg-zinc-900" />
+      <SidebarSeparator className="bg-neutral-800" />
 
-      {/* Search Button */}
+      {/* Search — Vercel-style command button */}
       <div className="px-3 pt-3 pb-1">
         <button
           onClick={() => setCommandOpen(true)}
-          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-zinc-400 bg-zinc-800/60 border border-zinc-700/50 hover:bg-zinc-800 hover:text-zinc-300 dark:bg-zinc-900/60 dark:border-zinc-800/50 dark:hover:bg-zinc-900 transition-colors"
+          className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[13px] text-neutral-400 bg-neutral-900 border border-neutral-800 hover:bg-neutral-800 hover:text-neutral-300 hover:border-neutral-700 transition-colors"
         >
-          <Search className="size-4" />
+          <Search className="size-3.5" />
           <span className="flex-1 text-left">Search...</span>
-          <kbd className="text-[10px] bg-zinc-800 dark:bg-zinc-900 px-1.5 py-0.5 rounded border border-zinc-700/50 dark:border-zinc-800/50 font-mono">
+          <kbd className="text-[10px] text-neutral-600 px-1.5 py-0.5 rounded border border-neutral-800 font-mono">
             ⌘K
           </kbd>
         </button>
       </div>
 
-      {/* Navigation */}
-      <SidebarContent className="px-2 pt-2">
+      {/* Navigation — Vercel-style clean nav */}
+      <SidebarContent className="px-2 pt-1">
         <SidebarGroup>
-          <SidebarGroupLabel className="text-zinc-500 dark:text-zinc-600 text-[11px] font-semibold uppercase tracking-wider px-1">
-            Navigation
+          <SidebarGroupLabel className="text-neutral-600 text-[11px] font-medium uppercase tracking-widest px-2">
+            Menu
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -143,29 +135,25 @@ export default function SalonSidebar() {
                       isActive={isActive}
                       onClick={() => setActiveTab(item.tab)}
                       className={`
-                        group relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
-                        transition-all duration-200
+                        group relative flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-[13px]
+                        transition-colors duration-150
                         ${
                           isActive
-                            ? 'bg-zinc-800 dark:bg-zinc-900 text-white shadow-sm hover:bg-zinc-800 dark:hover:bg-zinc-900'
-                            : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-200 dark:hover:bg-zinc-900/50 dark:hover:text-zinc-300'
+                            ? 'bg-neutral-800 text-white'
+                            : 'text-neutral-400 hover:bg-neutral-800/60 hover:text-neutral-200'
                         }
                       `}
                     >
                       <Icon
-                        className={`size-5 transition-colors ${
-                          isActive ? 'text-primary' : 'text-zinc-500 dark:text-zinc-600 group-hover:text-zinc-300 dark:group-hover:text-zinc-400'
+                        className={`size-4 transition-colors ${
+                          isActive ? 'text-white' : 'text-neutral-500 group-hover:text-neutral-300'
                         }`}
                       />
                       <span>{item.label}</span>
                       {item.tab === 'appointments' && todayCount !== null && (
-                        <SidebarMenuBadge className="bg-primary text-primary-foreground border-0 text-xs min-w-[20px] justify-center">
+                        <SidebarMenuBadge className="bg-white text-black border-0 text-[10px] min-w-[18px] h-[18px] justify-center font-medium">
                           {todayCount}
                         </SidebarMenuBadge>
-                      )}
-                      {/* Active indicator */}
-                      {isActive && (
-                        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-primary" />
                       )}
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -176,38 +164,37 @@ export default function SalonSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      {/* Footer: User info & Logout */}
-      <SidebarFooter className="px-3 pb-4 pt-2">
-        <Separator className="bg-zinc-800 dark:bg-zinc-900 mb-3" />
-        <div className="flex items-center gap-3 px-1 mb-2">
-          <Avatar className="size-9 border border-zinc-700 dark:border-zinc-800">
-            <AvatarFallback className="bg-zinc-800 dark:bg-zinc-900 text-zinc-300 dark:text-zinc-400 text-sm font-medium">
-              {user?.name ? getInitials(user.name) : '??'}
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-zinc-200 dark:text-zinc-300 truncate">
-              {user?.name || 'User'}
-            </p>
-            <Badge
-              className={`${roleBadgeStyles[user?.role as UserRole] || ''} border text-[10px] px-1.5 py-0 mt-0.5`}
-            >
-              {roleLabels[user?.role as UserRole] || user?.role}
-            </Badge>
+      {/* Footer: User info & Logout — Vercel-style */}
+      <SidebarFooter className="px-3 pb-3 pt-2">
+        <div className="border-t border-neutral-800 pt-3">
+          <div className="flex items-center gap-2.5 px-1 mb-2">
+            <Avatar className="size-7 border border-neutral-700">
+              <AvatarFallback className="bg-neutral-800 text-neutral-300 text-[11px] font-medium">
+                {user?.name ? getInitials(user.name) : '??'}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1 min-w-0">
+              <p className="text-[13px] font-medium text-neutral-200 truncate leading-tight">
+                {user?.name || 'User'}
+              </p>
+              <p className="text-[11px] text-neutral-500 leading-tight">
+                {roleLabels[user?.role as UserRole] || user?.role}
+              </p>
+            </div>
           </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full justify-start text-neutral-500 hover:text-red-400 hover:bg-red-500/10 transition-colors text-[13px] h-8"
+            onClick={handleLogout}
+          >
+            <LogOut className="size-3.5 mr-2" />
+            Sign Out
+          </Button>
+          <p className="text-[10px] text-neutral-700 text-center mt-1.5 font-mono">
+            v1.3.0
+          </p>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="w-full justify-start text-zinc-500 dark:text-zinc-600 hover:text-red-400 hover:bg-red-950/30 transition-colors"
-          onClick={handleLogout}
-        >
-          <LogOut className="size-4 mr-2" />
-          Sign Out
-        </Button>
-        <p className="text-[10px] text-zinc-600 dark:text-zinc-700 text-center mt-2">
-          v1.2.0 · SalonPro Rwanda
-        </p>
       </SidebarFooter>
     </Sidebar>
   )

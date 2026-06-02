@@ -79,11 +79,11 @@ function getInitials(name: string) {
 }
 
 const statusColors: Record<string, string> = {
-  booked: 'bg-sky-50 text-sky-700 dark:bg-sky-950 dark:text-sky-300',
-  confirmed: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300',
-  in_progress: 'bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300',
-  completed: 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400',
-  no_show: 'bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300',
+  booked: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
+  confirmed: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+  in_progress: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+  completed: 'bg-neutral-500/10 text-neutral-500 dark:text-neutral-400',
+  no_show: 'bg-red-500/10 text-red-600 dark:text-red-400',
 }
 
 const statusLabels: Record<string, string> = {
@@ -113,9 +113,9 @@ const methodIcons: Record<string, React.ReactNode> = {
 }
 
 const paymentStatusColors: Record<string, string> = {
-  unpaid: 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300',
-  partial: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300',
-  paid: 'bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300',
+  unpaid: 'bg-red-500/10 text-red-700 dark:text-red-400',
+  partial: 'bg-amber-500/10 text-amber-700 dark:text-amber-400',
+  paid: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
 }
 
 const paymentStatusLabels: Record<string, string> = {
@@ -293,7 +293,7 @@ export default function AppointmentDialog({ appointment, open, onClose, onUpdate
             </div>
             <div className="flex items-start gap-3">
               <Avatar className="size-9 border shrink-0">
-                <AvatarFallback className="bg-teal-50 text-teal-700 dark:bg-teal-950 dark:text-teal-300 text-xs font-semibold">
+                <AvatarFallback className="bg-muted text-muted-foreground text-xs font-semibold">
                   {getInitials(appointment.staff.name)}
                 </AvatarFallback>
               </Avatar>

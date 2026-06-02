@@ -57,13 +57,13 @@ const roleBadgeVariant: Record<string, 'default' | 'secondary' | 'outline'> = {
 }
 
 const roleColors: Record<string, string> = {
-  stylist: 'bg-teal-100 text-teal-800 hover:bg-teal-100 dark:bg-teal-950 dark:text-teal-300 dark:hover:bg-teal-950',
-  receptionist: 'bg-purple-100 text-purple-800 hover:bg-purple-100 dark:bg-purple-950 dark:text-purple-300 dark:hover:bg-purple-950',
+  stylist: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/10',
+  receptionist: 'bg-violet-500/10 text-violet-700 dark:text-violet-400 hover:bg-violet-500/10',
 }
 
 const roleAvatarColors: Record<string, string> = {
-  stylist: 'bg-teal-50 text-teal-700 dark:bg-teal-950 dark:text-teal-300',
-  receptionist: 'bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300',
+  stylist: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+  receptionist: 'bg-violet-500/10 text-violet-600 dark:text-violet-400',
 }
 
 const roleIcons: Record<string, React.ReactNode> = {

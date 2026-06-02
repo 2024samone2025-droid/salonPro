@@ -70,11 +70,11 @@ const statusLabels: Record<string, string> = {
 }
 
 const statusColors: Record<string, string> = {
-  booked: 'bg-sky-50 text-sky-700 dark:bg-sky-950 dark:text-sky-300',
-  confirmed: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300',
-  in_progress: 'bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300',
-  completed: 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400',
-  no_show: 'bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300',
+  booked: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
+  confirmed: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+  in_progress: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+  completed: 'bg-neutral-500/10 text-neutral-500 dark:text-neutral-400',
+  no_show: 'bg-red-500/10 text-red-600 dark:text-red-400',
 }
 
 function formatRWF(amount: number) {

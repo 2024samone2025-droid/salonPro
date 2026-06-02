@@ -14,7 +14,7 @@ import ServicesView from '@/components/salon/ServicesView'
 import ReportsView from '@/components/salon/ReportsView'
 import CommandPalette from '@/components/salon/CommandPalette'
 import LoginPage from '@/components/salon/LoginPage'
-import { Sparkles, Loader2 } from 'lucide-react'
+import { Loader2, Triangle } from 'lucide-react'
 import { ThemeToggle } from '@/components/theme-toggle'
 
 function MainContent() {
@@ -43,24 +43,26 @@ function AuthenticatedApp() {
     <>
       <Sidebar />
       <SidebarInset className="min-h-svh flex flex-col">
-        <header className="flex h-12 items-center gap-2 border-b bg-background/80 backdrop-blur-sm px-3 sm:px-4 sticky top-0 z-10">
-          <SidebarTrigger className="-ml-1" />
-          <Separator orientation="vertical" className="h-5" />
-          <div className="flex items-center gap-2">
-            <Sparkles className="size-4 text-primary" />
-            <span className="text-sm font-medium text-muted-foreground hidden sm:inline">SalonPro Rwanda</span>
-            <span className="text-sm font-medium text-muted-foreground sm:hidden">SalonPro</span>
+        {/* Header — Vercel-style minimal top bar */}
+        <header className="flex h-11 items-center gap-2 border-b bg-background/95 backdrop-blur-sm px-3 sm:px-4 sticky top-0 z-10">
+          <SidebarTrigger className="-ml-1 size-7" />
+          <Separator orientation="vertical" className="h-4" />
+          <div className="flex items-center gap-1.5">
+            <Triangle className="size-3 fill-foreground text-foreground" />
+            <span className="text-[13px] font-medium text-muted-foreground hidden sm:inline">SalonPro</span>
           </div>
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-1">
             <ThemeToggle />
           </div>
         </header>
-        <div className="flex-1 p-3 sm:p-4 md:p-6 overflow-auto min-w-0">
+        {/* Content area */}
+        <div className="flex-1 p-4 sm:p-6 md:p-8 overflow-auto min-w-0">
           <MainContent />
         </div>
-        <footer className="border-t bg-card/80 backdrop-blur-sm py-2 sm:py-3 px-4 sm:px-6 text-center mt-auto">
-          <p className="text-xs text-muted-foreground">
-            &copy; 2025 <span className="font-semibold">SalonPro Rwanda</span> — Salon Management System
+        {/* Footer — minimal Vercel-style */}
+        <footer className="border-t py-2 px-4 text-center mt-auto">
+          <p className="text-[11px] text-muted-foreground font-mono">
+            © 2025 SalonPro Rwanda
           </p>
         </footer>
       </SidebarInset>
@@ -74,13 +76,12 @@ function AppShell() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-primary/5">
-        <div className="space-y-4 text-center">
-          <div className="relative mx-auto size-12">
-            <div className="absolute inset-0 rounded-full border-2 border-primary/20" />
-            <Loader2 className="absolute inset-0 size-12 text-primary animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="space-y-3 text-center">
+          <div className="relative mx-auto size-10">
+            <Loader2 className="size-10 text-foreground/20 animate-spin" />
           </div>
-          <p className="text-sm text-muted-foreground">Loading SalonPro...</p>
+          <p className="text-sm text-muted-foreground">Loading...</p>
         </div>
       </div>
     )

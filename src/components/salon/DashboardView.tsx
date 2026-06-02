@@ -69,11 +69,11 @@ function formatRWF(amount: number) {
 }
 
 const statusConfig: Record<string, { label: string; bgClass: string; dotClass: string }> = {
-  booked: { label: 'Booked', bgClass: 'bg-sky-50 text-sky-700 hover:bg-sky-50 dark:bg-sky-950 dark:text-sky-300 dark:hover:bg-sky-950', dotClass: 'bg-sky-500' },
-  confirmed: { label: 'Confirmed', bgClass: 'bg-emerald-50 text-emerald-700 hover:bg-emerald-50 dark:bg-emerald-950 dark:text-emerald-300 dark:hover:bg-emerald-950', dotClass: 'bg-emerald-500' },
-  in_progress: { label: 'In Progress', bgClass: 'bg-amber-50 text-amber-700 hover:bg-amber-50 dark:bg-amber-950 dark:text-amber-300 dark:hover:bg-amber-950', dotClass: 'bg-amber-500' },
-  completed: { label: 'Completed', bgClass: 'bg-zinc-100 text-zinc-600 hover:bg-zinc-100 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800', dotClass: 'bg-zinc-400' },
-  no_show: { label: 'No Show', bgClass: 'bg-red-50 text-red-700 hover:bg-red-50 dark:bg-red-950 dark:text-red-300 dark:hover:bg-red-950', dotClass: 'bg-red-500' },
+  booked: { label: 'Booked', bgClass: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-500/10', dotClass: 'bg-blue-500' },
+  confirmed: { label: 'Confirmed', bgClass: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10', dotClass: 'bg-emerald-500' },
+  in_progress: { label: 'In Progress', bgClass: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10', dotClass: 'bg-amber-500' },
+  completed: { label: 'Completed', bgClass: 'bg-neutral-500/10 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-500/10', dotClass: 'bg-neutral-400' },
+  no_show: { label: 'No Show', bgClass: 'bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-500/10', dotClass: 'bg-red-500' },
 }
 
 export default function DashboardView() {
