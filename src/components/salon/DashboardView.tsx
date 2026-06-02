@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import {
   Card,
   CardContent,
@@ -78,19 +78,47 @@ const statusConfig: Record<string, { label: string; bgClass: string; dotClass: s
 export default function DashboardView() {
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const { setActiveTab } = useSalonStore()
   const { user, permissions, authFetch } = useAuth()
   const isStylist = user?.role === 'stylist'
   const canManagePayments = permissions?.canManagePayments ?? false
 
+  const fetchDashboard = useCallback(() => {
+    setLoading(true)
+    setError(null)
+    authFetch('/api/dashboard')
+      .then((r) => {
+        if (!r.ok) throw new Error(`Failed to fetch (${r.status})`)
+        return r.json()
+      })
+      .then((d) => {
+        setData(d)
+        setError(null)
+      })
+      .catch((err) => {
+        console.error('Dashboard fetch error:', err)
+        setError(err.message || 'Failed to load dashboard data')
+        setData(null)
+      })
+      .finally(() => setLoading(false))
+  }, [authFetch])
+
   useEffect(() => {
     authFetch('/api/dashboard')
       .then((r) => {
-        if (!r.ok) throw new Error('Failed to fetch')
+        if (!r.ok) throw new Error(`Failed to fetch (${r.status})`)
         return r.json()
       })
-      .then((d) => setData(d))
-      .catch(() => setData(null))
+      .then((d) => {
+        setData(d)
+        setError(null)
+      })
+      .catch((err) => {
+        console.error('Dashboard fetch error:', err)
+        setError(err.message || 'Failed to load dashboard data')
+        setData(null)
+      })
       .finally(() => setLoading(false))
   }, [authFetch])
 
@@ -122,7 +150,15 @@ export default function DashboardView() {
     )
   }
 
-  if (!data) return <div className="text-muted-foreground">Failed to load dashboard data.</div>
+  if (!data) return (
+    <div className="flex flex-col items-center justify-center py-16">
+      <AlertCircle className="size-10 text-muted-foreground/30 mb-3" />
+      <p className="text-muted-foreground text-sm mb-3">{error || 'Failed to load dashboard data.'}</p>
+      <Button variant="outline" size="sm" onClick={fetchDashboard}>
+        Retry
+      </Button>
+    </div>
+  )
 
   const today = format(new Date(), 'EEEE, MMMM d, yyyy')
 
@@ -239,7 +275,7 @@ export default function DashboardView() {
               onClick={() => setActiveTab('appointments')}
             >
               <CardHeader className="pb-2">
-                <CardDescription>Pending Payments</CardDescription>
+                <CardDescription>Pending Payments Today</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center justify-between">
@@ -259,7 +295,7 @@ export default function DashboardView() {
               onClick={() => setActiveTab('appointments')}
             >
               <CardHeader className="pb-2">
-                <CardDescription>Pending Amount</CardDescription>
+                <CardDescription>Outstanding Today</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center justify-between">
