@@ -1,0 +1,89 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Customer {
+  id        String        @id @default(cuid())
+  name      String
+  phone     String
+  notes     String        @default("")
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  appointments Appointment[]
+
+  @@index([phone])
+  @@index([name])
+}
+
+model Staff {
+  id        String        @id @default(cuid())
+  name      String
+  phone     String        @default("")
+  role      String        @default("stylist") // stylist, receptionist
+  active    Boolean       @default(true)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  appointments Appointment[]
+
+  @@index([role])
+}
+
+model Service {
+  id        String        @id @default(cuid())
+  name      String
+  price     Float         // in RWF
+  duration  Int           // in minutes
+  active    Boolean       @default(true)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  appointments Appointment[]
+
+  @@index([name])
+}
+
+model Appointment {
+  id         String   @id @default(cuid())
+  date       String   // YYYY-MM-DD format for easy querying
+  startTime  String   // HH:mm format
+  endTime    String   // HH:mm format
+  status     String   @default("booked") // booked, confirmed, in_progress, completed, no_show
+  notes      String   @default("")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  staffId    String
+  staff      Staff    @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  serviceId  String
+  service    Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  payment    Payment?
+
+  @@index([date])
+  @@index([status])
+  @@index([staffId])
+  @@index([customerId])
+}
+
+model Payment {
+  id            String      @id @default(cuid())
+  status        String      @default("unpaid") // unpaid, partial, paid
+  method        String      @default("cash") // cash, mtn_momo, airtel_money
+  amount        Float       @default(0) // amount paid in RWF
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  appointmentId String      @unique
+  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([method])
+}
