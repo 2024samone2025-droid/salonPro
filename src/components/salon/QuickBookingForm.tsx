@@ -42,7 +42,7 @@ interface QuickBookingFormProps {
 }
 
 export default function QuickBookingForm({ selectedDate, onBookingCreated }: QuickBookingFormProps) {
-  const { permissions, user } = useAuth()
+  const { permissions, user, authFetch } = useAuth()
   const canCreate = permissions?.canCreateAppointment ?? false
 
   const [customers, setCustomers] = useState<Customer[]>([])
@@ -63,9 +63,9 @@ export default function QuickBookingForm({ selectedDate, onBookingCreated }: Qui
 
   useEffect(() => {
     Promise.all([
-      fetch('/api/customers').then((r) => r.ok ? r.json() : []),
-      fetch('/api/staff?active=true').then((r) => r.ok ? r.json() : []),
-      fetch('/api/services?active=true').then((r) => r.ok ? r.json() : []),
+      authFetch('/api/customers').then((r) => r.ok ? r.json() : []),
+      authFetch('/api/staff?active=true').then((r) => r.ok ? r.json() : []),
+      authFetch('/api/services?active=true').then((r) => r.ok ? r.json() : []),
     ]).then(([c, s, sv]) => {
       setCustomers(Array.isArray(c) ? c : [])
       setStaff(Array.isArray(s) ? s : [])
@@ -116,7 +116,7 @@ export default function QuickBookingForm({ selectedDate, onBookingCreated }: Qui
 
       // Create new customer if needed
       if (showNewCustomer && newCustomerName) {
-        const res = await fetch('/api/customers', {
+        const res = await authFetch('/api/customers', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name: newCustomerName, phone: newCustomerPhone }),
@@ -127,7 +127,7 @@ export default function QuickBookingForm({ selectedDate, onBookingCreated }: Qui
 
       const endTime = getEndTime()
 
-      const res = await fetch('/api/appointments', {
+      const res = await authFetch('/api/appointments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -50,7 +50,7 @@ export default function StaffView() {
   const [showDialog, setShowDialog] = useState(false)
   const [editing, setEditing] = useState<StaffMember | null>(null)
 
-  const { permissions } = useAuth()
+  const { permissions, authFetch } = useAuth()
   const canManage = permissions?.canManageStaff ?? false
   const isViewOnly = permissions?.staff === 'view'
 
@@ -61,7 +61,7 @@ export default function StaffView() {
   const fetchStaff = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await fetch('/api/staff')
+      const res = await authFetch('/api/staff')
       if (!res.ok) throw new Error('Failed to fetch')
       const data = await res.json()
       setStaff(Array.isArray(data) ? data : [])
@@ -105,7 +105,7 @@ export default function StaffView() {
       const body = editing
         ? { id: editing.id, name, phone, role }
         : { name, phone, role }
-      const res = await fetch(url, {
+      const res = await authFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -123,7 +123,7 @@ export default function StaffView() {
   const handleToggleActive = async (s: StaffMember) => {
     if (!canManage) return
     try {
-      const res = await fetch('/api/staff', {
+      const res = await authFetch('/api/staff', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: s.id, active: !s.active }),

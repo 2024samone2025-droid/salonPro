@@ -64,7 +64,7 @@ const timeSlots = Array.from({ length: END_HOUR - START_HOUR }, (_, i) => {
 
 export default function AppointmentsView() {
   const { selectedDate, setSelectedDate } = useSalonStore()
-  const { user, permissions } = useAuth()
+  const { user, permissions, authFetch } = useAuth()
   const isStylist = user?.role === 'stylist'
   const staffFilter = isStylist && user.staffId ? user.staffId : null
   const [appointments, setAppointments] = useState<Appointment[]>([])
@@ -94,7 +94,7 @@ export default function AppointmentsView() {
       if (staffFilter) {
         url += `&staffId=${staffFilter}`
       }
-      const res = await fetch(url)
+      const res = await authFetch(url)
       if (!res.ok) throw new Error('Failed to fetch')
       const data = await res.json()
       setAppointments(Array.isArray(data) ? data : [])
@@ -103,7 +103,7 @@ export default function AppointmentsView() {
     } finally {
       setLoading(false)
     }
-  }, [selectedDate, viewMode, staffFilter])
+  }, [selectedDate, viewMode, staffFilter, authFetch])
 
   useEffect(() => {
     fetchAppointments()

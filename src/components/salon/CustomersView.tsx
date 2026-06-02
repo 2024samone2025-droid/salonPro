@@ -73,7 +73,7 @@ export default function CustomersView() {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
 
-  const { permissions } = useAuth()
+  const { permissions, authFetch } = useAuth()
   const canEdit = permissions?.customers === 'full'
   const isViewOnly = permissions?.customers === 'view'
 
@@ -91,7 +91,7 @@ export default function CustomersView() {
     setLoading(true)
     try {
       const url = searchQuery ? `/api/customers?q=${encodeURIComponent(searchQuery)}` : '/api/customers'
-      const res = await fetch(url)
+      const res = await authFetch(url)
       if (!res.ok) throw new Error('Failed to fetch')
       const data = await res.json()
       setCustomers(Array.isArray(data) ? data : [])
@@ -100,7 +100,7 @@ export default function CustomersView() {
     } finally {
       setLoading(false)
     }
-  }, [searchQuery])
+  }, [searchQuery, authFetch])
 
   useEffect(() => {
     fetchCustomers()
@@ -112,7 +112,7 @@ export default function CustomersView() {
       return
     }
     try {
-      const res = await fetch('/api/customers', {
+      const res = await authFetch('/api/customers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: newName, phone: newPhone, notes: newNotes }),
@@ -133,7 +133,7 @@ export default function CustomersView() {
   const handleUpdateCustomer = async () => {
     if (!selectedCustomer) return
     try {
-      const res = await fetch('/api/customers', {
+      const res = await authFetch('/api/customers', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

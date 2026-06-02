@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth-guard'
 
 export async function GET(req: NextRequest) {
-  const auth = await requireAuth()
+  const auth = await requireAuth(req)
   if (!auth.authorized) return auth.error
 
   const q = req.nextUrl.searchParams.get('q')
@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   // Only admin/receptionist can add customers
-  const auth = await requireAuth()
+  const auth = await requireAuth(req)
   if (!auth.authorized) return auth.error
 
   // Stylists have view-only access to customers
@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   // Only admin/receptionist can edit customers
-  const auth = await requireAuth()
+  const auth = await requireAuth(req)
   if (!auth.authorized) return auth.error
 
   if (auth.user?.role === 'stylist') {
@@ -77,7 +77,7 @@ export async function PUT(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   // Only admin can delete customers
-  const auth = await requireAuth('canDeleteRecords')
+  const auth = await requireAuth(req, 'canDeleteRecords')
   if (!auth.authorized) return auth.error
 
   const id = req.nextUrl.searchParams.get('id')

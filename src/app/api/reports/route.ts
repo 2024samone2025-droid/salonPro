@@ -4,7 +4,7 @@ import { requireAuth } from '@/lib/auth-guard'
 
 export async function GET(req: NextRequest) {
   // Reports require admin or receptionist role
-  const auth = await requireAuth()
+  const auth = await requireAuth(req)
   if (!auth.authorized) return auth.error
 
   if (auth.user?.role === 'stylist') {

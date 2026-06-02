@@ -36,7 +36,7 @@ export default function ServicesView() {
   const [showDialog, setShowDialog] = useState(false)
   const [editing, setEditing] = useState<Service | null>(null)
 
-  const { permissions } = useAuth()
+  const { permissions, authFetch } = useAuth()
   const canManage = permissions?.canManageServices ?? false
 
   const [name, setName] = useState('')
@@ -46,7 +46,7 @@ export default function ServicesView() {
   const fetchServices = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await fetch('/api/services')
+      const res = await authFetch('/api/services')
       if (!res.ok) throw new Error('Failed to fetch')
       const data = await res.json()
       setServices(Array.isArray(data) ? data : [])
@@ -89,7 +89,7 @@ export default function ServicesView() {
       const body = editing
         ? { id: editing.id, name, price: parseFloat(price), duration: parseInt(duration) }
         : { name, price: parseFloat(price), duration: parseInt(duration) }
-      const res = await fetch('/api/services', {
+      const res = await authFetch('/api/services', {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -107,7 +107,7 @@ export default function ServicesView() {
   const handleToggleActive = async (s: Service) => {
     if (!canManage) return
     try {
-      const res = await fetch('/api/services', {
+      const res = await authFetch('/api/services', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: s.id, active: !s.active }),

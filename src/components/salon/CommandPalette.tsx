@@ -20,6 +20,7 @@ import {
   BarChart3,
   Search,
 } from 'lucide-react'
+import { useAuth } from '@/lib/auth-context'
 
 const navItems: { tab: ViewTab; label: string; icon: React.ElementType }[] = [
   { tab: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -46,6 +47,7 @@ interface AppointmentResult {
 
 export default function CommandPalette() {
   const { commandOpen, setCommandOpen, setActiveTab } = useSalonStore()
+  const { authFetch } = useAuth()
   const [customers, setCustomers] = useState<CustomerResult[]>([])
   const [appointments, setAppointments] = useState<AppointmentResult[]>([])
 
@@ -53,8 +55,8 @@ export default function CommandPalette() {
     if (commandOpen) {
       // Load search data when palette opens
       Promise.all([
-        fetch('/api/customers').then((r) => r.ok ? r.json() : []),
-        fetch('/api/appointments?date=' + new Date().toISOString().split('T')[0]).then((r) => r.ok ? r.json() : []),
+        authFetch('/api/customers').then((r) => r.ok ? r.json() : []),
+        authFetch('/api/appointments?date=' + new Date().toISOString().split('T')[0]).then((r) => r.ok ? r.json() : []),
       ]).then(([custs, apts]) => {
         setCustomers(Array.isArray(custs) ? custs : [])
         setAppointments(Array.isArray(apts) ? apts : [])

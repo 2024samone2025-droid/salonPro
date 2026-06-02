@@ -78,12 +78,12 @@ export default function DashboardView() {
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
   const { setActiveTab } = useSalonStore()
-  const { user, permissions } = useAuth()
+  const { user, permissions, authFetch } = useAuth()
   const isStylist = user?.role === 'stylist'
   const canManagePayments = permissions?.canManagePayments ?? false
 
   useEffect(() => {
-    fetch('/api/dashboard')
+    authFetch('/api/dashboard')
       .then((r) => {
         if (!r.ok) throw new Error('Failed to fetch')
         return r.json()
@@ -91,7 +91,7 @@ export default function DashboardView() {
       .then((d) => setData(d))
       .catch(() => setData(null))
       .finally(() => setLoading(false))
-  }, [])
+  }, [authFetch])
 
   if (loading) {
     return (

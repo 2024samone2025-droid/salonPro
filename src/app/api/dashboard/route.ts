@@ -1,9 +1,9 @@
 import { db } from '@/lib/db'
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth-guard'
 
-export async function GET() {
-  const auth = await requireAuth()
+export async function GET(req: NextRequest) {
+  const auth = await requireAuth(req)
   if (!auth.authorized) return auth.error
 
   const today = new Date().toISOString().split('T')[0]

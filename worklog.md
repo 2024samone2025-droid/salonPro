@@ -191,3 +191,41 @@ Stage Summary:
 - Login flow works end-to-end (cookie set + permissions returned in one response)
 - Frontend handles API errors gracefully (no more JSON.parse crashes)
 - All 7 modules functional with role-based access control
+
+---
+Task ID: 7
+Agent: Main Agent
+Task: Fix session persistence in sandbox/iframe environment (dual auth)
+
+Work Log:
+- Diagnosed: After login, API calls still return 401 because HttpOnly cookies aren't sent in sandbox/iframe cross-origin context
+- Implemented dual authentication strategy:
+  1. Primary: HttpOnly cookies (secure, same-origin)
+  2. Fallback: Authorization Bearer header from localStorage (works in iframe/sandbox)
+- Updated auth-context.tsx:
+  - Added `authFetch()` helper that automatically adds `Authorization: Bearer <token>` header
+  - Login stores session token in localStorage (via `data.token` from login response)
+  - refreshSession also checks localStorage for token
+  - Logout clears both cookie and localStorage
+- Updated auth-guard.ts:
+  - `getSessionFromRequest(req)` now checks cookie first, then Authorization header
+  - Both methods verified to work independently
+- Updated login API (route.ts):
+  - Now returns `token` in response body for client-side localStorage storage
+  - Cookie still set as before (HttpOnly)
+- Updated /api/auth/me route:
+  - Now also checks Authorization header as fallback
+- Updated ALL API routes to pass `req: NextRequest` to `requireAuth()`:
+  - dashboard, appointments, customers, staff, services, payments, reports
+  - This enables Authorization header verification
+- Updated ALL frontend components to use `authFetch()` instead of `fetch()`:
+  - DashboardView, Sidebar, AppointmentsView, CustomersView, StaffView, ServicesView, ReportsView
+  - QuickBookingForm, AppointmentDialog, CommandPalette
+- Verified with curl: Bearer token authentication works for all endpoints
+- ESLint: 0 errors
+
+Stage Summary:
+- Dual authentication: cookies (primary) + Bearer token (fallback)
+- Session persists across page loads via localStorage
+- All API routes and frontend components use the new auth flow
+- Dashboard and all modules now load successfully after login

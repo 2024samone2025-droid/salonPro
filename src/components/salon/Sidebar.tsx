@@ -44,12 +44,12 @@ const roleColors: Record<UserRole, string> = {
 
 export default function Sidebar() {
   const { activeTab, setActiveTab, sidebarOpen, setSidebarOpen, setCommandOpen } = useSalonStore()
-  const { user, permissions, logout } = useAuth()
+  const { user, permissions, logout, authFetch } = useAuth()
   const [todayCount, setTodayCount] = useState<number | null>(null)
 
   useEffect(() => {
     const today = new Date().toISOString().split('T')[0]
-    fetch(`/api/appointments?date=${today}`)
+    authFetch(`/api/appointments?date=${today}`)
       .then((r) => {
         if (!r.ok) return []
         return r.json()
@@ -58,7 +58,7 @@ export default function Sidebar() {
         if (Array.isArray(data)) setTodayCount(data.length)
       })
       .catch(() => {})
-  }, [activeTab])
+  }, [activeTab, authFetch])
 
   // Filter nav items based on user role
   const navItems = allNavItems.filter((item) => {

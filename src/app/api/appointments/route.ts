@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth, canModifyAppointment } from '@/lib/auth-guard'
 
 export async function GET(req: NextRequest) {
-  const auth = await requireAuth()
+  const auth = await requireAuth(req)
   if (!auth.authorized) return auth.error
 
   const params = req.nextUrl.searchParams
@@ -40,7 +40,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   // Only admin and receptionist can create appointments
-  const auth = await requireAuth('canCreateAppointment')
+  const auth = await requireAuth(req, 'canCreateAppointment')
   if (!auth.authorized) return auth.error
 
   try {
@@ -96,7 +96,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
-  const auth = await requireAuth()
+  const auth = await requireAuth(req)
   if (!auth.authorized) return auth.error
 
   try {
@@ -146,7 +146,7 @@ export async function PUT(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   // Only admin can delete appointments
-  const auth = await requireAuth('canDeleteRecords')
+  const auth = await requireAuth(req, 'canDeleteRecords')
   if (!auth.authorized) return auth.error
 
   const id = req.nextUrl.searchParams.get('id')

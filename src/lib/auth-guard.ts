@@ -9,17 +9,30 @@ interface AuthResult {
 }
 
 /**
- * Get session from request cookies (synchronous, faster)
+ * Get session from request - checks cookie first, then Authorization header
  */
 export function getSessionFromRequest(req: NextRequest): SessionUser | null {
-  const token = req.cookies.get('salonpro_session')?.value
-  if (!token) return null
-  return verifySessionToken(token)
+  // 1. Try cookie first
+  const cookieToken = req.cookies.get('salonpro_session')?.value
+  if (cookieToken) {
+    const user = verifySessionToken(cookieToken)
+    if (user) return user
+  }
+
+  // 2. Try Authorization header as fallback (for iframe/sandbox environments where cookies may not work)
+  const authHeader = req.headers.get('authorization')
+  if (authHeader?.startsWith('Bearer ')) {
+    const token = authHeader.slice(7)
+    const user = verifySessionToken(token)
+    if (user) return user
+  }
+
+  return null
 }
 
 /**
  * Check if the current request is authenticated and optionally check permissions.
- * If req is provided, uses req.cookies (synchronous). Otherwise falls back to
+ * If req is provided, checks cookie + Authorization header. Otherwise falls back to
  * the async cookies() API from next/headers.
  */
 export async function requireAuth(req?: NextRequest, requiredPermission?: keyof Permissions): Promise<AuthResult> {
@@ -28,6 +41,7 @@ export async function requireAuth(req?: NextRequest, requiredPermission?: keyof 
   if (req) {
     user = getSessionFromRequest(req)
   } else {
+    // Try cookies() API first, then check if we can access headers
     user = await getSession()
   }
 

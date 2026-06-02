@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth-guard'
 
 export async function GET(req: NextRequest) {
-  const auth = await requireAuth()
+  const auth = await requireAuth(req)
   if (!auth.authorized) return auth.error
 
   const params = req.nextUrl.searchParams
@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   // Only admin and receptionist can manage payments
-  const auth = await requireAuth('canManagePayments')
+  const auth = await requireAuth(req, 'canManagePayments')
   if (!auth.authorized) return auth.error
 
   const body = await req.json()
@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   // Only admin and receptionist can manage payments
-  const auth = await requireAuth('canManagePayments')
+  const auth = await requireAuth(req, 'canManagePayments')
   if (!auth.authorized) return auth.error
 
   const body = await req.json()

@@ -37,10 +37,12 @@ export async function POST(req: NextRequest) {
     // Get permissions for this role
     const permissions = ROLE_PERMISSIONS[user.role as UserRole] || null
 
-    // Set cookie via response header instead of cookies() API
+    // Set cookie via response header (primary auth method)
+    // Also return token in body for localStorage (fallback for iframe/sandbox environments)
     const response = NextResponse.json({
       user: sessionUser,
       permissions,
+      token, // Client stores this in localStorage for Authorization header
       message: 'Login successful',
     })
 

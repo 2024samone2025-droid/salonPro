@@ -87,7 +87,7 @@ export default function AppointmentDialog({ appointment, open, onClose, onUpdate
   const [notes, setNotes] = useState('')
   const [updating, setUpdating] = useState(false)
 
-  const { permissions } = useAuth()
+  const { permissions, authFetch } = useAuth()
   const canUpdateStatus = permissions?.canUpdateAppointmentStatus ?? false
   const canManagePayments = permissions?.canManagePayments ?? false
   const canDelete = permissions?.canDeleteRecords ?? false
@@ -108,7 +108,7 @@ export default function AppointmentDialog({ appointment, open, onClose, onUpdate
   const handleStatusChange = async (newStatus: string) => {
     setUpdating(true)
     try {
-      const res = await fetch('/api/appointments', {
+      const res = await authFetch('/api/appointments', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: appointment.id, status: newStatus }),
@@ -127,7 +127,7 @@ export default function AppointmentDialog({ appointment, open, onClose, onUpdate
   const handlePaymentUpdate = async () => {
     if (!appointment.payment?.id) {
       try {
-        const res = await fetch('/api/payments', {
+        const res = await authFetch('/api/payments', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -146,7 +146,7 @@ export default function AppointmentDialog({ appointment, open, onClose, onUpdate
       }
     } else {
       try {
-        const res = await fetch('/api/payments', {
+        const res = await authFetch('/api/payments', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -169,7 +169,7 @@ export default function AppointmentDialog({ appointment, open, onClose, onUpdate
   const handleDelete = async () => {
     setUpdating(true)
     try {
-      const res = await fetch(`/api/appointments?id=${appointment.id}`, { method: 'DELETE' })
+      const res = await authFetch(`/api/appointments?id=${appointment.id}`, { method: 'DELETE' })
       if (res.ok) {
         toast({ title: 'Cancelled', description: 'Appointment has been cancelled' })
         onClose()
@@ -338,7 +338,7 @@ export default function AppointmentDialog({ appointment, open, onClose, onUpdate
               variant="outline"
               className="mt-1"
               onClick={async () => {
-                await fetch('/api/appointments', {
+                await authFetch('/api/appointments', {
                   method: 'PUT',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({ id: appointment.id, notes }),

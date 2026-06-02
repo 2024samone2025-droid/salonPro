@@ -1,9 +1,19 @@
-import { getSession, ROLE_PERMISSIONS, type UserRole } from '@/lib/auth'
-import { NextResponse } from 'next/server'
+import { verifySessionToken, getSession, ROLE_PERMISSIONS, type UserRole } from '@/lib/auth'
+import { NextRequest, NextResponse } from 'next/server'
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const user = await getSession()
+    let user = await getSession()
+
+    // Fallback: check Authorization header if cookie didn't work
+    if (!user) {
+      const authHeader = req.headers.get('authorization')
+      if (authHeader?.startsWith('Bearer ')) {
+        const token = authHeader.slice(7)
+        user = verifySessionToken(token)
+      }
+    }
+
     if (!user) {
       return NextResponse.json({ user: null, permissions: null }, { status: 401 })
     }

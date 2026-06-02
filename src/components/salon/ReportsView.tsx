@@ -88,7 +88,7 @@ function Sparkline({ data }: { data: number[] }) {
 }
 
 export default function ReportsView() {
-  const { permissions } = useAuth()
+  const { permissions, authFetch } = useAuth()
   const canView = permissions?.reports !== 'none'
 
   const [data, setData] = useState<ReportData | null>(null)
@@ -129,7 +129,7 @@ export default function ReportsView() {
       params.set('period', period)
     }
     try {
-      const res = await fetch(`/api/reports?${params.toString()}`)
+      const res = await authFetch(`/api/reports?${params.toString()}`)
       if (!res.ok) throw new Error('Failed to fetch')
       const d = await res.json()
       setData(d)

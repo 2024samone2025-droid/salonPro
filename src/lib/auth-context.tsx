@@ -34,9 +34,13 @@ interface AuthContextType {
   login: (name: string, pin: string) => Promise<{ success: boolean; error?: string }>
   logout: () => Promise<void>
   refreshSession: () => Promise<void>
+  /** Fetch wrapper that includes the session token */
+  authFetch: (url: string, options?: RequestInit) => Promise<Response>
 }
 
 const AuthContext = createContext<AuthContextType | null>(null)
+
+const TOKEN_KEY = 'salonpro_token'
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<SessionUser | null>(null)
@@ -45,7 +49,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshSession = useCallback(async () => {
     try {
-      const res = await fetch('/api/auth/me')
+      const token = localStorage.getItem(TOKEN_KEY)
+      const headers: Record<string, string> = {}
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`
+      }
+
+      const res = await fetch('/api/auth/me', { headers })
       if (res.ok) {
         const data = await res.json()
         setUser(data.user)
@@ -53,6 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         setUser(null)
         setPermissions(null)
+        localStorage.removeItem(TOKEN_KEY)
       }
     } catch {
       setUser(null)
@@ -75,9 +86,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       })
       const data = await res.json()
       if (res.ok) {
-        // Use login response data directly — no extra /api/auth/me call needed
+        // Store user and permissions from login response
         setUser(data.user)
         setPermissions(data.permissions)
+        // Store the token in localStorage for Authorization header fallback
+        if (data.token) {
+          localStorage.setItem(TOKEN_KEY, data.token)
+        }
         return { success: true }
       }
       return { success: false, error: data.error || 'Login failed' }
@@ -94,10 +109,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     setUser(null)
     setPermissions(null)
+    localStorage.removeItem(TOKEN_KEY)
   }
 
+  /**
+   * Authenticated fetch that includes the session token via Authorization header.
+   * This works even in iframe/sandbox environments where cookies may not be sent.
+   */
+  const authFetch = useCallback(async (url: string, options: RequestInit = {}): Promise<Response> => {
+    const token = localStorage.getItem(TOKEN_KEY)
+    const headers = new Headers(options.headers || {})
+    if (token) {
+      headers.set('Authorization', `Bearer ${token}`)
+    }
+    return fetch(url, { ...options, headers })
+  }, [])
+
   return (
-    <AuthContext.Provider value={{ user, permissions, loading, login, logout, refreshSession }}>
+    <AuthContext.Provider value={{ user, permissions, loading, login, logout, refreshSession, authFetch }}>
       {children}
     </AuthContext.Provider>
   )

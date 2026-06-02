@@ -4,7 +4,7 @@ import { requireAuth } from '@/lib/auth-guard'
 
 export async function GET(req: NextRequest) {
   // Anyone authenticated can view services
-  const auth = await requireAuth()
+  const auth = await requireAuth(req)
   if (!auth.authorized) return auth.error
 
   const active = req.nextUrl.searchParams.get('active')
@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   // Only admin can add services
-  const auth = await requireAuth('canManageServices')
+  const auth = await requireAuth(req, 'canManageServices')
   if (!auth.authorized) return auth.error
 
   const body = await req.json()
@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   // Only admin can edit services
-  const auth = await requireAuth('canManageServices')
+  const auth = await requireAuth(req, 'canManageServices')
   if (!auth.authorized) return auth.error
 
   const body = await req.json()
@@ -48,7 +48,7 @@ export async function PUT(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   // Only admin can delete services
-  const auth = await requireAuth('canManageServices')
+  const auth = await requireAuth(req, 'canManageServices')
   if (!auth.authorized) return auth.error
 
   const id = req.nextUrl.searchParams.get('id')
