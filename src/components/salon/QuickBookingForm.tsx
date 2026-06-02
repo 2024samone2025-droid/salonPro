@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -11,9 +11,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Card, CardContent } from '@/components/ui/card'
-import { Plus, Search, Zap } from 'lucide-react'
-import { toast } from '@/hooks/use-toast'
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card'
+import { Separator } from '@/components/ui/separator'
+import { Plus, Search, Zap, Loader2, X, UserPlus } from 'lucide-react'
+import { toast } from 'sonner'
 import { useAuth } from '@/lib/auth-context'
 
 interface Customer {
@@ -41,6 +48,10 @@ interface QuickBookingFormProps {
   onBookingCreated?: () => void
 }
 
+function formatRWF(amount: number) {
+  return new Intl.NumberFormat('en-RW').format(amount) + ' RWF'
+}
+
 export default function QuickBookingForm({ selectedDate, onBookingCreated }: QuickBookingFormProps) {
   const { permissions, user, authFetch } = useAuth()
   const canCreate = permissions?.canCreateAppointment ?? false
@@ -51,6 +62,7 @@ export default function QuickBookingForm({ selectedDate, onBookingCreated }: Qui
 
   const [searchQuery, setSearchQuery] = useState('')
   const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([])
+  const [showDropdown, setShowDropdown] = useState(false)
   const [showNewCustomer, setShowNewCustomer] = useState(false)
   const [newCustomerName, setNewCustomerName] = useState('')
   const [newCustomerPhone, setNewCustomerPhone] = useState('')
@@ -61,30 +73,49 @@ export default function QuickBookingForm({ selectedDate, onBookingCreated }: Qui
   const [startTime, setStartTime] = useState('09:00')
   const [submitting, setSubmitting] = useState(false)
 
+  const dropdownRef = useRef<HTMLDivElement>(null)
+  const searchInputRef = useRef<HTMLInputElement>(null)
+
   useEffect(() => {
     Promise.all([
-      authFetch('/api/customers').then((r) => r.ok ? r.json() : []),
-      authFetch('/api/staff?active=true').then((r) => r.ok ? r.json() : []),
-      authFetch('/api/services?active=true').then((r) => r.ok ? r.json() : []),
+      authFetch('/api/customers').then((r) => (r.ok ? r.json() : [])),
+      authFetch('/api/staff?active=true').then((r) => (r.ok ? r.json() : [])),
+      authFetch('/api/services?active=true').then((r) => (r.ok ? r.json() : [])),
     ]).then(([c, s, sv]) => {
       setCustomers(Array.isArray(c) ? c : [])
       setStaff(Array.isArray(s) ? s : [])
       setServices(Array.isArray(sv) ? sv : [])
     })
-  }, [])
+  }, [authFetch])
 
   useEffect(() => {
     if (searchQuery.length > 0) {
       const q = searchQuery.toLowerCase()
       setFilteredCustomers(
-        customers.filter((c) => c.name.toLowerCase().includes(q) || c.phone.includes(q))
+        customers.filter(
+          (c) => c.name.toLowerCase().includes(q) || c.phone.includes(q)
+        )
       )
+      setShowDropdown(true)
     } else {
       setFilteredCustomers([])
+      setShowDropdown(false)
     }
   }, [searchQuery, customers])
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setShowDropdown(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
   const selectedService = services.find((s) => s.id === serviceId)
+  const selectedCustomer = customers.find((c) => c.id === customerId)
 
   const getEndTime = useCallback(() => {
     if (!selectedService || !startTime) return ''
@@ -97,15 +128,19 @@ export default function QuickBookingForm({ selectedDate, onBookingCreated }: Qui
 
   const handleSubmit = async () => {
     if (!customerId && !showNewCustomer) {
-      toast({ title: 'Error', description: 'Please select a customer', variant: 'destructive' })
+      toast.error('Please select a customer')
+      return
+    }
+    if (showNewCustomer && !newCustomerName.trim()) {
+      toast.error('Please enter the customer name')
       return
     }
     if (!staffId) {
-      toast({ title: 'Error', description: 'Please select a stylist', variant: 'destructive' })
+      toast.error('Please select a stylist')
       return
     }
     if (!serviceId) {
-      toast({ title: 'Error', description: 'Please select a service', variant: 'destructive' })
+      toast.error('Please select a service')
       return
     }
 
@@ -121,6 +156,11 @@ export default function QuickBookingForm({ selectedDate, onBookingCreated }: Qui
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name: newCustomerName, phone: newCustomerPhone }),
         })
+        if (!res.ok) {
+          toast.error('Failed to create customer')
+          setSubmitting(false)
+          return
+        }
         const newCust = await res.json()
         cId = newCust.id
       }
@@ -142,7 +182,7 @@ export default function QuickBookingForm({ selectedDate, onBookingCreated }: Qui
       })
 
       if (res.ok) {
-        toast({ title: 'Success', description: 'Appointment booked!' })
+        toast.success('Appointment booked successfully!')
         setCustomerId('')
         setStaffId('')
         setServiceId('')
@@ -153,10 +193,10 @@ export default function QuickBookingForm({ selectedDate, onBookingCreated }: Qui
         setNewCustomerPhone('')
         onBookingCreated?.()
       } else {
-        toast({ title: 'Error', description: 'Failed to book appointment', variant: 'destructive' })
+        toast.error('Failed to book appointment')
       }
     } catch {
-      toast({ title: 'Error', description: 'Something went wrong', variant: 'destructive' })
+      toast.error('Something went wrong')
     } finally {
       setSubmitting(false)
     }
@@ -166,66 +206,112 @@ export default function QuickBookingForm({ selectedDate, onBookingCreated }: Qui
   if (!canCreate) return null
 
   return (
-    <Card className="border-emerald-200 bg-emerald-50/50">
-      <CardContent className="p-4">
-        <div className="flex items-center gap-2 mb-3">
-          <Zap className="size-4 text-emerald-600" />
-          <h3 className="text-sm font-semibold text-emerald-900">Quick Booking</h3>
+    <Card className="border-emerald-200 bg-gradient-to-r from-emerald-50/80 to-teal-50/50 shadow-sm">
+      <CardHeader className="pb-3">
+        <div className="flex items-center gap-2">
+          <div className="flex items-center justify-center size-8 rounded-lg bg-emerald-100">
+            <Zap className="size-4 text-emerald-700" />
+          </div>
+          <div>
+            <CardTitle className="text-sm">Quick Booking</CardTitle>
+            <CardDescription className="text-xs">Create a new appointment in seconds</CardDescription>
+          </div>
         </div>
-
+      </CardHeader>
+      <CardContent>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
           {/* Customer Search */}
-          <div className="lg:col-span-2 relative">
-            <Label className="text-xs text-muted-foreground">Customer</Label>
-            <div className="relative mt-1">
+          <div className="lg:col-span-2 relative" ref={dropdownRef}>
+            <Label className="text-xs text-muted-foreground mb-1.5 block">Customer</Label>
+            <div className="relative">
               <Search className="absolute left-2.5 top-2.5 size-3.5 text-muted-foreground" />
               <Input
+                ref={searchInputRef}
                 placeholder="Search name or phone..."
-                value={customerId ? customers.find((c) => c.id === customerId)?.name || searchQuery : searchQuery}
+                value={
+                  customerId
+                    ? selectedCustomer?.name || searchQuery
+                    : searchQuery
+                }
                 onChange={(e) => {
                   setSearchQuery(e.target.value)
                   setCustomerId('')
                 }}
-                className="pl-8 h-9 text-sm"
+                onFocus={() => {
+                  if (searchQuery.length > 0) setShowDropdown(true)
+                }}
+                className="pl-8 h-9 text-sm pr-8"
               />
+              {customerId && (
+                <button
+                  className="absolute right-2 top-2"
+                  onClick={() => {
+                    setCustomerId('')
+                    setSearchQuery('')
+                    searchInputRef.current?.focus()
+                  }}
+                >
+                  <X className="size-3.5 text-muted-foreground hover:text-foreground transition-colors" />
+                </button>
+              )}
             </div>
-            {filteredCustomers.length > 0 && !customerId && (
-              <div className="absolute z-20 mt-1 w-full bg-popover border rounded-md shadow-lg max-h-40 overflow-y-auto">
+            {/* Autocomplete dropdown */}
+            {showDropdown && filteredCustomers.length > 0 && !customerId && (
+              <div className="absolute z-30 mt-1 w-full bg-popover border rounded-lg shadow-lg max-h-40 overflow-y-auto">
                 {filteredCustomers.map((c) => (
                   <button
                     key={c.id}
-                    className="w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors"
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors flex items-center justify-between"
                     onClick={() => {
                       setCustomerId(c.id)
                       setSearchQuery('')
+                      setShowDropdown(false)
                       setFilteredCustomers([])
                     }}
                   >
                     <span className="font-medium">{c.name}</span>
-                    <span className="text-muted-foreground ml-2">{c.phone}</span>
+                    <span className="text-xs text-muted-foreground">{c.phone}</span>
                   </button>
                 ))}
               </div>
             )}
+            {/* No results */}
+            {showDropdown && searchQuery.length > 0 && filteredCustomers.length === 0 && !customerId && (
+              <div className="absolute z-30 mt-1 w-full bg-popover border rounded-lg shadow-lg p-3">
+                <p className="text-xs text-muted-foreground">No customers found.</p>
+              </div>
+            )}
             {!customerId && (
               <button
-                className="text-xs text-emerald-700 hover:text-emerald-800 mt-1 flex items-center gap-1"
-                onClick={() => setShowNewCustomer(!showNewCustomer)}
+                className="text-xs text-emerald-700 hover:text-emerald-800 mt-1.5 flex items-center gap-1 font-medium"
+                onClick={() => {
+                  setShowNewCustomer(!showNewCustomer)
+                  setShowDropdown(false)
+                }}
               >
-                <Plus className="size-3" />
-                New customer
+                {showNewCustomer ? (
+                  <>
+                    <X className="size-3" />
+                    Cancel
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="size-3" />
+                    New customer
+                  </>
+                )}
               </button>
             )}
             {showNewCustomer && (
-              <div className="mt-2 space-y-2 p-2 border rounded-md bg-background">
+              <div className="mt-2 space-y-2 p-3 border rounded-lg bg-background">
                 <Input
-                  placeholder="Name"
+                  placeholder="Customer name"
                   value={newCustomerName}
                   onChange={(e) => setNewCustomerName(e.target.value)}
                   className="h-8 text-sm"
                 />
                 <Input
-                  placeholder="Phone"
+                  placeholder="Phone number"
                   value={newCustomerPhone}
                   onChange={(e) => setNewCustomerPhone(e.target.value)}
                   className="h-8 text-sm"
@@ -236,26 +322,31 @@ export default function QuickBookingForm({ selectedDate, onBookingCreated }: Qui
 
           {/* Service */}
           <div>
-            <Label className="text-xs text-muted-foreground">Service</Label>
+            <Label className="text-xs text-muted-foreground mb-1.5 block">Service</Label>
             <Select value={serviceId} onValueChange={setServiceId}>
-              <SelectTrigger className="h-9 text-sm mt-1 w-full">
+              <SelectTrigger className="h-9 text-sm w-full">
                 <SelectValue placeholder="Select service" />
               </SelectTrigger>
               <SelectContent>
                 {services.map((s) => (
                   <SelectItem key={s.id} value={s.id}>
-                    {s.name} ({new Intl.NumberFormat('en-RW').format(s.price)} RWF)
+                    {s.name} ({formatRWF(s.price)})
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            {selectedService && (
+              <p className="text-[11px] text-muted-foreground mt-1">
+                {selectedService.duration} min
+              </p>
+            )}
           </div>
 
           {/* Staff */}
           <div>
-            <Label className="text-xs text-muted-foreground">Stylist</Label>
+            <Label className="text-xs text-muted-foreground mb-1.5 block">Stylist</Label>
             <Select value={staffId} onValueChange={setStaffId}>
-              <SelectTrigger className="h-9 text-sm mt-1 w-full">
+              <SelectTrigger className="h-9 text-sm w-full">
                 <SelectValue placeholder="Select stylist" />
               </SelectTrigger>
               <SelectContent>
@@ -272,13 +363,18 @@ export default function QuickBookingForm({ selectedDate, onBookingCreated }: Qui
 
           {/* Time */}
           <div>
-            <Label className="text-xs text-muted-foreground">Time</Label>
+            <Label className="text-xs text-muted-foreground mb-1.5 block">Time</Label>
             <Input
               type="time"
               value={startTime}
               onChange={(e) => setStartTime(e.target.value)}
-              className="h-9 text-sm mt-1"
+              className="h-9 text-sm"
             />
+            {selectedService && startTime && (
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Until {getEndTime()}
+              </p>
+            )}
           </div>
 
           {/* Submit */}
@@ -286,9 +382,19 @@ export default function QuickBookingForm({ selectedDate, onBookingCreated }: Qui
             <Button
               onClick={handleSubmit}
               disabled={submitting}
-              className="w-full h-9 bg-emerald-600 hover:bg-emerald-700 text-white"
+              className="w-full h-9 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
             >
-              {submitting ? 'Booking...' : 'Book Now'}
+              {submitting ? (
+                <>
+                  <Loader2 className="size-3.5 animate-spin" />
+                  Booking...
+                </>
+              ) : (
+                <>
+                  <Plus className="size-3.5" />
+                  Book Now
+                </>
+              )}
             </Button>
           </div>
         </div>

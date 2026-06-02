@@ -37,20 +37,11 @@ Agent: Main Agent
 Task: Build all API routes
 
 Work Log:
-- Created 8 API route files:
-  - /api/customers (GET, POST, PUT, DELETE) with search
-  - /api/staff (GET, POST, PUT, DELETE) with active filter
-  - /api/services (GET, POST, PUT, DELETE) with active filter
-  - /api/appointments (GET, POST, PUT, DELETE) with date/status/staff filters
-  - /api/payments (GET, POST, PUT) with status/method filters
-  - /api/dashboard (GET) - aggregated today's data
-  - /api/reports (GET) - revenue, top services/customers, charts
-  - /api/seed (POST) - seed demo data
+- Created 8 API route files for customers, staff, services, appointments, payments, dashboard, reports, and seed
+- All CRUD APIs functional with proper error handling
 
 Stage Summary:
 - All CRUD APIs functional with proper error handling
-- Dashboard returns today's appointments, revenue, pending payments, staff workload
-- Reports support daily/weekly/monthly periods with custom date ranges
 
 ---
 Task ID: 3-b
@@ -58,25 +49,10 @@ Agent: Full-stack Developer (subagent)
 Task: Build complete frontend (9 components)
 
 Work Log:
-- Created Zustand store at src/lib/salon-store.ts
-- Built 9 salon components:
-  - Sidebar.tsx - Navigation with emerald gradient, mobile responsive
-  - DashboardView.tsx - Stats cards, status breakdown, staff workload, appointments
-  - QuickBookingForm.tsx - Fast appointment creation with customer search
-  - AppointmentDialog.tsx - Status management, payment tracking, notes
-  - AppointmentsView.tsx - Day/week calendar view with time slots
-  - CustomersView.tsx - Search, CRUD, visit history
-  - StaffView.tsx - Role badges, active toggle, CRUD
-  - ServicesView.tsx - Price in RWF, duration, active toggle, CRUD
-  - ReportsView.tsx - Revenue charts, top services/customers, pie charts
-- Updated page.tsx with sidebar layout and tab switching
-- All components use shadcn/ui, Lucide icons, emerald/teal color scheme
+- Built 9 salon components with Zustand store
 
 Stage Summary:
 - Full SPA with 6 navigable modules
-- Emerald/teal color scheme throughout
-- Responsive design with mobile hamburger menu
-- All CRUD operations functional
 
 ---
 Task ID: 4
@@ -84,25 +60,11 @@ Agent: Full-stack Developer (subagent) + Main Agent fixes
 Task: Fix and polish the salon management system
 
 Work Log:
-- Auto-create Payment record when Appointment is created (POST /api/appointments)
-- Improved seed data: 30 days of history, 211 appointments, 12 customers, 8 services
-- Enhanced Sidebar: emerald gradient, active indicator with left border, search button, appointment count badge
-- Enhanced DashboardView: quick actions, clickable stat cards, pending payments list, staff workload bars
-- Enhanced AppointmentsView: overlapping appointments side-by-side, current time indicator, compact time slots
-- Enhanced CustomersView: last visit date, total spent, enhanced visit history
-- Enhanced ReportsView: collected vs outstanding stats, sparkline trend, prominent date range
-- Created CommandPalette.tsx: Ctrl+K search, customer/appointment search, quick navigation
-- Fixed page.tsx layout: removed incorrect md:ml-64, added min-w-0 to main
-- Added validation to appointment POST handler
-- Added proper try-catch to appointment creation API
-- Updated salon-store.ts with commandOpen/setCommandOpen state
+- Auto-create Payment record when Appointment is created
+- Enhanced all views, created CommandPalette
 
 Stage Summary:
 - Production-ready salon management system with all 7 required modules
-- Auto-payment creation ensures data consistency
-- 211 demo appointments for realistic testing
-- Command palette for quick navigation (Ctrl+K)
-- ESLint: 0 errors, all APIs return 200
 
 ---
 Task ID: 5
@@ -110,55 +72,12 @@ Agent: Main Agent
 Task: Implement User Access Control (PIN-based auth with role-based permissions)
 
 Work Log:
-- Added User model to Prisma schema (name, hashed PIN, role, staffId link)
-- Created auth utility library (src/lib/auth.ts) with:
-  - SHA-256 PIN hashing via Web Crypto API
-  - HMAC-signed session tokens (base64 + SHA-256 HMAC)
-  - Session cookie management (HttpOnly, 7-day expiry)
-  - ROLE_PERMISSIONS matrix for 3 roles: admin, receptionist, stylist
-- Created 3 auth API routes:
-  - POST /api/auth/login - validates name+PIN, sets session cookie
-  - POST /api/auth/logout - clears session cookie
-  - GET /api/auth/me - returns current user + permissions
-- Created auth context (src/lib/auth-context.tsx) with:
-  - AuthProvider wrapping entire app
-  - useAuth() hook for components
-  - usePermission() and useCanAccess() helper hooks
-- Created LoginPage component with:
-  - PIN-based login form with show/hide PIN toggle
-  - Demo account quick-fill buttons
-  - Loading states and error feedback
-- Updated page.tsx with auth flow (AuthProvider → login gate → authenticated app)
-- Updated Sidebar with:
-  - Role-based navigation filtering (stylists can't see Staff/Reports)
-  - User info display with role badge
-  - Sign out button
-- Updated all views with role-based restrictions:
-  - DashboardView: stylists see own data only, hide revenue/payments
-  - AppointmentsView: stylists see own appointments only, no quick booking
-  - CustomersView: stylists have read-only access
-  - StaffView: receptionists view-only, stylists blocked
-  - ServicesView: receptionists/stylists view-only
-  - ReportsView: stylists see "Access Restricted" page
-  - AppointmentDialog: stylists can update status but not manage payments/delete
-- Created auth guard middleware (src/lib/auth-guard.ts) for API protection
-- Protected all API routes:
-  - /api/appointments - stylist: own appointments only, can update status/notes
-  - /api/customers - stylist: read-only
-  - /api/staff - admin: full CRUD, others: view only
-  - /api/services - admin: full CRUD, others: view only
-  - /api/payments - admin/receptionist only
-  - /api/dashboard - all authenticated, stylists see filtered data
-  - /api/reports - admin/receptionist only
-- Updated seed data with 3 demo users (Admin/1234, Alice/5678, Marie/9012)
-- ESLint: 0 errors, build succeeds
+- Added User model, auth utility library, 3 auth API routes, auth context, LoginPage
+- Protected all API routes with auth guards
+- All frontend views respect role-based permissions
 
 Stage Summary:
 - Full PIN-based authentication with 3 roles
-- Permission matrix: Admin (full), Receptionist (appointments+customers), Stylist (own appointments+view)
-- Session management via HMAC-signed HttpOnly cookies
-- All API routes protected with auth guards
-- All frontend views respect role-based permissions
 - Demo accounts: Admin (1234), Alice-Receptionist (5678), Marie-Stylist (9012)
 
 ---
@@ -167,30 +86,13 @@ Agent: Main Agent
 Task: Fix critical runtime errors (JSON.parse, TypeError, auth flow)
 
 Work Log:
-- Diagnosed root cause: `requireAuth()` called without `req` parameter in ALL API routes
-  - Caused `TypeError: Cannot read properties of undefined (reading 'cookies')` at auth-guard.ts:15
-  - This was the primary reason for all 500 errors on protected routes
-- Fixed auth-guard.ts: made `req` parameter optional, added `getSession()` fallback from `next/headers`
-  - When `req` is provided, uses synchronous `req.cookies` (faster)
-  - When `req` is omitted, uses async `getSession()` via `cookies()` API (works in all contexts)
-- Fixed login flow: login API now returns `permissions` in response
-  - Previously, auth-context.tsx made an extra `/api/auth/me` call after login
-  - That call returned 401 because the session cookie wasn't available yet
-  - Now, login response includes both `user` and `permissions` — no extra call needed
-- Fixed DashboardView.tsx: replaced `permissions?.canAccessModule?.('reports')` with `permissions && permissions.reports !== 'none'`
-  - The `canAccessModule` method doesn't exist on the Permissions interface
-- Added proper error handling to all frontend fetch calls:
-  - DashboardView, Sidebar, AppointmentsView, CustomersView, StaffView, ServicesView, ReportsView, QuickBookingForm, CommandPalette
-  - Now checks `r.ok` before calling `r.json()`
-  - Handles errors gracefully instead of crashing with JSON.parse errors
-- Verified all APIs return 200 with session cookie
-- ESLint: 0 errors
+- Fixed requireAuth() to make req parameter optional
+- Fixed login flow to return permissions in response
+- Fixed DashboardView permissions check
+- Added proper error handling to all frontend fetch calls
 
 Stage Summary:
-- All 500 errors fixed (requireAuth now works with/without req parameter)
-- Login flow works end-to-end (cookie set + permissions returned in one response)
-- Frontend handles API errors gracefully (no more JSON.parse crashes)
-- All 7 modules functional with role-based access control
+- All 500 errors fixed, login flow works end-to-end
 
 ---
 Task ID: 7
@@ -198,34 +100,39 @@ Agent: Main Agent
 Task: Fix session persistence in sandbox/iframe environment (dual auth)
 
 Work Log:
-- Diagnosed: After login, API calls still return 401 because HttpOnly cookies aren't sent in sandbox/iframe cross-origin context
-- Implemented dual authentication strategy:
-  1. Primary: HttpOnly cookies (secure, same-origin)
-  2. Fallback: Authorization Bearer header from localStorage (works in iframe/sandbox)
-- Updated auth-context.tsx:
-  - Added `authFetch()` helper that automatically adds `Authorization: Bearer <token>` header
-  - Login stores session token in localStorage (via `data.token` from login response)
-  - refreshSession also checks localStorage for token
-  - Logout clears both cookie and localStorage
-- Updated auth-guard.ts:
-  - `getSessionFromRequest(req)` now checks cookie first, then Authorization header
-  - Both methods verified to work independently
-- Updated login API (route.ts):
-  - Now returns `token` in response body for client-side localStorage storage
-  - Cookie still set as before (HttpOnly)
-- Updated /api/auth/me route:
-  - Now also checks Authorization header as fallback
-- Updated ALL API routes to pass `req: NextRequest` to `requireAuth()`:
-  - dashboard, appointments, customers, staff, services, payments, reports
-  - This enables Authorization header verification
-- Updated ALL frontend components to use `authFetch()` instead of `fetch()`:
-  - DashboardView, Sidebar, AppointmentsView, CustomersView, StaffView, ServicesView, ReportsView
-  - QuickBookingForm, AppointmentDialog, CommandPalette
-- Verified with curl: Bearer token authentication works for all endpoints
-- ESLint: 0 errors
+- Implemented dual authentication: cookies (primary) + Bearer token (fallback)
+- All API routes and frontend components use the new auth flow
 
 Stage Summary:
-- Dual authentication: cookies (primary) + Bearer token (fallback)
-- Session persists across page loads via localStorage
-- All API routes and frontend components use the new auth flow
-- Dashboard and all modules now load successfully after login
+- Dual authentication working, session persists across page loads
+
+---
+Task ID: 8
+Agent: Main Agent
+Task: Comprehensive UI overhaul with shadcn/ui components
+
+Work Log:
+- Fixed backend auth issues (dev server was running stale code; restart fixed all 500 errors)
+- Verified all APIs return 200 with Bearer token authentication
+- Redesigned page.tsx: SidebarProvider wrapper, SidebarInset for content, sticky header with SidebarTrigger, Sonner Toaster
+- Redesigned Sidebar.tsx: Full shadcn Sidebar component with SidebarHeader/Content/Footer/Group/Menu, emerald gradient via CSS, Avatar for user, role-based nav filtering, mobile Sheet-based sidebar
+- Redesigned LoginPage.tsx: Card with CardHeader/Title/Description/Footer, Alert for errors, Button for show/hide PIN, demo account quick-fill buttons
+- Redesigned DashboardView.tsx: CardHeader/CardDescription for all cards, Progress component for workload bars, ScrollArea for scrollable lists, Separator between sections, status badges with colored dots
+- Redesigned AppointmentsView.tsx: Tabs/TabsList/TabsTrigger for Day/Week toggle, border-l-[3px] status color indicators, isToday rings, current time indicator with glow
+- Redesigned QuickBookingForm.tsx: CardHeader with Zap icon, autocomplete dropdown with click-outside handling, X clear button, Loader2 spinner on submit
+- Redesigned ReportsView.tsx: Tabs for Revenue/Breakdown/Rankings, Sparkline SVG trends, ArrowUpRight/ArrowDownRight indicators, Legend in pie charts, mini progress bars in rankings
+- Redesigned CustomersView.tsx: Table/TableHeader/Body/Row/Cell for list view, ToggleGroup for grid/list toggle, Avatar with initials, Dialog with DialogDescription/Footer, ScrollArea for visit history
+- Redesigned StaffView.tsx: Avatar with role-specific colors, Switch with stopPropagation, role icons in cards and Select items, Active/Inactive sections
+- Redesigned ServicesView.tsx: Scissors icon in emerald-50 box, DollarSign/Timer input icons, 2-column form layout, Active/Inactive sections
+- Redesigned AppointmentDialog.tsx: Avatar with initials for customer/stylist, Separator between all sections, service price banner, Banknote/Smartphone icons for payment methods
+- Migrated all toasts from @/hooks/use-toast to sonner (toast.success/toast.error)
+- Updated globals.css with emerald→teal gradient for [data-sidebar="sidebar"]
+- ESLint: 0 errors, All APIs verified working
+
+Stage Summary:
+- Complete shadcn/ui redesign of all 11 salon components
+- Sidebar uses proper shadcn Sidebar component with collapsible="offcanvas"
+- All views use shadcn patterns: Tabs, Table, Progress, Avatar, ScrollArea, Dialog
+- Toasts migrated to Sonner for consistent styling
+- Emerald/teal color scheme throughout
+- All 7 modules verified working with Bearer token auth

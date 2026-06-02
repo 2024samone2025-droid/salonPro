@@ -2,6 +2,9 @@
 
 import { AuthProvider, useAuth } from '@/lib/auth-context'
 import { useSalonStore } from '@/lib/salon-store'
+import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
+import { Toaster } from '@/components/ui/sonner'
+import { Separator } from '@/components/ui/separator'
 import Sidebar from '@/components/salon/Sidebar'
 import DashboardView from '@/components/salon/DashboardView'
 import AppointmentsView from '@/components/salon/AppointmentsView'
@@ -11,7 +14,7 @@ import ServicesView from '@/components/salon/ServicesView'
 import ReportsView from '@/components/salon/ReportsView'
 import CommandPalette from '@/components/salon/CommandPalette'
 import LoginPage from '@/components/salon/LoginPage'
-import { Skeleton } from '@/components/ui/skeleton'
+import { Sparkles, Loader2 } from 'lucide-react'
 
 function MainContent() {
   const { activeTab } = useSalonStore()
@@ -36,20 +39,28 @@ function MainContent() {
 
 function AuthenticatedApp() {
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-emerald-50/50 via-background to-teal-50/30">
-      <div className="flex flex-1">
-        <Sidebar />
-        <main className="flex-1 p-4 sm:p-6 overflow-auto min-w-0">
+    <>
+      <Sidebar />
+      <SidebarInset>
+        <header className="flex h-12 items-center gap-2 border-b bg-background/80 backdrop-blur-sm px-4 sticky top-0 z-10">
+          <SidebarTrigger className="-ml-1" />
+          <Separator orientation="vertical" className="h-5" />
+          <div className="flex items-center gap-2">
+            <Sparkles className="size-4 text-emerald-600" />
+            <span className="text-sm font-medium text-muted-foreground">SalonPro Rwanda</span>
+          </div>
+        </header>
+        <div className="flex-1 p-4 sm:p-6 overflow-auto min-w-0">
           <MainContent />
-        </main>
-      </div>
-      <footer className="border-t bg-card/80 backdrop-blur-sm py-3 px-6 text-center mt-auto">
-        <p className="text-xs text-muted-foreground">
-          © 2025 <span className="font-semibold text-emerald-700">SalonPro Rwanda</span> — Salon Management System
-        </p>
-      </footer>
+        </div>
+        <footer className="border-t bg-card/80 backdrop-blur-sm py-3 px-6 text-center">
+          <p className="text-xs text-muted-foreground">
+            &copy; 2025 <span className="font-semibold text-emerald-700">SalonPro Rwanda</span> — Salon Management System
+          </p>
+        </footer>
+      </SidebarInset>
       <CommandPalette />
-    </div>
+    </>
   )
 }
 
@@ -60,8 +71,11 @@ function AppShell() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-background to-teal-50">
         <div className="space-y-4 text-center">
-          <div className="size-12 border-3 border-emerald-200 border-t-emerald-600 rounded-full animate-spin mx-auto" />
-          <p className="text-sm text-muted-foreground">Loading...</p>
+          <div className="relative mx-auto size-12">
+            <div className="absolute inset-0 rounded-full border-2 border-emerald-200" />
+            <Loader2 className="absolute inset-0 size-12 text-emerald-600 animate-spin" />
+          </div>
+          <p className="text-sm text-muted-foreground">Loading SalonPro...</p>
         </div>
       </div>
     )
@@ -76,8 +90,11 @@ function AppShell() {
 
 export default function Home() {
   return (
-    <AuthProvider>
-      <AppShell />
-    </AuthProvider>
+    <SidebarProvider>
+      <AuthProvider>
+        <AppShell />
+        <Toaster position="top-right" richColors />
+      </AuthProvider>
+    </SidebarProvider>
   )
 }

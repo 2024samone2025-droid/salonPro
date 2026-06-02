@@ -140,3 +140,9 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* SalonPro custom sidebar gradient */
+[data-sidebar="sidebar"] {
+  background: linear-gradient(to bottom, oklch(0.378 0.077 168.94), oklch(0.26 0.06 170), oklch(0.36 0.08 175.49)) !important;
+  color: oklch(0.905 0.03 166.113);
+}

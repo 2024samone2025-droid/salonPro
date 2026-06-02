@@ -1,20 +1,31 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Separator } from '@/components/ui/separator'
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Plus, Scissors, Clock } from 'lucide-react'
-import { toast } from '@/hooks/use-toast'
+import {
+  Plus,
+  Scissors,
+  Clock,
+  Loader2,
+  DollarSign,
+  Timer,
+} from 'lucide-react'
+import { toast } from 'sonner'
 import { useAuth } from '@/lib/auth-context'
 
 interface Service {
@@ -35,6 +46,7 @@ export default function ServicesView() {
   const [loading, setLoading] = useState(true)
   const [showDialog, setShowDialog] = useState(false)
   const [editing, setEditing] = useState<Service | null>(null)
+  const [saving, setSaving] = useState(false)
 
   const { permissions, authFetch } = useAuth()
   const canManage = permissions?.canManageServices ?? false
@@ -52,10 +64,11 @@ export default function ServicesView() {
       setServices(Array.isArray(data) ? data : [])
     } catch (err) {
       console.error(err)
+      toast.error('Failed to load services')
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [authFetch])
 
   useEffect(() => {
     fetchServices()
@@ -80,27 +93,40 @@ export default function ServicesView() {
   }
 
   const handleSave = async () => {
-    if (!name || !price || !duration) {
-      toast({ title: 'Error', description: 'All fields are required', variant: 'destructive' })
+    if (!name.trim()) {
+      toast.error('Service name is required')
       return
     }
+    if (!price || parseFloat(price) <= 0) {
+      toast.error('Please enter a valid price')
+      return
+    }
+    if (!duration || parseInt(duration) <= 0) {
+      toast.error('Please enter a valid duration')
+      return
+    }
+    setSaving(true)
     try {
       const method = editing ? 'PUT' : 'POST'
       const body = editing
-        ? { id: editing.id, name, price: parseFloat(price), duration: parseInt(duration) }
-        : { name, price: parseFloat(price), duration: parseInt(duration) }
+        ? { id: editing.id, name: name.trim(), price: parseFloat(price), duration: parseInt(duration) }
+        : { name: name.trim(), price: parseFloat(price), duration: parseInt(duration) }
       const res = await authFetch('/api/services', {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
       if (res.ok) {
-        toast({ title: editing ? 'Service Updated' : 'Service Added' })
+        toast.success(editing ? 'Service updated' : 'Service added')
         setShowDialog(false)
         fetchServices()
+      } else {
+        toast.error('Failed to save service')
       }
     } catch {
-      toast({ title: 'Error', description: 'Failed to save service', variant: 'destructive' })
+      toast.error('Failed to save service')
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -113,146 +139,270 @@ export default function ServicesView() {
         body: JSON.stringify({ id: s.id, active: !s.active }),
       })
       if (res.ok) {
-        toast({ title: s.active ? 'Service Deactivated' : 'Service Activated' })
+        toast.success(s.active ? `${s.name} deactivated` : `${s.name} activated`)
         fetchServices()
+      } else {
+        toast.error('Failed to update service status')
       }
     } catch {
-      toast({ title: 'Error', description: 'Failed to update service', variant: 'destructive' })
+      toast.error('Failed to update service status')
     }
   }
 
+  const activeServices = services.filter((s) => s.active)
+  const inactiveServices = services.filter((s) => !s.active)
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Services</h2>
-          <p className="text-muted-foreground text-sm">{services.length} services {!canManage && '• View only'}</p>
+          <h2 className="text-2xl font-bold tracking-tight">Services</h2>
+          <p className="text-muted-foreground text-sm">
+            {services.length} service{services.length !== 1 ? 's' : ''} &middot; {activeServices.length} active
+            {!canManage && ' · View only'}
+          </p>
         </div>
         {canManage && (
           <Button
             className="bg-emerald-600 hover:bg-emerald-700 text-white"
             onClick={openAdd}
           >
-            <Plus className="size-4 mr-1" />
+            <Plus className="size-4 mr-1.5" />
             Add Service
           </Button>
         )}
       </div>
 
-      {/* Service List */}
+      {/* Loading State */}
       {loading ? (
-        <div className="space-y-3">
-          {[...Array(5)].map((_, i) => (
-            <Skeleton key={i} className="h-16 w-full" />
-          ))}
-        </div>
-      ) : services.length === 0 ? (
-        <Card>
-          <CardContent className="p-8 text-center">
-            <Scissors className="size-12 mx-auto text-muted-foreground mb-3" />
-            <p className="text-muted-foreground">No services yet.</p>
-            {canManage && (
-              <Button
-                className="mt-4 bg-emerald-600 hover:bg-emerald-700 text-white"
-                onClick={openAdd}
-              >
-                <Plus className="size-4 mr-1" /> Add Service
-              </Button>
-            )}
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {services.map((s) => (
-            <Card
-              key={s.id}
-              className={`transition-opacity ${!s.active ? 'opacity-60' : ''}`}
-            >
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between">
-                  <div
-                    className={`flex-1 ${canManage ? 'cursor-pointer' : ''}`}
-                    onClick={() => openEdit(s)}
-                  >
-                    <p className="font-medium">{s.name}</p>
-                    <p className="text-lg font-bold text-emerald-700 mt-1">
-                      {formatRWF(s.price)}
-                    </p>
-                    <p className="text-sm text-muted-foreground flex items-center gap-1 mt-0.5">
-                      <Clock className="size-3" />
-                      {s.duration} min
-                    </p>
-                  </div>
-                  {canManage ? (
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-muted-foreground">
-                        {s.active ? 'Active' : 'Inactive'}
-                      </span>
-                      <Switch
-                        checked={s.active}
-                        onCheckedChange={() => handleToggleActive(s)}
-                      />
-                    </div>
-                  ) : (
-                    <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
-                      {s.active ? 'Active' : 'Inactive'}
-                    </span>
-                  )}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[...Array(6)].map((_, i) => (
+            <Card key={i}>
+              <CardContent className="p-6">
+                <div className="space-y-3">
+                  <Skeleton className="h-5 w-32" />
+                  <Skeleton className="h-7 w-28" />
+                  <Skeleton className="h-4 w-20" />
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
+      ) : services.length === 0 ? (
+        /* Empty State */
+        <Card>
+          <CardContent className="p-12 text-center">
+            <div className="mx-auto size-16 rounded-full bg-emerald-50 flex items-center justify-center mb-4">
+              <Scissors className="size-8 text-emerald-600" />
+            </div>
+            <h3 className="text-lg font-semibold mb-1">No services yet</h3>
+            <p className="text-muted-foreground text-sm mb-4">
+              Get started by adding your first service
+            </p>
+            {canManage && (
+              <Button
+                className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                onClick={openAdd}
+              >
+                <Plus className="size-4 mr-1.5" /> Add Service
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          {/* Active Services */}
+          {activeServices.length > 0 && (
+            <div>
+              <h3 className="text-sm font-medium text-muted-foreground mb-3 uppercase tracking-wider">
+                Active ({activeServices.length})
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {activeServices.map((s) => (
+                  <Card
+                    key={s.id}
+                    className={`transition-all hover:shadow-md hover:border-emerald-200 ${canManage ? 'cursor-pointer' : ''}`}
+                    onClick={() => openEdit(s)}
+                  >
+                    <CardHeader className="pb-2 pt-4 px-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="size-9 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
+                            <Scissors className="size-4 text-emerald-600" />
+                          </div>
+                          <CardTitle className="text-base">{s.name}</CardTitle>
+                        </div>
+                        {canManage ? (
+                          <div
+                            className="flex items-center gap-2"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Label htmlFor={`svc-active-${s.id}`} className="text-xs text-muted-foreground cursor-pointer">
+                              Active
+                            </Label>
+                            <Switch
+                              id={`svc-active-${s.id}`}
+                              checked={s.active}
+                              onCheckedChange={() => handleToggleActive(s)}
+                            />
+                          </div>
+                        ) : (
+                          <Badge variant="outline" className="text-xs text-emerald-700 border-emerald-200 shrink-0">
+                            Active
+                          </Badge>
+                        )}
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pb-4 px-4 pt-2">
+                      <div className="flex items-end justify-between">
+                        <div className="space-y-1">
+                          <p className="text-xl font-bold text-emerald-700">
+                            {formatRWF(s.price)}
+                          </p>
+                          <p className="text-sm text-muted-foreground flex items-center gap-1">
+                            <Clock className="size-3.5" />
+                            {s.duration} min
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Inactive Services */}
+          {inactiveServices.length > 0 && (
+            <div>
+              <h3 className="text-sm font-medium text-muted-foreground mb-3 uppercase tracking-wider">
+                Inactive ({inactiveServices.length})
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {inactiveServices.map((s) => (
+                  <Card
+                    key={s.id}
+                    className={`opacity-60 transition-all hover:shadow-md ${canManage ? 'cursor-pointer' : ''}`}
+                    onClick={() => openEdit(s)}
+                  >
+                    <CardHeader className="pb-2 pt-4 px-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="size-9 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                            <Scissors className="size-4 text-muted-foreground" />
+                          </div>
+                          <CardTitle className="text-base">{s.name}</CardTitle>
+                        </div>
+                        {canManage ? (
+                          <div
+                            className="flex items-center gap-2"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Label htmlFor={`svc-active-${s.id}`} className="text-xs text-muted-foreground cursor-pointer">
+                              Inactive
+                            </Label>
+                            <Switch
+                              id={`svc-active-${s.id}`}
+                              checked={s.active}
+                              onCheckedChange={() => handleToggleActive(s)}
+                            />
+                          </div>
+                        ) : (
+                          <Badge variant="outline" className="text-xs text-muted-foreground shrink-0">
+                            Inactive
+                          </Badge>
+                        )}
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pb-4 px-4 pt-2">
+                      <div className="flex items-end justify-between">
+                        <div className="space-y-1">
+                          <p className="text-xl font-bold text-muted-foreground">
+                            {formatRWF(s.price)}
+                          </p>
+                          <p className="text-sm text-muted-foreground flex items-center gap-1">
+                            <Clock className="size-3.5" />
+                            {s.duration} min
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       {/* Add/Edit Dialog - only for admin */}
-      {canManage && (
-        <Dialog open={showDialog} onOpenChange={setShowDialog}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>{editing ? 'Edit Service' : 'Add Service'}</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-3">
-              <div>
-                <Label>Service Name</Label>
-                <Input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g., Haircut"
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label>Price (RWF)</Label>
-                <Input
-                  type="number"
-                  value={price}
-                  onChange={(e) => setPrice(e.target.value)}
-                  placeholder="5000"
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label>Duration (minutes)</Label>
-                <Input
-                  type="number"
-                  value={duration}
-                  onChange={(e) => setDuration(e.target.value)}
-                  placeholder="30"
-                  className="mt-1"
-                />
-              </div>
-              <Button
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
-                onClick={handleSave}
-              >
-                {editing ? 'Save Changes' : 'Add Service'}
-              </Button>
+      <Dialog open={showDialog} onOpenChange={setShowDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editing ? 'Edit Service' : 'Add Service'}</DialogTitle>
+            <DialogDescription>
+              {editing
+                ? 'Update the service details below.'
+                : 'Fill in the details to add a new service offering.'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="svc-name">Service Name *</Label>
+              <Input
+                id="svc-name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g., Haircut, Braids, Manicure"
+              />
             </div>
-          </DialogContent>
-        </Dialog>
-      )}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="svc-price">Price (RWF) *</Label>
+                <div className="relative">
+                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                  <Input
+                    id="svc-price"
+                    type="number"
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value)}
+                    placeholder="5000"
+                    className="pl-9"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="svc-duration">Duration (min) *</Label>
+                <div className="relative">
+                  <Timer className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                  <Input
+                    id="svc-duration"
+                    type="number"
+                    value={duration}
+                    onChange={(e) => setDuration(e.target.value)}
+                    placeholder="30"
+                    className="pl-9"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDialog(false)}>
+              Cancel
+            </Button>
+            <Button
+              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+              onClick={handleSave}
+              disabled={saving}
+            >
+              {saving && <Loader2 className="size-4 mr-1.5 animate-spin" />}
+              {editing ? 'Save Changes' : 'Add Service'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

@@ -1,20 +1,29 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Progress } from '@/components/ui/progress'
+import { Separator } from '@/components/ui/separator'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   CalendarDays,
-  DollarSign,
+  Banknote,
   AlertCircle,
   Clock,
   Plus,
   Users,
   BarChart3,
   ArrowRight,
-  Lock,
+  UserCheck,
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { useSalonStore } from '@/lib/salon-store'
@@ -58,20 +67,12 @@ function formatRWF(amount: number) {
   return new Intl.NumberFormat('en-RW').format(amount) + ' RWF'
 }
 
-const statusColors: Record<string, string> = {
-  booked: 'bg-blue-100 text-blue-800',
-  confirmed: 'bg-emerald-100 text-emerald-800',
-  in_progress: 'bg-amber-100 text-amber-800',
-  completed: 'bg-green-100 text-green-800',
-  no_show: 'bg-red-100 text-red-800',
-}
-
-const statusLabels: Record<string, string> = {
-  booked: 'Booked',
-  confirmed: 'Confirmed',
-  in_progress: 'In Progress',
-  completed: 'Completed',
-  no_show: 'No Show',
+const statusConfig: Record<string, { label: string; bgClass: string; dotClass: string }> = {
+  booked: { label: 'Booked', bgClass: 'bg-blue-100 text-blue-800 hover:bg-blue-100', dotClass: 'bg-blue-500' },
+  confirmed: { label: 'Confirmed', bgClass: 'bg-emerald-100 text-emerald-800 hover:bg-emerald-100', dotClass: 'bg-emerald-500' },
+  in_progress: { label: 'In Progress', bgClass: 'bg-amber-100 text-amber-800 hover:bg-amber-100', dotClass: 'bg-amber-500' },
+  completed: { label: 'Completed', bgClass: 'bg-green-100 text-green-800 hover:bg-green-100', dotClass: 'bg-green-500' },
+  no_show: { label: 'No Show', bgClass: 'bg-red-100 text-red-800 hover:bg-red-100', dotClass: 'bg-red-500' },
 }
 
 export default function DashboardView() {
@@ -96,21 +97,27 @@ export default function DashboardView() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <Skeleton className="h-8 w-64" />
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-4 w-64" />
+          </div>
+        </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {[...Array(3)].map((_, i) => (
-            <Skeleton key={i} className="h-20" />
+            <Skeleton key={i} className="h-20 rounded-xl" />
           ))}
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => (
-            <Skeleton key={i} className="h-28" />
+            <Skeleton key={i} className="h-28 rounded-xl" />
           ))}
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Skeleton className="h-64" />
-          <Skeleton className="h-64" />
+          <Skeleton className="h-48 rounded-xl" />
+          <Skeleton className="h-48 rounded-xl" />
         </div>
+        <Skeleton className="h-64 rounded-xl" />
       </div>
     )
   }
@@ -124,13 +131,13 @@ export default function DashboardView() {
       {/* Date header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">
+          <h2 className="text-2xl font-bold tracking-tight">
             {isStylist ? 'My Dashboard' : 'Dashboard'}
           </h2>
-          <p className="text-muted-foreground flex items-center gap-2">
+          <CardDescription className="flex items-center gap-2 mt-1">
             <CalendarDays className="size-4" />
             {today}
-          </p>
+          </CardDescription>
         </div>
       </div>
 
@@ -142,7 +149,7 @@ export default function DashboardView() {
             className="h-auto py-3 px-4 justify-start gap-3 hover:bg-emerald-50 hover:border-emerald-300 transition-colors"
             onClick={() => setActiveTab('appointments')}
           >
-            <div className="flex items-center justify-center size-8 rounded-lg bg-emerald-100 shrink-0">
+            <div className="flex items-center justify-center size-9 rounded-lg bg-emerald-100 shrink-0">
               <Plus className="size-4 text-emerald-700" />
             </div>
             <div className="text-left">
@@ -155,7 +162,7 @@ export default function DashboardView() {
             className="h-auto py-3 px-4 justify-start gap-3 hover:bg-emerald-50 hover:border-emerald-300 transition-colors"
             onClick={() => setActiveTab('customers')}
           >
-            <div className="flex items-center justify-center size-8 rounded-lg bg-teal-100 shrink-0">
+            <div className="flex items-center justify-center size-9 rounded-lg bg-teal-100 shrink-0">
               <Users className="size-4 text-teal-700" />
             </div>
             <div className="text-left">
@@ -169,7 +176,7 @@ export default function DashboardView() {
               className="h-auto py-3 px-4 justify-start gap-3 hover:bg-emerald-50 hover:border-emerald-300 transition-colors col-span-2 sm:col-span-1"
               onClick={() => setActiveTab('reports')}
             >
-              <div className="flex items-center justify-center size-8 rounded-lg bg-green-100 shrink-0">
+              <div className="flex items-center justify-center size-9 rounded-lg bg-green-100 shrink-0">
                 <BarChart3 className="size-4 text-green-700" />
               </div>
               <div className="text-left">
@@ -184,38 +191,42 @@ export default function DashboardView() {
       {/* Stat cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card
-          className="cursor-pointer hover:shadow-md transition-all hover:border-emerald-300"
+          className="cursor-pointer hover:shadow-md transition-all hover:border-emerald-300 group"
           onClick={() => setActiveTab('appointments')}
         >
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center size-10 rounded-lg bg-emerald-100">
-                <CalendarDays className="size-5 text-emerald-700" />
+          <CardHeader className="pb-2">
+            <CardDescription>{isStylist ? 'My Appointments' : "Today's Appointments"}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center size-10 rounded-xl bg-emerald-100 shrink-0 group-hover:bg-emerald-200 transition-colors">
+                  <CalendarDays className="size-5 text-emerald-700" />
+                </div>
+                <span className="text-3xl font-bold tracking-tight">{data.totalAppointmentsToday}</span>
               </div>
-              <div className="flex-1">
-                <p className="text-sm text-muted-foreground">{isStylist ? 'My Appointments' : "Today's Appointments"}</p>
-                <p className="text-2xl font-bold">{data.totalAppointmentsToday}</p>
-              </div>
-              <ArrowRight className="size-4 text-muted-foreground/50" />
+              <ArrowRight className="size-4 text-muted-foreground/50 group-hover:text-emerald-600 transition-colors" />
             </div>
           </CardContent>
         </Card>
 
         {!isStylist && (
           <Card
-            className="cursor-pointer hover:shadow-md transition-all hover:border-green-300"
+            className="cursor-pointer hover:shadow-md transition-all hover:border-green-300 group"
             onClick={() => setActiveTab('reports')}
           >
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center size-10 rounded-lg bg-green-100">
-                  <DollarSign className="size-5 text-green-700" />
+            <CardHeader className="pb-2">
+              <CardDescription>Today&apos;s Revenue</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center size-10 rounded-xl bg-green-100 shrink-0 group-hover:bg-green-200 transition-colors">
+                    <Banknote className="size-5 text-green-700" />
+                  </div>
+                  <span className="text-xl font-bold tracking-tight">{formatRWF(data.todayRevenue)}</span>
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm text-muted-foreground">Today&apos;s Revenue</p>
-                  <p className="text-2xl font-bold">{formatRWF(data.todayRevenue)}</p>
-                </div>
-                <ArrowRight className="size-4 text-muted-foreground/50" />
+                <ArrowRight className="size-4 text-muted-foreground/50 group-hover:text-green-600 transition-colors" />
               </div>
             </CardContent>
           </Card>
@@ -224,37 +235,41 @@ export default function DashboardView() {
         {canManagePayments && (
           <>
             <Card
-              className="cursor-pointer hover:shadow-md transition-all hover:border-amber-300"
+              className="cursor-pointer hover:shadow-md transition-all hover:border-amber-300 group"
               onClick={() => setActiveTab('appointments')}
             >
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center justify-center size-10 rounded-lg bg-amber-100">
-                    <AlertCircle className="size-5 text-amber-700" />
+              <CardHeader className="pb-2">
+                <CardDescription>Pending Payments</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-center size-10 rounded-xl bg-amber-100 shrink-0 group-hover:bg-amber-200 transition-colors">
+                      <AlertCircle className="size-5 text-amber-700" />
+                    </div>
+                    <span className="text-3xl font-bold tracking-tight">{data.pendingPayments}</span>
                   </div>
-                  <div className="flex-1">
-                    <p className="text-sm text-muted-foreground">Pending Payments</p>
-                    <p className="text-2xl font-bold">{data.pendingPayments}</p>
-                  </div>
-                  <ArrowRight className="size-4 text-muted-foreground/50" />
+                  <ArrowRight className="size-4 text-muted-foreground/50 group-hover:text-amber-600 transition-colors" />
                 </div>
               </CardContent>
             </Card>
 
             <Card
-              className="cursor-pointer hover:shadow-md transition-all hover:border-red-300"
+              className="cursor-pointer hover:shadow-md transition-all hover:border-red-300 group"
               onClick={() => setActiveTab('appointments')}
             >
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center justify-center size-10 rounded-lg bg-red-100">
-                    <Clock className="size-5 text-red-700" />
+              <CardHeader className="pb-2">
+                <CardDescription>Pending Amount</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-center size-10 rounded-xl bg-red-100 shrink-0 group-hover:bg-red-200 transition-colors">
+                      <Clock className="size-5 text-red-700" />
+                    </div>
+                    <span className="text-xl font-bold tracking-tight">{formatRWF(data.pendingAmount)}</span>
                   </div>
-                  <div className="flex-1">
-                    <p className="text-sm text-muted-foreground">Pending Amount</p>
-                    <p className="text-2xl font-bold">{formatRWF(data.pendingAmount)}</p>
-                  </div>
-                  <ArrowRight className="size-4 text-muted-foreground/50" />
+                  <ArrowRight className="size-4 text-muted-foreground/50 group-hover:text-red-600 transition-colors" />
                 </div>
               </CardContent>
             </Card>
@@ -262,57 +277,83 @@ export default function DashboardView() {
         )}
       </div>
 
+      <Separator />
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Status Breakdown */}
         <Card>
-          <CardHeader className="pb-3">
+          <CardHeader>
             <CardTitle className="text-lg">Status Breakdown</CardTitle>
+            <CardDescription>Appointment status distribution for today</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
-              {Object.entries(data.statusBreakdown).map(([status, count]) => (
-                <Badge key={status} className={`${statusColors[status] || 'bg-gray-100 text-gray-800'} border-0 text-sm px-3 py-1`}>
-                  {statusLabels[status] || status}: {count}
-                </Badge>
-              ))}
+              {Object.entries(data.statusBreakdown).map(([status, count]) => {
+                const config = statusConfig[status]
+                return (
+                  <Badge
+                    key={status}
+                    variant="secondary"
+                    className={`${config?.bgClass || 'bg-gray-100 text-gray-800'} border-0 text-sm px-3 py-1.5 gap-1.5`}
+                  >
+                    <span className={`size-2 rounded-full ${config?.dotClass || 'bg-gray-400'}`} />
+                    {config?.label || status}: {count}
+                  </Badge>
+                )
+              })}
             </div>
           </CardContent>
         </Card>
 
         {/* Staff Workload */}
         <Card>
-          <CardHeader className="pb-3">
+          <CardHeader>
             <CardTitle className="text-lg">{isStylist ? 'My Workload' : 'Staff Workload Today'}</CardTitle>
+            <CardDescription>Percentage of 8-hour workday allocated</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
+            <div className="space-y-4">
               {data.staffWorkload
                 .filter((s) => isStylist ? s.id === user?.staffId : s.role === 'stylist')
                 .map((s) => {
-                  const totalHours = Math.floor((s.totalMinutes || s.appointmentCount * 45) / 60)
-                  const totalMins = (s.totalMinutes || s.appointmentCount * 45) % 60
+                  const totalMinutes = s.totalMinutes || s.appointmentCount * 45
+                  const totalHours = Math.floor(totalMinutes / 60)
+                  const totalMins = totalMinutes % 60
                   const maxMinutes = 480 // 8 hours
-                  const percentage = Math.min(((s.totalMinutes || s.appointmentCount * 45) / maxMinutes) * 100, 100)
-                  const barColor = percentage > 75 ? 'bg-amber-500' : percentage > 50 ? 'bg-emerald-500' : 'bg-teal-400'
+                  const percentage = Math.min((totalMinutes / maxMinutes) * 100, 100)
                   return (
-                    <div key={s.id}>
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm font-medium">{s.name}</span>
+                    <div key={s.id} className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center justify-center size-7 rounded-full bg-emerald-100">
+                            <UserCheck className="size-3.5 text-emerald-700" />
+                          </div>
+                          <span className="text-sm font-medium">{s.name}</span>
+                        </div>
                         <span className="text-xs text-muted-foreground">
-                          {totalHours}h {totalMins}m ({s.appointmentCount} appts)
+                          {totalHours}h {totalMins}m &middot; {s.appointmentCount} appt{s.appointmentCount !== 1 ? 's' : ''}
                         </span>
                       </div>
-                      <div className="w-full h-3 bg-muted rounded-full overflow-hidden">
-                        <div
-                          className={`h-full rounded-full transition-all duration-500 ${barColor}`}
-                          style={{ width: `${percentage}%` }}
+                      <div className="flex items-center gap-3">
+                        <Progress
+                          value={percentage}
+                          className={`h-2.5 flex-1 ${
+                            percentage > 75
+                              ? '[&>[data-slot=progress-indicator]]:bg-amber-500'
+                              : percentage > 50
+                              ? '[&>[data-slot=progress-indicator]]:bg-emerald-500'
+                              : '[&>[data-slot=progress-indicator]]:bg-teal-400'
+                          }`}
                         />
+                        <span className="text-xs font-medium text-muted-foreground w-10 text-right">
+                          {Math.round(percentage)}%
+                        </span>
                       </div>
                     </div>
                   )
                 })}
               {data.staffWorkload.filter((s) => isStylist ? s.id === user?.staffId : s.role === 'stylist').length === 0 && (
-                <p className="text-sm text-muted-foreground">No staff data.</p>
+                <p className="text-sm text-muted-foreground">No staff data available.</p>
               )}
             </div>
           </CardContent>
@@ -321,77 +362,107 @@ export default function DashboardView() {
 
       {/* Pending Payments List - only for admin/receptionist */}
       {canManagePayments && data.pendingPaymentsList && data.pendingPaymentsList.length > 0 && (
-        <Card>
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">Pending Payments</CardTitle>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-emerald-700"
-                onClick={() => setActiveTab('appointments')}
-              >
-                View All <ArrowRight className="size-3 ml-1" />
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2 max-h-64 overflow-y-auto">
-              {data.pendingPaymentsList.slice(0, 10).map((p) => {
-                const remaining = p.appointment.service.price - p.amount
-                return (
-                  <div
-                    key={p.id}
-                    className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
-                  >
-                    <div>
-                      <p className="text-sm font-medium">{p.appointment.customer.name}</p>
-                      <p className="text-xs text-muted-foreground">{p.appointment.service.name}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-bold text-amber-700">{formatRWF(remaining)}</p>
-                      <p className="text-xs text-muted-foreground">of {formatRWF(p.appointment.service.price)}</p>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </CardContent>
-        </Card>
+        <>
+          <Separator />
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg">Pending Payments</CardTitle>
+                  <CardDescription>Outstanding balances requiring attention</CardDescription>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-emerald-700 hover:text-emerald-800"
+                  onClick={() => setActiveTab('appointments')}
+                >
+                  View All <ArrowRight className="size-3 ml-1" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="max-h-72">
+                <div className="space-y-2">
+                  {data.pendingPaymentsList.slice(0, 10).map((p) => {
+                    const remaining = p.appointment.service.price - p.amount
+                    const paidPercent = p.appointment.service.price > 0
+                      ? (p.amount / p.appointment.service.price) * 100
+                      : 0
+                    return (
+                      <div
+                        key={p.id}
+                        className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{p.appointment.customer.name}</p>
+                          <p className="text-xs text-muted-foreground truncate">{p.appointment.service.name}</p>
+                          {p.amount > 0 && (
+                            <div className="mt-1.5">
+                              <Progress value={paidPercent} className="h-1.5 [&>[data-slot=progress-indicator]]:bg-amber-400" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="text-right ml-4 shrink-0">
+                          <p className="text-sm font-bold text-amber-700">{formatRWF(remaining)}</p>
+                          <p className="text-xs text-muted-foreground">of {formatRWF(p.appointment.service.price)}</p>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </>
       )}
 
       {/* Today's Appointments */}
+      <Separator />
       <Card>
-        <CardHeader className="pb-3">
+        <CardHeader>
           <CardTitle className="text-lg">{isStylist ? 'My Appointments Today' : "Today's Appointments"}</CardTitle>
+          <CardDescription>{data.todayAppointments.length} appointment{data.todayAppointments.length !== 1 ? 's' : ''} scheduled</CardDescription>
         </CardHeader>
         <CardContent>
           {data.todayAppointments.length === 0 ? (
-            <p className="text-muted-foreground text-sm">No appointments today.</p>
-          ) : (
-            <div className="space-y-2 max-h-96 overflow-y-auto">
-              {data.todayAppointments.map((apt) => (
-                <div
-                  key={apt.id}
-                  className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="text-sm font-mono text-muted-foreground w-20">
-                      {apt.startTime} - {apt.endTime}
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">{apt.customer.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {apt.service.name} • {apt.staff.name}
-                      </p>
-                    </div>
-                  </div>
-                  <Badge className={`${statusColors[apt.status] || ''} border-0`}>
-                    {statusLabels[apt.status] || apt.status}
-                  </Badge>
-                </div>
-              ))}
+            <div className="text-center py-8">
+              <CalendarDays className="size-10 mx-auto text-muted-foreground/30 mb-3" />
+              <p className="text-muted-foreground text-sm">No appointments today.</p>
             </div>
+          ) : (
+            <ScrollArea className="max-h-96">
+              <div className="space-y-2">
+                {data.todayAppointments.map((apt) => {
+                  const config = statusConfig[apt.status]
+                  return (
+                    <div
+                      key={apt.id}
+                      className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="text-sm font-mono text-muted-foreground w-24 shrink-0">
+                          {apt.startTime} - {apt.endTime}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium truncate">{apt.customer.name}</p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {apt.service.name} &middot; {apt.staff.name}
+                          </p>
+                        </div>
+                      </div>
+                      <Badge
+                        variant="secondary"
+                        className={`${config?.bgClass || ''} border-0 shrink-0 ml-2`}
+                      >
+                        <span className={`size-1.5 rounded-full ${config?.dotClass || 'bg-gray-400'}`} />
+                        {config?.label || apt.status}
+                      </Badge>
+                    </div>
+                  )
+                })}
+              </div>
+            </ScrollArea>
           )}
         </CardContent>
       </Card>
