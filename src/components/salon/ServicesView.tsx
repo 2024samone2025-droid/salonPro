@@ -165,7 +165,6 @@ export default function ServicesView() {
         </div>
         {canManage && (
           <Button
-            className="bg-emerald-600 hover:bg-emerald-700 text-white"
             onClick={openAdd}
           >
             <Plus className="size-4 mr-1.5" />
@@ -193,8 +192,8 @@ export default function ServicesView() {
         /* Empty State */
         <Card>
           <CardContent className="p-12 text-center">
-            <div className="mx-auto size-16 rounded-full bg-emerald-50 flex items-center justify-center mb-4">
-              <Scissors className="size-8 text-emerald-600" />
+            <div className="mx-auto size-16 rounded-full bg-primary/5 flex items-center justify-center mb-4">
+              <Scissors className="size-8 text-primary" />
             </div>
             <h3 className="text-lg font-semibold mb-1">No services yet</h3>
             <p className="text-muted-foreground text-sm mb-4">
@@ -202,7 +201,6 @@ export default function ServicesView() {
             </p>
             {canManage && (
               <Button
-                className="bg-emerald-600 hover:bg-emerald-700 text-white"
                 onClick={openAdd}
               >
                 <Plus className="size-4 mr-1.5" /> Add Service
@@ -222,14 +220,14 @@ export default function ServicesView() {
                 {activeServices.map((s) => (
                   <Card
                     key={s.id}
-                    className={`transition-all hover:shadow-md hover:border-emerald-200 ${canManage ? 'cursor-pointer' : ''}`}
+                    className={`transition-all hover:shadow-md ${canManage ? 'cursor-pointer' : ''}`}
                     onClick={() => openEdit(s)}
                   >
                     <CardHeader className="pb-2 pt-4 px-4">
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-2">
-                          <div className="size-9 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
-                            <Scissors className="size-4 text-emerald-600" />
+                          <div className="size-9 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
+                            <Scissors className="size-4 text-primary" />
                           </div>
                           <CardTitle className="text-base">{s.name}</CardTitle>
                         </div>
@@ -248,7 +246,7 @@ export default function ServicesView() {
                             />
                           </div>
                         ) : (
-                          <Badge variant="outline" className="text-xs text-emerald-700 border-emerald-200 shrink-0">
+                          <Badge variant="outline" className="text-xs text-primary border-primary/20 shrink-0">
                             Active
                           </Badge>
                         )}
@@ -257,7 +255,7 @@ export default function ServicesView() {
                     <CardContent className="pb-4 px-4 pt-2">
                       <div className="flex items-end justify-between">
                         <div className="space-y-1">
-                          <p className="text-xl font-bold text-emerald-700">
+                          <p className="text-xl font-bold text-primary">
                             {formatRWF(s.price)}
                           </p>
                           <p className="text-sm text-muted-foreground flex items-center gap-1">
@@ -393,7 +391,6 @@ export default function ServicesView() {
               Cancel
             </Button>
             <Button
-              className="bg-emerald-600 hover:bg-emerald-700 text-white"
               onClick={handleSave}
               disabled={saving}
             >

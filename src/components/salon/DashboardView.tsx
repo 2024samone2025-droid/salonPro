@@ -24,6 +24,7 @@ import {
   BarChart3,
   ArrowRight,
   UserCheck,
+  TrendingUp,
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { useSalonStore } from '@/lib/salon-store'
@@ -68,11 +69,11 @@ function formatRWF(amount: number) {
 }
 
 const statusConfig: Record<string, { label: string; bgClass: string; dotClass: string }> = {
-  booked: { label: 'Booked', bgClass: 'bg-blue-100 text-blue-800 hover:bg-blue-100', dotClass: 'bg-blue-500' },
-  confirmed: { label: 'Confirmed', bgClass: 'bg-emerald-100 text-emerald-800 hover:bg-emerald-100', dotClass: 'bg-emerald-500' },
-  in_progress: { label: 'In Progress', bgClass: 'bg-amber-100 text-amber-800 hover:bg-amber-100', dotClass: 'bg-amber-500' },
-  completed: { label: 'Completed', bgClass: 'bg-green-100 text-green-800 hover:bg-green-100', dotClass: 'bg-green-500' },
-  no_show: { label: 'No Show', bgClass: 'bg-red-100 text-red-800 hover:bg-red-100', dotClass: 'bg-red-500' },
+  booked: { label: 'Booked', bgClass: 'bg-sky-50 text-sky-700 hover:bg-sky-50', dotClass: 'bg-sky-500' },
+  confirmed: { label: 'Confirmed', bgClass: 'bg-emerald-50 text-emerald-700 hover:bg-emerald-50', dotClass: 'bg-emerald-500' },
+  in_progress: { label: 'In Progress', bgClass: 'bg-amber-50 text-amber-700 hover:bg-amber-50', dotClass: 'bg-amber-500' },
+  completed: { label: 'Completed', bgClass: 'bg-zinc-100 text-zinc-600 hover:bg-zinc-100', dotClass: 'bg-zinc-400' },
+  no_show: { label: 'No Show', bgClass: 'bg-red-50 text-red-700 hover:bg-red-50', dotClass: 'bg-red-500' },
 }
 
 export default function DashboardView() {
@@ -105,21 +106,26 @@ export default function DashboardView() {
   }, [authFetch])
 
   useEffect(() => {
+    let cancelled = false
     authFetch('/api/dashboard')
       .then((r) => {
         if (!r.ok) throw new Error(`Failed to fetch (${r.status})`)
         return r.json()
       })
       .then((d) => {
-        setData(d)
-        setError(null)
+        if (!cancelled) {
+          setData(d)
+          setLoading(false)
+        }
       })
       .catch((err) => {
-        console.error('Dashboard fetch error:', err)
-        setError(err.message || 'Failed to load dashboard data')
-        setData(null)
+        if (!cancelled) {
+          console.error('Dashboard fetch error:', err)
+          setError(err.message || 'Failed to load dashboard data')
+          setLoading(false)
+        }
       })
-      .finally(() => setLoading(false))
+    return () => { cancelled = true }
   }, [authFetch])
 
   if (loading) {
@@ -136,7 +142,7 @@ export default function DashboardView() {
             <Skeleton key={i} className="h-20 rounded-xl" />
           ))}
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {[...Array(4)].map((_, i) => (
             <Skeleton key={i} className="h-28 rounded-xl" />
           ))}
@@ -182,11 +188,11 @@ export default function DashboardView() {
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           <Button
             variant="outline"
-            className="h-auto py-3 px-4 justify-start gap-3 hover:bg-emerald-50 hover:border-emerald-300 transition-colors"
+            className="h-auto py-3 px-4 justify-start gap-3 hover:bg-primary/5 hover:border-primary/20 transition-colors"
             onClick={() => setActiveTab('appointments')}
           >
-            <div className="flex items-center justify-center size-8 sm:size-9 rounded-lg bg-emerald-100 shrink-0">
-              <Plus className="size-4 text-emerald-700" />
+            <div className="flex items-center justify-center size-8 sm:size-9 rounded-lg bg-primary/10 shrink-0">
+              <Plus className="size-4 text-primary" />
             </div>
             <div className="text-left">
               <p className="text-xs sm:text-sm font-semibold">New Appointment</p>
@@ -195,11 +201,11 @@ export default function DashboardView() {
           </Button>
           <Button
             variant="outline"
-            className="h-auto py-3 px-4 justify-start gap-3 hover:bg-emerald-50 hover:border-emerald-300 transition-colors"
+            className="h-auto py-3 px-4 justify-start gap-3 hover:bg-primary/5 hover:border-primary/20 transition-colors"
             onClick={() => setActiveTab('customers')}
           >
-            <div className="flex items-center justify-center size-8 sm:size-9 rounded-lg bg-teal-100 shrink-0">
-              <Users className="size-4 text-teal-700" />
+            <div className="flex items-center justify-center size-8 sm:size-9 rounded-lg bg-primary/10 shrink-0">
+              <Users className="size-4 text-primary" />
             </div>
             <div className="text-left">
               <p className="text-xs sm:text-sm font-semibold">Add Customer</p>
@@ -209,11 +215,11 @@ export default function DashboardView() {
           {permissions && permissions.reports !== 'none' && (
             <Button
               variant="outline"
-              className="h-auto py-3 px-4 justify-start gap-3 hover:bg-emerald-50 hover:border-emerald-300 transition-colors col-span-2 sm:col-span-1"
+              className="h-auto py-3 px-4 justify-start gap-3 hover:bg-primary/5 hover:border-primary/20 transition-colors col-span-2 sm:col-span-1"
               onClick={() => setActiveTab('reports')}
             >
-              <div className="flex items-center justify-center size-8 sm:size-9 rounded-lg bg-green-100 shrink-0">
-                <BarChart3 className="size-4 text-green-700" />
+              <div className="flex items-center justify-center size-8 sm:size-9 rounded-lg bg-primary/10 shrink-0">
+                <BarChart3 className="size-4 text-primary" />
               </div>
               <div className="text-left">
                 <p className="text-xs sm:text-sm font-semibold">View Reports</p>
@@ -225,45 +231,35 @@ export default function DashboardView() {
       )}
 
       {/* Stat cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <Card
-          className="cursor-pointer hover:shadow-md transition-all hover:border-emerald-300 group"
+          className="cursor-pointer hover:shadow-md transition-all group"
           onClick={() => setActiveTab('appointments')}
         >
-          <CardHeader className="pb-2">
-            <CardDescription>{isStylist ? 'My Appointments' : "Today's Appointments"}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center size-10 rounded-xl bg-emerald-100 shrink-0 group-hover:bg-emerald-200 transition-colors">
-                  <CalendarDays className="size-5 text-emerald-700" />
-                </div>
-                <span className="text-2xl sm:text-3xl font-bold tracking-tight">{data.totalAppointmentsToday}</span>
+          <CardContent className="pt-4 pb-3 px-4">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="flex items-center justify-center size-8 rounded-lg bg-primary/10 shrink-0 group-hover:bg-primary/15 transition-colors">
+                <CalendarDays className="size-4 text-primary" />
               </div>
-              <ArrowRight className="size-4 text-muted-foreground/50 group-hover:text-emerald-600 transition-colors" />
+              <CardDescription className="text-[11px] sm:text-xs leading-tight">{isStylist ? 'My Appointments' : "Today's Appointments"}</CardDescription>
             </div>
+            <span className="text-2xl sm:text-3xl font-bold tracking-tight">{data.totalAppointmentsToday}</span>
           </CardContent>
         </Card>
 
         {!isStylist && (
           <Card
-            className="cursor-pointer hover:shadow-md transition-all hover:border-green-300 group"
+            className="cursor-pointer hover:shadow-md transition-all group"
             onClick={() => setActiveTab('reports')}
           >
-            <CardHeader className="pb-2">
-              <CardDescription>Today&apos;s Revenue</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center justify-center size-10 rounded-xl bg-green-100 shrink-0 group-hover:bg-green-200 transition-colors">
-                    <Banknote className="size-5 text-green-700" />
-                  </div>
-                  <span className="text-lg sm:text-xl font-bold tracking-tight">{formatRWF(data.todayRevenue)}</span>
+            <CardContent className="pt-4 pb-3 px-4">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="flex items-center justify-center size-8 rounded-lg bg-emerald-500/10 shrink-0 group-hover:bg-emerald-500/15 transition-colors">
+                  <TrendingUp className="size-4 text-emerald-600" />
                 </div>
-                <ArrowRight className="size-4 text-muted-foreground/50 group-hover:text-green-600 transition-colors" />
+                <CardDescription className="text-[11px] sm:text-xs leading-tight">Today&apos;s Revenue</CardDescription>
               </div>
+              <span className="text-base sm:text-xl font-bold tracking-tight">{formatRWF(data.todayRevenue)}</span>
             </CardContent>
           </Card>
         )}
@@ -271,42 +267,32 @@ export default function DashboardView() {
         {canManagePayments && (
           <>
             <Card
-              className="cursor-pointer hover:shadow-md transition-all hover:border-amber-300 group"
+              className="cursor-pointer hover:shadow-md transition-all group"
               onClick={() => setActiveTab('appointments')}
             >
-              <CardHeader className="pb-2">
-                <CardDescription>Pending Payments Today</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center justify-center size-10 rounded-xl bg-amber-100 shrink-0 group-hover:bg-amber-200 transition-colors">
-                      <AlertCircle className="size-5 text-amber-700" />
-                    </div>
-                    <span className="text-2xl sm:text-3xl font-bold tracking-tight">{data.pendingPayments}</span>
+              <CardContent className="pt-4 pb-3 px-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="flex items-center justify-center size-8 rounded-lg bg-amber-500/10 shrink-0 group-hover:bg-amber-500/15 transition-colors">
+                    <AlertCircle className="size-4 text-amber-600" />
                   </div>
-                  <ArrowRight className="size-4 text-muted-foreground/50 group-hover:text-amber-600 transition-colors" />
+                  <CardDescription className="text-[11px] sm:text-xs leading-tight">Pending Payments</CardDescription>
                 </div>
+                <span className="text-2xl sm:text-3xl font-bold tracking-tight">{data.pendingPayments}</span>
               </CardContent>
             </Card>
 
             <Card
-              className="cursor-pointer hover:shadow-md transition-all hover:border-red-300 group"
+              className="cursor-pointer hover:shadow-md transition-all group"
               onClick={() => setActiveTab('appointments')}
             >
-              <CardHeader className="pb-2">
-                <CardDescription>Outstanding Today</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center justify-center size-10 rounded-xl bg-red-100 shrink-0 group-hover:bg-red-200 transition-colors">
-                      <Clock className="size-5 text-red-700" />
-                    </div>
-                    <span className="text-lg sm:text-xl font-bold tracking-tight">{formatRWF(data.pendingAmount)}</span>
+              <CardContent className="pt-4 pb-3 px-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="flex items-center justify-center size-8 rounded-lg bg-red-500/10 shrink-0 group-hover:bg-red-500/15 transition-colors">
+                    <Clock className="size-4 text-red-600" />
                   </div>
-                  <ArrowRight className="size-4 text-muted-foreground/50 group-hover:text-red-600 transition-colors" />
+                  <CardDescription className="text-[11px] sm:text-xs leading-tight">Outstanding</CardDescription>
                 </div>
+                <span className="text-base sm:text-xl font-bold tracking-tight">{formatRWF(data.pendingAmount)}</span>
               </CardContent>
             </Card>
           </>
@@ -319,7 +305,7 @@ export default function DashboardView() {
         {/* Status Breakdown */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Status Breakdown</CardTitle>
+            <CardTitle className="text-base font-semibold">Status Breakdown</CardTitle>
             <CardDescription>Appointment status distribution for today</CardDescription>
           </CardHeader>
           <CardContent>
@@ -330,9 +316,9 @@ export default function DashboardView() {
                   <Badge
                     key={status}
                     variant="secondary"
-                    className={`${config?.bgClass || 'bg-gray-100 text-gray-800'} border-0 text-sm px-3 py-1.5 gap-1.5`}
+                    className={`${config?.bgClass || 'bg-zinc-100 text-zinc-600'} border-0 text-xs sm:text-sm px-2.5 sm:px-3 py-1 sm:py-1.5 gap-1.5 font-medium`}
                   >
-                    <span className={`size-2 rounded-full ${config?.dotClass || 'bg-gray-400'}`} />
+                    <span className={`size-1.5 sm:size-2 rounded-full ${config?.dotClass || 'bg-zinc-400'}`} />
                     {config?.label || status}: {count}
                   </Badge>
                 )
@@ -344,7 +330,7 @@ export default function DashboardView() {
         {/* Staff Workload */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">{isStylist ? 'My Workload' : 'Staff Workload Today'}</CardTitle>
+            <CardTitle className="text-base font-semibold">{isStylist ? 'My Workload' : 'Staff Workload Today'}</CardTitle>
             <CardDescription>Percentage of 8-hour workday allocated</CardDescription>
           </CardHeader>
           <CardContent>
@@ -361,8 +347,8 @@ export default function DashboardView() {
                     <div key={s.id} className="space-y-2">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <div className="flex items-center justify-center size-7 rounded-full bg-emerald-100">
-                            <UserCheck className="size-3.5 text-emerald-700" />
+                          <div className="flex items-center justify-center size-7 rounded-full bg-zinc-100">
+                            <UserCheck className="size-3.5 text-zinc-600" />
                           </div>
                           <span className="text-sm font-medium">{s.name}</span>
                         </div>
@@ -373,12 +359,12 @@ export default function DashboardView() {
                       <div className="flex items-center gap-3">
                         <Progress
                           value={percentage}
-                          className={`h-2.5 flex-1 ${
+                          className={`h-2 flex-1 ${
                             percentage > 75
                               ? '[&>[data-slot=progress-indicator]]:bg-amber-500'
                               : percentage > 50
-                              ? '[&>[data-slot=progress-indicator]]:bg-emerald-500'
-                              : '[&>[data-slot=progress-indicator]]:bg-teal-400'
+                              ? '[&>[data-slot=progress-indicator]]:bg-primary'
+                              : '[&>[data-slot=progress-indicator]]:bg-zinc-300'
                           }`}
                         />
                         <span className="text-xs font-medium text-muted-foreground w-10 text-right">
@@ -404,13 +390,13 @@ export default function DashboardView() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-lg">Pending Payments</CardTitle>
+                  <CardTitle className="text-base font-semibold">Pending Payments</CardTitle>
                   <CardDescription>Outstanding balances requiring attention</CardDescription>
                 </div>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-emerald-700 hover:text-emerald-800"
+                  className="text-primary hover:text-primary/80"
                   onClick={() => setActiveTab('appointments')}
                 >
                   View All <ArrowRight className="size-3 ml-1" />
@@ -428,7 +414,7 @@ export default function DashboardView() {
                     return (
                       <div
                         key={p.id}
-                        className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                        className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
                       >
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate">{p.appointment.customer.name}</p>
@@ -440,7 +426,7 @@ export default function DashboardView() {
                           )}
                         </div>
                         <div className="text-right ml-2 sm:ml-4 shrink-0">
-                          <p className="text-sm font-bold text-amber-700">{formatRWF(remaining)}</p>
+                          <p className="text-sm font-semibold text-foreground">{formatRWF(remaining)}</p>
                           <p className="text-xs text-muted-foreground">of {formatRWF(p.appointment.service.price)}</p>
                         </div>
                       </div>
@@ -457,7 +443,7 @@ export default function DashboardView() {
       <Separator />
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">{isStylist ? 'My Appointments Today' : "Today's Appointments"}</CardTitle>
+          <CardTitle className="text-base font-semibold">{isStylist ? 'My Appointments Today' : "Today's Appointments"}</CardTitle>
           <CardDescription>{data.todayAppointments.length} appointment{data.todayAppointments.length !== 1 ? 's' : ''} scheduled</CardDescription>
         </CardHeader>
         <CardContent>
@@ -474,7 +460,7 @@ export default function DashboardView() {
                   return (
                     <div
                       key={apt.id}
-                      className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                      className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         <div className="text-[11px] sm:text-sm font-mono text-muted-foreground w-20 sm:w-24 shrink-0">
@@ -489,9 +475,9 @@ export default function DashboardView() {
                       </div>
                       <Badge
                         variant="secondary"
-                        className={`${config?.bgClass || ''} border-0 shrink-0 ml-2`}
+                        className={`${config?.bgClass || ''} border-0 shrink-0 ml-2 text-xs`}
                       >
-                        <span className={`size-1.5 rounded-full ${config?.dotClass || 'bg-gray-400'}`} />
+                        <span className={`size-1.5 rounded-full ${config?.dotClass || 'bg-zinc-400'}`} />
                         {config?.label || apt.status}
                       </Badge>
                     </div>

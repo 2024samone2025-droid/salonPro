@@ -206,11 +206,11 @@ export default function QuickBookingForm({ selectedDate, onBookingCreated }: Qui
   if (!canCreate) return null
 
   return (
-    <Card className="border-emerald-200 bg-gradient-to-r from-emerald-50/80 to-teal-50/50 shadow-sm">
+    <Card className="border-primary/20 bg-primary/[0.03] shadow-sm">
       <CardHeader className="pb-3">
         <div className="flex items-center gap-2">
-          <div className="flex items-center justify-center size-8 rounded-lg bg-emerald-100">
-            <Zap className="size-4 text-emerald-700" />
+          <div className="flex items-center justify-center size-8 rounded-lg bg-primary/10">
+            <Zap className="size-4 text-primary" />
           </div>
           <div>
             <CardTitle className="text-sm">Quick Booking</CardTitle>
@@ -283,7 +283,7 @@ export default function QuickBookingForm({ selectedDate, onBookingCreated }: Qui
             )}
             {!customerId && (
               <button
-                className="text-xs text-emerald-700 hover:text-emerald-800 mt-1.5 flex items-center gap-1 font-medium"
+                className="text-xs text-primary hover:text-primary/80 mt-1.5 flex items-center gap-1 font-medium"
                 onClick={() => {
                   setShowNewCustomer(!showNewCustomer)
                   setShowDropdown(false)
@@ -382,7 +382,7 @@ export default function QuickBookingForm({ selectedDate, onBookingCreated }: Qui
             <Button
               onClick={handleSubmit}
               disabled={submitting}
-              className="w-full h-10 sm:h-9 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
+              className="w-full h-10 sm:h-9 shadow-sm"
             >
               {submitting ? (
                 <>

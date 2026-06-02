@@ -46,7 +46,7 @@ function AuthenticatedApp() {
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="h-5" />
           <div className="flex items-center gap-2">
-            <Sparkles className="size-4 text-emerald-600" />
+            <Sparkles className="size-4 text-primary" />
             <span className="text-sm font-medium text-muted-foreground hidden sm:inline">SalonPro Rwanda</span>
             <span className="text-sm font-medium text-muted-foreground sm:hidden">SalonPro</span>
           </div>
@@ -56,7 +56,7 @@ function AuthenticatedApp() {
         </div>
         <footer className="border-t bg-card/80 backdrop-blur-sm py-2 sm:py-3 px-4 sm:px-6 text-center mt-auto">
           <p className="text-xs text-muted-foreground">
-            &copy; 2025 <span className="font-semibold text-emerald-700">SalonPro Rwanda</span> — Salon Management System
+            &copy; 2025 <span className="font-semibold">SalonPro Rwanda</span> — Salon Management System
           </p>
         </footer>
       </SidebarInset>
@@ -70,11 +70,11 @@ function AppShell() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-background to-teal-50">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-primary/5">
         <div className="space-y-4 text-center">
           <div className="relative mx-auto size-12">
-            <div className="absolute inset-0 rounded-full border-2 border-emerald-200" />
-            <Loader2 className="absolute inset-0 size-12 text-emerald-600 animate-spin" />
+            <div className="absolute inset-0 rounded-full border-2 border-primary/20" />
+            <Loader2 className="absolute inset-0 size-12 text-primary animate-spin" />
           </div>
           <p className="text-sm text-muted-foreground">Loading SalonPro...</p>
         </div>

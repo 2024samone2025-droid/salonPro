@@ -79,11 +79,11 @@ function getInitials(name: string) {
 }
 
 const statusColors: Record<string, string> = {
-  booked: 'bg-blue-100 text-blue-800',
-  confirmed: 'bg-emerald-100 text-emerald-800',
-  in_progress: 'bg-amber-100 text-amber-800',
-  completed: 'bg-green-100 text-green-800',
-  no_show: 'bg-red-100 text-red-800',
+  booked: 'bg-sky-50 text-sky-700',
+  confirmed: 'bg-emerald-50 text-emerald-700',
+  in_progress: 'bg-amber-50 text-amber-700',
+  completed: 'bg-zinc-100 text-zinc-600',
+  no_show: 'bg-red-50 text-red-700',
 }
 
 const statusLabels: Record<string, string> = {
@@ -277,7 +277,7 @@ export default function AppointmentDialog({ appointment, open, onClose, onUpdate
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="flex items-start gap-3">
               <Avatar className="size-9 border shrink-0">
-                <AvatarFallback className="bg-emerald-50 text-emerald-700 text-xs font-semibold">
+                <AvatarFallback className="bg-primary/5 text-primary text-xs font-semibold">
                   {getInitials(appointment.customer.name)}
                 </AvatarFallback>
               </Avatar>
@@ -330,9 +330,9 @@ export default function AppointmentDialog({ appointment, open, onClose, onUpdate
             </div>
           </div>
 
-          <div className="flex items-center justify-between rounded-lg bg-emerald-50 px-3 py-2 sm:px-4 sm:py-3">
-            <span className="text-sm text-emerald-800 font-medium">Service Price</span>
-            <span className="text-lg font-bold text-emerald-700">{formatRWF(appointment.service.price)}</span>
+          <div className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2 sm:px-4 sm:py-3">
+            <span className="text-sm text-foreground font-medium">Service Price</span>
+            <span className="text-lg font-bold">{formatRWF(appointment.service.price)}</span>
           </div>
 
           {/* Status Change Buttons */}
@@ -347,7 +347,7 @@ export default function AppointmentDialog({ appointment, open, onClose, onUpdate
                       key={s}
                       size="sm"
                       variant={s === 'no_show' ? 'destructive' : 'default'}
-                      className={s !== 'no_show' ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : ''}
+                      className=""
                       onClick={() => handleStatusChange(s)}
                       disabled={updating}
                     >
@@ -424,7 +424,7 @@ export default function AppointmentDialog({ appointment, open, onClose, onUpdate
                 </div>
                 <Button
                   size="sm"
-                  className="mt-3 w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+                  className="mt-3 w-full"
                   onClick={handlePaymentUpdate}
                   disabled={updating}
                 >

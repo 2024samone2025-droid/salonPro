@@ -35,10 +35,10 @@ interface Appointment {
 }
 
 const statusConfig: Record<string, { label: string; cardClass: string; dotClass: string; borderClass: string }> = {
-  booked: { label: 'Booked', cardClass: 'bg-blue-50 text-blue-900 border-blue-200', dotClass: 'bg-blue-500', borderClass: 'border-l-blue-500' },
+  booked: { label: 'Booked', cardClass: 'bg-sky-50 text-sky-900 border-sky-200', dotClass: 'bg-sky-500', borderClass: 'border-l-sky-500' },
   confirmed: { label: 'Confirmed', cardClass: 'bg-emerald-50 text-emerald-900 border-emerald-200', dotClass: 'bg-emerald-500', borderClass: 'border-l-emerald-500' },
   in_progress: { label: 'In Progress', cardClass: 'bg-amber-50 text-amber-900 border-amber-200', dotClass: 'bg-amber-500', borderClass: 'border-l-amber-500' },
-  completed: { label: 'Completed', cardClass: 'bg-green-50 text-green-900 border-green-200', dotClass: 'bg-green-500', borderClass: 'border-l-green-500' },
+  completed: { label: 'Completed', cardClass: 'bg-zinc-50 text-zinc-700 border-zinc-200', dotClass: 'bg-zinc-400', borderClass: 'border-l-zinc-400' },
   no_show: { label: 'No Show', cardClass: 'bg-red-50 text-red-900 border-red-200', dotClass: 'bg-red-500', borderClass: 'border-l-red-500' },
 }
 
@@ -273,9 +273,9 @@ export default function AppointmentsView() {
                 key={day.toISOString()}
                 className={`text-center py-2.5 min-h-[44px] rounded-xl transition-all ${
                   isSelected
-                    ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30'
+                    ? 'bg-primary text-primary-foreground shadow-md shadow-primary/30'
                     : isTodayDate
-                    ? 'bg-emerald-100 text-emerald-800 ring-1 ring-emerald-300'
+                    ? 'bg-primary/10 text-primary ring-1 ring-primary/30'
                     : 'hover:bg-accent border border-transparent hover:border-border'
                 }`}
                 onClick={() => {
@@ -290,8 +290,8 @@ export default function AppointmentsView() {
                     variant="secondary"
                     className={`text-[10px] px-1.5 py-0 mt-0.5 ${
                       isSelected
-                        ? 'bg-emerald-500 text-white hover:bg-emerald-500'
-                        : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100'
+                        ? 'bg-primary/80 text-primary-foreground hover:bg-primary/80'
+                        : 'bg-primary/10 text-primary hover:bg-primary/10'
                     }`}
                   >
                     {dayApts.length}
@@ -405,7 +405,7 @@ export default function AppointmentsView() {
       <Card className="overflow-hidden">
         <CardHeader className="pb-2">
           <CardTitle className="text-base flex items-center gap-2">
-            <CalendarDays className="size-4 text-emerald-600" />
+            <CalendarDays className="size-4 text-primary" />
             {formattedSelectedDate}
           </CardTitle>
         </CardHeader>

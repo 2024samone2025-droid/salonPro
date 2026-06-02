@@ -50,9 +50,9 @@ const roleLabels: Record<UserRole, string> = {
 }
 
 const roleBadgeStyles: Record<UserRole, string> = {
-  admin: 'bg-amber-100 text-amber-800 border-amber-200',
-  receptionist: 'bg-violet-100 text-violet-800 border-violet-200',
-  stylist: 'bg-teal-100 text-teal-800 border-teal-200',
+  admin: 'bg-amber-50 text-amber-700 border-amber-200',
+  receptionist: 'bg-violet-50 text-violet-700 border-violet-200',
+  stylist: 'bg-teal-50 text-teal-700 border-teal-200',
 }
 
 export default function SalonSidebar() {
@@ -100,27 +100,27 @@ export default function SalonSidebar() {
       {/* Header: Logo */}
       <SidebarHeader className="px-4 pt-5 pb-4">
         <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center size-9 rounded-lg bg-emerald-600 shadow-lg shadow-emerald-900/50 shrink-0">
-            <Sparkles className="size-5 text-white" />
+          <div className="flex items-center justify-center size-9 rounded-lg bg-primary shadow-lg shrink-0">
+            <Sparkles className="size-5 text-primary-foreground" />
           </div>
           <div className="flex flex-col">
             <span className="text-lg font-bold text-white leading-tight">SalonPro</span>
-            <span className="text-[11px] text-emerald-300/60 leading-tight">Rwanda</span>
+            <span className="text-[11px] text-zinc-400 leading-tight">Rwanda</span>
           </div>
         </div>
       </SidebarHeader>
 
-      <SidebarSeparator className="bg-emerald-800/40" />
+      <SidebarSeparator className="bg-zinc-800" />
 
       {/* Search Button */}
       <div className="px-3 pt-3 pb-1">
         <button
           onClick={() => setCommandOpen(true)}
-          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-emerald-300/50 bg-emerald-800/25 border border-emerald-700/25 hover:bg-emerald-800/40 hover:text-emerald-200 transition-colors"
+          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-zinc-400 bg-zinc-800/60 border border-zinc-700/50 hover:bg-zinc-800 hover:text-zinc-300 transition-colors"
         >
           <Search className="size-4" />
           <span className="flex-1 text-left">Search...</span>
-          <kbd className="text-[10px] bg-emerald-800/50 px-1.5 py-0.5 rounded border border-emerald-700/30 font-mono">
+          <kbd className="text-[10px] bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700/50 font-mono">
             ⌘K
           </kbd>
         </button>
@@ -129,7 +129,7 @@ export default function SalonSidebar() {
       {/* Navigation */}
       <SidebarContent className="px-2 pt-2">
         <SidebarGroup>
-          <SidebarGroupLabel className="text-emerald-400/40 text-[11px] font-semibold uppercase tracking-wider px-1">
+          <SidebarGroupLabel className="text-zinc-500 text-[11px] font-semibold uppercase tracking-wider px-1">
             Navigation
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -147,25 +147,25 @@ export default function SalonSidebar() {
                         transition-all duration-200
                         ${
                           isActive
-                            ? 'bg-emerald-700/50 text-white shadow-md shadow-emerald-950/30 hover:bg-emerald-700/60'
-                            : 'text-emerald-200/60 hover:bg-emerald-800/30 hover:text-emerald-100'
+                            ? 'bg-zinc-800 text-white shadow-sm hover:bg-zinc-800'
+                            : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-200'
                         }
                       `}
                     >
                       <Icon
                         className={`size-5 transition-colors ${
-                          isActive ? 'text-emerald-300' : 'text-emerald-400/50 group-hover:text-emerald-300'
+                          isActive ? 'text-primary' : 'text-zinc-500 group-hover:text-zinc-300'
                         }`}
                       />
                       <span>{item.label}</span>
                       {item.tab === 'appointments' && todayCount !== null && (
-                        <SidebarMenuBadge className="bg-emerald-600 text-white border-0 text-xs min-w-[20px] justify-center">
+                        <SidebarMenuBadge className="bg-primary text-primary-foreground border-0 text-xs min-w-[20px] justify-center">
                           {todayCount}
                         </SidebarMenuBadge>
                       )}
                       {/* Active indicator */}
                       {isActive && (
-                        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-emerald-400" />
+                        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-primary" />
                       )}
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -178,15 +178,15 @@ export default function SalonSidebar() {
 
       {/* Footer: User info & Logout */}
       <SidebarFooter className="px-3 pb-4 pt-2">
-        <Separator className="bg-emerald-800/40 mb-3" />
+        <Separator className="bg-zinc-800 mb-3" />
         <div className="flex items-center gap-3 px-1 mb-2">
-          <Avatar className="size-9 border border-emerald-700/50">
-            <AvatarFallback className="bg-emerald-700/50 text-emerald-200 text-sm font-medium">
+          <Avatar className="size-9 border border-zinc-700">
+            <AvatarFallback className="bg-zinc-800 text-zinc-300 text-sm font-medium">
               {user?.name ? getInitials(user.name) : '??'}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-emerald-100 truncate">
+            <p className="text-sm font-medium text-zinc-200 truncate">
               {user?.name || 'User'}
             </p>
             <Badge
@@ -199,13 +199,13 @@ export default function SalonSidebar() {
         <Button
           variant="ghost"
           size="sm"
-          className="w-full justify-start text-emerald-400/60 hover:text-red-300 hover:bg-red-900/20 transition-colors"
+          className="w-full justify-start text-zinc-500 hover:text-red-400 hover:bg-red-950/30 transition-colors"
           onClick={handleLogout}
         >
           <LogOut className="size-4 mr-2" />
           Sign Out
         </Button>
-        <p className="text-[10px] text-emerald-500/25 text-center mt-2">
+        <p className="text-[10px] text-zinc-600 text-center mt-2">
           v1.2.0 · SalonPro Rwanda
         </p>
       </SidebarFooter>

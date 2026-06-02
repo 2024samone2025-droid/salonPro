@@ -197,7 +197,6 @@ export default function StaffView() {
         </div>
         {canManage && (
           <Button
-            className="bg-emerald-600 hover:bg-emerald-700 text-white"
             onClick={openAdd}
           >
             <Plus className="size-4 mr-1.5" />
@@ -228,8 +227,8 @@ export default function StaffView() {
         /* Empty State */
         <Card>
           <CardContent className="p-12 text-center">
-            <div className="mx-auto size-16 rounded-full bg-emerald-50 flex items-center justify-center mb-4">
-              <UserCog className="size-8 text-emerald-600" />
+            <div className="mx-auto size-16 rounded-full bg-primary/5 flex items-center justify-center mb-4">
+              <UserCog className="size-8 text-primary" />
             </div>
             <h3 className="text-lg font-semibold mb-1">No staff members</h3>
             <p className="text-muted-foreground text-sm mb-4">
@@ -237,7 +236,6 @@ export default function StaffView() {
             </p>
             {canManage && (
               <Button
-                className="bg-emerald-600 hover:bg-emerald-700 text-white"
                 onClick={openAdd}
               >
                 <Plus className="size-4 mr-1.5" /> Add Staff Member
@@ -257,7 +255,7 @@ export default function StaffView() {
                 {activeStaff.map((s) => (
                   <Card
                     key={s.id}
-                    className={`transition-all hover:shadow-md hover:border-emerald-200 ${canManage ? 'cursor-pointer' : ''}`}
+                    className={`transition-all hover:shadow-md ${canManage ? 'cursor-pointer' : ''}`}
                     onClick={() => openEdit(s)}
                   >
                     <CardHeader className="pb-2 pt-4 px-4">
@@ -291,7 +289,7 @@ export default function StaffView() {
                             />
                           </div>
                         ) : (
-                          <Badge variant="outline" className="text-xs text-emerald-700 border-emerald-200">
+                          <Badge variant="outline" className="text-xs text-primary border-primary/20">
                             Active
                           </Badge>
                         )}
@@ -431,7 +429,6 @@ export default function StaffView() {
               Cancel
             </Button>
             <Button
-              className="bg-emerald-600 hover:bg-emerald-700 text-white"
               onClick={handleSave}
               disabled={saving}
             >

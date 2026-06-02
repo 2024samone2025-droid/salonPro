@@ -70,11 +70,11 @@ const statusLabels: Record<string, string> = {
 }
 
 const statusColors: Record<string, string> = {
-  booked: 'bg-blue-100 text-blue-800',
-  confirmed: 'bg-emerald-100 text-emerald-800',
-  in_progress: 'bg-amber-100 text-amber-800',
-  completed: 'bg-green-100 text-green-800',
-  no_show: 'bg-red-100 text-red-800',
+  booked: 'bg-sky-50 text-sky-700',
+  confirmed: 'bg-emerald-50 text-emerald-700',
+  in_progress: 'bg-amber-50 text-amber-700',
+  completed: 'bg-zinc-100 text-zinc-600',
+  no_show: 'bg-red-50 text-red-700',
 }
 
 function formatRWF(amount: number) {
@@ -255,7 +255,7 @@ export default function CustomersView() {
           </ToggleGroup>
           {canEdit && (
             <Button
-              className="bg-emerald-600 hover:bg-emerald-700 text-white h-9 sm:h-10"
+              className="h-9 sm:h-10"
               onClick={() => setShowAddDialog(true)}
             >
               <Plus className="size-4 mr-1.5" />
@@ -311,8 +311,8 @@ export default function CustomersView() {
         /* Empty State */
         <Card>
           <CardContent className="p-12 text-center">
-            <div className="mx-auto size-16 rounded-full bg-emerald-50 flex items-center justify-center mb-4">
-              <User className="size-8 text-emerald-600" />
+            <div className="mx-auto size-16 rounded-full bg-primary/5 flex items-center justify-center mb-4">
+              <User className="size-8 text-primary" />
             </div>
             <h3 className="text-lg font-semibold mb-1">No customers found</h3>
             <p className="text-muted-foreground text-sm mb-4">
@@ -320,7 +320,7 @@ export default function CustomersView() {
             </p>
             {canEdit && !searchQuery && (
               <Button
-                className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                className=""
                 onClick={() => setShowAddDialog(true)}
               >
                 <Plus className="size-4 mr-1.5" /> Add Customer
@@ -337,14 +337,14 @@ export default function CustomersView() {
             return (
               <Card
                 key={customer.id}
-                className="cursor-pointer hover:shadow-md transition-all hover:border-emerald-200"
+                className="cursor-pointer hover:shadow-md transition-all"
                 onClick={() => openDetail(customer)}
               >
                 <CardHeader className="pb-3 pt-4 px-4">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
-                      <Avatar className="size-10 border border-emerald-100">
-                        <AvatarFallback className="bg-emerald-50 text-emerald-700 text-sm font-semibold">
+                      <Avatar className="size-10 border border-primary/10">
+                        <AvatarFallback className="bg-primary/5 text-primary text-sm font-semibold">
                           {getInitials(customer.name)}
                         </AvatarFallback>
                       </Avatar>
@@ -373,7 +373,7 @@ export default function CustomersView() {
                         <p className="text-xs text-muted-foreground">No visits yet</p>
                       )}
                       {totalSpent > 0 && (
-                        <p className="text-xs font-semibold text-emerald-700">
+                        <p className="text-xs font-semibold text-primary">
                           {formatRWF(totalSpent)}
                         </p>
                       )}
@@ -409,8 +409,8 @@ export default function CustomersView() {
                   >
                     <TableCell>
                       <div className="flex items-center gap-3">
-                        <Avatar className="size-8 border border-emerald-100">
-                          <AvatarFallback className="bg-emerald-50 text-emerald-700 text-xs font-semibold">
+                        <Avatar className="size-8 border border-primary/10">
+                          <AvatarFallback className="bg-primary/5 text-primary text-xs font-semibold">
                             {getInitials(customer.name)}
                           </AvatarFallback>
                         </Avatar>
@@ -428,7 +428,7 @@ export default function CustomersView() {
                         {customer.appointments?.length || 0}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right font-medium text-emerald-700">
+                    <TableCell className="text-right font-medium text-primary">
                       {totalSpent > 0 ? formatRWF(totalSpent) : '—'}
                     </TableCell>
                   </TableRow>
@@ -483,7 +483,7 @@ export default function CustomersView() {
               Cancel
             </Button>
             <Button
-              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+              className=""
               onClick={handleAddCustomer}
               disabled={saving}
             >
@@ -585,7 +585,7 @@ export default function CustomersView() {
                               {statusLabels[apt.status] || apt.status}
                             </Badge>
                             {apt.service?.price > 0 && (
-                              <span className="text-xs font-semibold text-emerald-700">
+                              <span className="text-xs font-semibold text-primary">
                                 {formatRWF(apt.service.price)}
                               </span>
                             )}
@@ -604,7 +604,7 @@ export default function CustomersView() {
                 Cancel
               </Button>
               <Button
-                className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                className=""
                 onClick={handleUpdateCustomer}
                 disabled={saving}
               >

@@ -18,9 +18,9 @@ import { Separator } from '@/components/ui/separator'
 import { Sparkles, Eye, EyeOff, LogIn, AlertCircle, Loader2, Shield, CalendarDays, Scissors } from 'lucide-react'
 
 const demoAccounts = [
-  { name: 'Admin', pin: '1234', role: 'Admin', description: 'Full access to everything', icon: Shield, accent: 'emerald' },
-  { name: 'Alice', pin: '5678', role: 'Receptionist', description: 'Appointments & customers', icon: CalendarDays, accent: 'violet' },
-  { name: 'Marie', pin: '9012', role: 'Stylist', description: 'Own appointments only', icon: Scissors, accent: 'teal' },
+  { name: 'Admin', pin: '1234', role: 'Admin', description: 'Full access to everything', icon: Shield, accent: 'text-amber-600' },
+  { name: 'Alice', pin: '5678', role: 'Receptionist', description: 'Appointments & customers', icon: CalendarDays, accent: 'text-violet-600' },
+  { name: 'Marie', pin: '9012', role: 'Stylist', description: 'Own appointments only', icon: Scissors, accent: 'text-teal-600' },
 ] as const
 
 export default function LoginPage() {
@@ -50,14 +50,14 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-background to-teal-50 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-primary/5 p-4">
       <div className="w-full max-w-md">
         {/* Logo Section */}
         <div className="text-center mb-6 sm:mb-8">
-          <div className="inline-flex items-center justify-center size-14 sm:size-16 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-600 shadow-lg shadow-emerald-200/50 mb-3 sm:mb-4">
-            <Sparkles className="size-7 sm:size-8 text-white" />
+          <div className="inline-flex items-center justify-center size-14 sm:size-16 rounded-2xl bg-primary shadow-lg mb-3 sm:mb-4">
+            <Sparkles className="size-7 sm:size-8 text-primary-foreground" />
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-emerald-900 to-teal-800 bg-clip-text text-transparent">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
             SalonPro
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
@@ -65,7 +65,7 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <Card className="shadow-xl border-emerald-100/80">
+        <Card className="shadow-xl">
           <CardHeader className="text-center pb-2">
             <CardTitle className="text-xl">Sign In</CardTitle>
             <CardDescription>Enter your credentials to access the system</CardDescription>
@@ -124,7 +124,7 @@ export default function LoginPage() {
 
               <Button
                 type="submit"
-                className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white h-11 font-medium"
+                className="w-full h-11 font-medium"
                 disabled={loading || !name || !pin}
               >
                 {loading ? (
@@ -155,11 +155,11 @@ export default function LoginPage() {
                       key={account.name}
                       type="button"
                       variant="outline"
-                      className="w-full justify-between h-auto py-2.5 sm:py-3 px-3 text-left font-normal min-h-[44px]"
+                      className="w-full justify-between h-auto py-2.5 sm:py-3 px-3 text-left font-normal min-h-[44px] hover:bg-muted/50"
                       onClick={() => fillDemo(account.name, account.pin)}
                     >
                       <div className="flex items-center gap-2.5">
-                        <Icon className="size-4 text-muted-foreground" />
+                        <Icon className={`size-4 ${account.accent}`} />
                         <div>
                           <p className="text-sm font-medium">{account.role}</p>
                           <p className="text-xs text-muted-foreground">{account.description}</p>
