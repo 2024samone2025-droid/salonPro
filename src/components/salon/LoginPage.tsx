@@ -53,11 +53,11 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-background to-teal-50 p-4">
       <div className="w-full max-w-md">
         {/* Logo Section */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center size-16 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-600 shadow-lg shadow-emerald-200/50 mb-4">
-            <Sparkles className="size-8 text-white" />
+        <div className="text-center mb-6 sm:mb-8">
+          <div className="inline-flex items-center justify-center size-14 sm:size-16 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-600 shadow-lg shadow-emerald-200/50 mb-3 sm:mb-4">
+            <Sparkles className="size-7 sm:size-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-emerald-900 to-teal-800 bg-clip-text text-transparent">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-emerald-900 to-teal-800 bg-clip-text text-transparent">
             SalonPro
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
@@ -155,7 +155,7 @@ export default function LoginPage() {
                       key={account.name}
                       type="button"
                       variant="outline"
-                      className="w-full justify-between h-auto py-2.5 px-3 text-left font-normal"
+                      className="w-full justify-between h-auto py-2.5 sm:py-3 px-3 text-left font-normal min-h-[44px]"
                       onClick={() => fillDemo(account.name, account.pin)}
                     >
                       <div className="flex items-center gap-2.5">

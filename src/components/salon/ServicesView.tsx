@@ -235,10 +235,10 @@ export default function ServicesView() {
                         </div>
                         {canManage ? (
                           <div
-                            className="flex items-center gap-2"
+                            className="flex items-center gap-2 min-h-[44px]"
                             onClick={(e) => e.stopPropagation()}
                           >
-                            <Label htmlFor={`svc-active-${s.id}`} className="text-xs text-muted-foreground cursor-pointer">
+                            <Label htmlFor={`svc-active-${s.id}`} className="text-xs text-muted-foreground cursor-pointer hidden sm:block">
                               Active
                             </Label>
                             <Switch
@@ -296,10 +296,10 @@ export default function ServicesView() {
                         </div>
                         {canManage ? (
                           <div
-                            className="flex items-center gap-2"
+                            className="flex items-center gap-2 min-h-[44px]"
                             onClick={(e) => e.stopPropagation()}
                           >
-                            <Label htmlFor={`svc-active-${s.id}`} className="text-xs text-muted-foreground cursor-pointer">
+                            <Label htmlFor={`svc-active-${s.id}`} className="text-xs text-muted-foreground cursor-pointer hidden sm:block">
                               Inactive
                             </Label>
                             <Switch
@@ -357,7 +357,7 @@ export default function ServicesView() {
                 placeholder="e.g., Haircut, Braids, Manicure"
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="svc-price">Price (RWF) *</Label>
                 <div className="relative">

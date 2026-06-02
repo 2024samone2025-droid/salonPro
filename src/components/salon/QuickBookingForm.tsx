@@ -219,9 +219,9 @@ export default function QuickBookingForm({ selectedDate, onBookingCreated }: Qui
         </div>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
           {/* Customer Search */}
-          <div className="lg:col-span-2 relative" ref={dropdownRef}>
+          <div className="lg:col-span-2 xl:col-span-2 relative" ref={dropdownRef}>
             <Label className="text-xs text-muted-foreground mb-1.5 block">Customer</Label>
             <div className="relative">
               <Search className="absolute left-2.5 top-2.5 size-3.5 text-muted-foreground" />
@@ -257,7 +257,7 @@ export default function QuickBookingForm({ selectedDate, onBookingCreated }: Qui
             </div>
             {/* Autocomplete dropdown */}
             {showDropdown && filteredCustomers.length > 0 && !customerId && (
-              <div className="absolute z-30 mt-1 w-full bg-popover border rounded-lg shadow-lg max-h-40 overflow-y-auto">
+              <div className="absolute z-30 mt-1 w-full bg-popover border rounded-lg shadow-lg max-h-48 overflow-y-auto">
                 {filteredCustomers.map((c) => (
                   <button
                     key={c.id}
@@ -382,7 +382,7 @@ export default function QuickBookingForm({ selectedDate, onBookingCreated }: Qui
             <Button
               onClick={handleSubmit}
               disabled={submitting}
-              className="w-full h-9 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
+              className="w-full h-10 sm:h-9 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
             >
               {submitting ? (
                 <>

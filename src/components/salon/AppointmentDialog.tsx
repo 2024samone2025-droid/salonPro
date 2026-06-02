@@ -274,7 +274,7 @@ export default function AppointmentDialog({ appointment, open, onClose, onUpdate
 
         <div className="space-y-5">
           {/* Customer & Stylist Info */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="flex items-start gap-3">
               <Avatar className="size-9 border shrink-0">
                 <AvatarFallback className="bg-emerald-50 text-emerald-700 text-xs font-semibold">
@@ -309,7 +309,7 @@ export default function AppointmentDialog({ appointment, open, onClose, onUpdate
           <Separator />
 
           {/* Service & Time Info */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <p className="text-xs text-muted-foreground flex items-center gap-1 mb-1">
                 <Scissors className="size-3" /> Service
@@ -330,7 +330,7 @@ export default function AppointmentDialog({ appointment, open, onClose, onUpdate
             </div>
           </div>
 
-          <div className="flex items-center justify-between rounded-lg bg-emerald-50 px-4 py-3">
+          <div className="flex items-center justify-between rounded-lg bg-emerald-50 px-3 py-2 sm:px-4 sm:py-3">
             <span className="text-sm text-emerald-800 font-medium">Service Price</span>
             <span className="text-lg font-bold text-emerald-700">{formatRWF(appointment.service.price)}</span>
           </div>
@@ -372,7 +372,7 @@ export default function AppointmentDialog({ appointment, open, onClose, onUpdate
                 <Label className="text-sm font-medium mb-3 flex items-center gap-1.5">
                   <CreditCard className="size-4" /> Payment
                 </Label>
-                <div className="grid grid-cols-3 gap-3 mt-2">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-2">
                   <div className="space-y-1.5">
                     <Label className="text-xs text-muted-foreground">Status</Label>
                     <Select value={paymentStatus} onValueChange={setPaymentStatus}>

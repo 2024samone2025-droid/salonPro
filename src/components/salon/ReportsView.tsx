@@ -263,9 +263,9 @@ export default function ReportsView() {
             {format(new Date(from + 'T00:00:00'), 'MMM d, yyyy')} — {format(new Date(to + 'T00:00:00'), 'MMM d, yyyy')}
           </CardDescription>
         </div>
-        <div className="flex gap-2 items-center flex-wrap">
+        <div className="flex gap-2 items-center flex-wrap w-full sm:w-auto">
           <Select value={period} onValueChange={handlePeriodChange}>
-            <SelectTrigger className="w-32">
+            <SelectTrigger className="w-full sm:w-32">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -278,13 +278,13 @@ export default function ReportsView() {
             type="date"
             value={customFrom || from}
             onChange={(e) => setCustomFrom(e.target.value)}
-            className="w-36"
+            className="w-28 sm:w-36"
           />
           <Input
             type="date"
             value={customTo || to}
             onChange={(e) => setCustomTo(e.target.value)}
-            className="w-36"
+            className="w-28 sm:w-36"
           />
           <Button
             variant="outline"
@@ -310,7 +310,7 @@ export default function ReportsView() {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center">
-                  <p className="text-lg font-bold truncate">{formatRWF(data.totalRevenue)}</p>
+                  <p className="text-base sm:text-lg font-bold truncate">{formatRWF(data.totalRevenue)}</p>
                   <Sparkline data={sparklineData} />
                 </div>
                 {trendPercent !== null && (
@@ -338,7 +338,7 @@ export default function ReportsView() {
                 <CheckCircle2 className="size-5 text-green-700" />
               </div>
               <div className="min-w-0">
-                <p className="text-lg font-bold text-green-700 truncate">{formatRWF(data.totalCollected)}</p>
+                <p className="text-base sm:text-lg font-bold text-green-700 truncate">{formatRWF(data.totalCollected)}</p>
                 <p className="text-xs text-muted-foreground">{collectionRate}% collection rate</p>
               </div>
             </div>
@@ -355,7 +355,7 @@ export default function ReportsView() {
                 <AlertCircle className="size-5 text-amber-700" />
               </div>
               <div className="min-w-0">
-                <p className="text-lg font-bold text-amber-700 truncate">{formatRWF(data.totalOutstanding)}</p>
+                <p className="text-base sm:text-lg font-bold text-amber-700 truncate">{formatRWF(data.totalOutstanding)}</p>
                 <p className="text-xs text-muted-foreground">Pending payments</p>
               </div>
             </div>
@@ -372,7 +372,7 @@ export default function ReportsView() {
                 <TrendingUp className="size-5 text-teal-700" />
               </div>
               <div className="min-w-0">
-                <p className="text-lg font-bold truncate">{data.totalAppointments}</p>
+                <p className="text-base sm:text-lg font-bold truncate">{data.totalAppointments}</p>
                 <p className="text-xs text-muted-foreground">{data.topServices.length} services</p>
               </div>
             </div>

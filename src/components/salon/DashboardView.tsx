@@ -131,7 +131,7 @@ export default function DashboardView() {
       {/* Date header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight">
             {isStylist ? 'My Dashboard' : 'Dashboard'}
           </h2>
           <CardDescription className="flex items-center gap-2 mt-1">
@@ -149,11 +149,11 @@ export default function DashboardView() {
             className="h-auto py-3 px-4 justify-start gap-3 hover:bg-emerald-50 hover:border-emerald-300 transition-colors"
             onClick={() => setActiveTab('appointments')}
           >
-            <div className="flex items-center justify-center size-9 rounded-lg bg-emerald-100 shrink-0">
+            <div className="flex items-center justify-center size-8 sm:size-9 rounded-lg bg-emerald-100 shrink-0">
               <Plus className="size-4 text-emerald-700" />
             </div>
             <div className="text-left">
-              <p className="text-sm font-semibold">New Appointment</p>
+              <p className="text-xs sm:text-sm font-semibold">New Appointment</p>
               <p className="text-xs text-muted-foreground">Quick booking</p>
             </div>
           </Button>
@@ -162,11 +162,11 @@ export default function DashboardView() {
             className="h-auto py-3 px-4 justify-start gap-3 hover:bg-emerald-50 hover:border-emerald-300 transition-colors"
             onClick={() => setActiveTab('customers')}
           >
-            <div className="flex items-center justify-center size-9 rounded-lg bg-teal-100 shrink-0">
+            <div className="flex items-center justify-center size-8 sm:size-9 rounded-lg bg-teal-100 shrink-0">
               <Users className="size-4 text-teal-700" />
             </div>
             <div className="text-left">
-              <p className="text-sm font-semibold">Add Customer</p>
+              <p className="text-xs sm:text-sm font-semibold">Add Customer</p>
               <p className="text-xs text-muted-foreground">New client</p>
             </div>
           </Button>
@@ -176,11 +176,11 @@ export default function DashboardView() {
               className="h-auto py-3 px-4 justify-start gap-3 hover:bg-emerald-50 hover:border-emerald-300 transition-colors col-span-2 sm:col-span-1"
               onClick={() => setActiveTab('reports')}
             >
-              <div className="flex items-center justify-center size-9 rounded-lg bg-green-100 shrink-0">
+              <div className="flex items-center justify-center size-8 sm:size-9 rounded-lg bg-green-100 shrink-0">
                 <BarChart3 className="size-4 text-green-700" />
               </div>
               <div className="text-left">
-                <p className="text-sm font-semibold">View Reports</p>
+                <p className="text-xs sm:text-sm font-semibold">View Reports</p>
                 <p className="text-xs text-muted-foreground">Analytics</p>
               </div>
             </Button>
@@ -203,7 +203,7 @@ export default function DashboardView() {
                 <div className="flex items-center justify-center size-10 rounded-xl bg-emerald-100 shrink-0 group-hover:bg-emerald-200 transition-colors">
                   <CalendarDays className="size-5 text-emerald-700" />
                 </div>
-                <span className="text-3xl font-bold tracking-tight">{data.totalAppointmentsToday}</span>
+                <span className="text-2xl sm:text-3xl font-bold tracking-tight">{data.totalAppointmentsToday}</span>
               </div>
               <ArrowRight className="size-4 text-muted-foreground/50 group-hover:text-emerald-600 transition-colors" />
             </div>
@@ -224,7 +224,7 @@ export default function DashboardView() {
                   <div className="flex items-center justify-center size-10 rounded-xl bg-green-100 shrink-0 group-hover:bg-green-200 transition-colors">
                     <Banknote className="size-5 text-green-700" />
                   </div>
-                  <span className="text-xl font-bold tracking-tight">{formatRWF(data.todayRevenue)}</span>
+                  <span className="text-lg sm:text-xl font-bold tracking-tight">{formatRWF(data.todayRevenue)}</span>
                 </div>
                 <ArrowRight className="size-4 text-muted-foreground/50 group-hover:text-green-600 transition-colors" />
               </div>
@@ -247,7 +247,7 @@ export default function DashboardView() {
                     <div className="flex items-center justify-center size-10 rounded-xl bg-amber-100 shrink-0 group-hover:bg-amber-200 transition-colors">
                       <AlertCircle className="size-5 text-amber-700" />
                     </div>
-                    <span className="text-3xl font-bold tracking-tight">{data.pendingPayments}</span>
+                    <span className="text-2xl sm:text-3xl font-bold tracking-tight">{data.pendingPayments}</span>
                   </div>
                   <ArrowRight className="size-4 text-muted-foreground/50 group-hover:text-amber-600 transition-colors" />
                 </div>
@@ -267,7 +267,7 @@ export default function DashboardView() {
                     <div className="flex items-center justify-center size-10 rounded-xl bg-red-100 shrink-0 group-hover:bg-red-200 transition-colors">
                       <Clock className="size-5 text-red-700" />
                     </div>
-                    <span className="text-xl font-bold tracking-tight">{formatRWF(data.pendingAmount)}</span>
+                    <span className="text-lg sm:text-xl font-bold tracking-tight">{formatRWF(data.pendingAmount)}</span>
                   </div>
                   <ArrowRight className="size-4 text-muted-foreground/50 group-hover:text-red-600 transition-colors" />
                 </div>
@@ -287,7 +287,7 @@ export default function DashboardView() {
             <CardDescription>Appointment status distribution for today</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1.5 sm:gap-2">
               {Object.entries(data.statusBreakdown).map(([status, count]) => {
                 const config = statusConfig[status]
                 return (
@@ -403,7 +403,7 @@ export default function DashboardView() {
                             </div>
                           )}
                         </div>
-                        <div className="text-right ml-4 shrink-0">
+                        <div className="text-right ml-2 sm:ml-4 shrink-0">
                           <p className="text-sm font-bold text-amber-700">{formatRWF(remaining)}</p>
                           <p className="text-xs text-muted-foreground">of {formatRWF(p.appointment.service.price)}</p>
                         </div>
@@ -441,7 +441,7 @@ export default function DashboardView() {
                       className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="text-sm font-mono text-muted-foreground w-24 shrink-0">
+                        <div className="text-[11px] sm:text-sm font-mono text-muted-foreground w-20 sm:w-24 shrink-0">
                           {apt.startTime} - {apt.endTime}
                         </div>
                         <div className="min-w-0">

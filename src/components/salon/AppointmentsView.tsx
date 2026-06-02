@@ -182,12 +182,12 @@ export default function AppointmentsView() {
   // Day View
   const DayView = () => (
     <div className="relative">
-      <div className="grid grid-cols-[52px_1fr]">
+      <div className="grid grid-cols-[44px_sm:52px_1fr]">
         {/* Time labels */}
         <div className="space-y-0">
           {timeSlots.map((time) => (
             <div key={time} className="h-14 flex items-start justify-end pr-2 pt-0">
-              <span className="text-[11px] text-muted-foreground font-medium -mt-2">{time}</span>
+              <span className="text-[10px] sm:text-[11px] text-muted-foreground font-medium -mt-2">{time}</span>
             </div>
           ))}
         </div>
@@ -271,7 +271,7 @@ export default function AppointmentsView() {
             return (
               <button
                 key={day.toISOString()}
-                className={`text-center py-2.5 rounded-xl transition-all ${
+                className={`text-center py-2.5 min-h-[44px] rounded-xl transition-all ${
                   isSelected
                     ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30'
                     : isTodayDate
@@ -284,7 +284,7 @@ export default function AppointmentsView() {
                 }}
               >
                 <p className="text-xs font-medium uppercase tracking-wide">{format(day, 'EEE')}</p>
-                <p className="text-lg font-bold">{format(day, 'd')}</p>
+                <p className="text-base sm:text-lg font-bold">{format(day, 'd')}</p>
                 {dayApts.length > 0 && (
                   <Badge
                     variant="secondary"
@@ -359,7 +359,7 @@ export default function AppointmentsView() {
             type="date"
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
-            className="w-40"
+            className="w-32 sm:w-40"
           />
           <Button variant="outline" size="icon" onClick={() => navigateDay(1)} className="shrink-0">
             <ChevronRight className="size-4" />
@@ -370,8 +370,8 @@ export default function AppointmentsView() {
             onClick={() => setSelectedDate(format(new Date(), 'yyyy-MM-dd'))}
             className="shrink-0"
           >
-            <CalendarDays className="size-3.5 mr-1" />
-            Today
+            <CalendarDays className="size-3.5 sm:mr-1" />
+            <span className="hidden sm:inline">Today</span>
           </Button>
         </div>
         <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'day' | 'week')}>
@@ -383,7 +383,7 @@ export default function AppointmentsView() {
       </div>
 
       {/* Status Legend */}
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
         {Object.entries(statusConfig).map(([key, config]) => (
           <div key={key} className="flex items-center gap-1.5">
             <div className={`size-2.5 rounded-full ${config.dotClass}`} />
@@ -402,7 +402,7 @@ export default function AppointmentsView() {
       </div>
 
       {/* Calendar */}
-      <Card>
+      <Card className="overflow-hidden">
         <CardHeader className="pb-2">
           <CardTitle className="text-base flex items-center gap-2">
             <CalendarDays className="size-4 text-emerald-600" />

@@ -246,16 +246,16 @@ export default function CustomersView() {
             variant="outline"
             size="sm"
           >
-            <ToggleGroupItem value="grid" aria-label="Grid view">
+            <ToggleGroupItem value="grid" aria-label="Grid view" className="min-w-[44px]">
               <LayoutGrid className="size-4" />
             </ToggleGroupItem>
-            <ToggleGroupItem value="list" aria-label="List view">
+            <ToggleGroupItem value="list" aria-label="List view" className="min-w-[44px]">
               <List className="size-4" />
             </ToggleGroupItem>
           </ToggleGroup>
           {canEdit && (
             <Button
-              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white h-9 sm:h-10"
               onClick={() => setShowAddDialog(true)}
             >
               <Plus className="size-4 mr-1.5" />
@@ -496,7 +496,7 @@ export default function CustomersView() {
 
       {/* Customer Detail Dialog */}
       <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-lg max-sm:max-w-[calc(100vw-2rem)]">
           <DialogHeader>
             <DialogTitle>Customer Details</DialogTitle>
             <DialogDescription>
@@ -558,7 +558,7 @@ export default function CustomersView() {
                       {selectedCustomer.appointments?.map((apt) => (
                         <div
                           key={apt.id}
-                          className="flex items-start justify-between p-3 rounded-lg border bg-card"
+                          className="flex items-start justify-between gap-2 p-3 rounded-lg border bg-card"
                         >
                           <div className="space-y-0.5 min-w-0 flex-1">
                             <p className="font-medium text-sm truncate">

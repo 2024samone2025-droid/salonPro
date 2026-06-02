@@ -278,10 +278,10 @@ export default function StaffView() {
                         </div>
                         {canManage ? (
                           <div
-                            className="flex items-center gap-2"
+                            className="flex items-center gap-2 min-h-[44px]"
                             onClick={(e) => e.stopPropagation()}
                           >
-                            <Label htmlFor={`active-${s.id}`} className="text-xs text-muted-foreground cursor-pointer">
+                            <Label htmlFor={`active-${s.id}`} className="text-xs text-muted-foreground cursor-pointer hidden sm:block">
                               Active
                             </Label>
                             <Switch
@@ -340,10 +340,10 @@ export default function StaffView() {
                         </div>
                         {canManage ? (
                           <div
-                            className="flex items-center gap-2"
+                            className="flex items-center gap-2 min-h-[44px]"
                             onClick={(e) => e.stopPropagation()}
                           >
-                            <Label htmlFor={`active-${s.id}`} className="text-xs text-muted-foreground cursor-pointer">
+                            <Label htmlFor={`active-${s.id}`} className="text-xs text-muted-foreground cursor-pointer hidden sm:block">
                               Inactive
                             </Label>
                             <Switch
