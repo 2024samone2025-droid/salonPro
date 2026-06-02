@@ -1,10 +1,12 @@
 import { db } from '@/lib/db'
+import { hashPin } from '@/lib/auth'
 import { NextResponse } from 'next/server'
 
 export async function POST() {
   // Clear existing data
   await db.payment.deleteMany()
   await db.appointment.deleteMany()
+  await db.user.deleteMany()
   await db.customer.deleteMany()
   await db.staff.deleteMany()
   await db.service.deleteMany()
@@ -28,6 +30,15 @@ export async function POST() {
     db.staff.create({ data: { name: 'Grace Ingabire', phone: '+250788345678', role: 'stylist', active: true } }),
     db.staff.create({ data: { name: 'Alice Niyonsaba', phone: '+250788456789', role: 'receptionist', active: true } }),
   ])
+
+  // Create demo users with hashed PINs
+  const pin1 = hashPin('1234') // Admin PIN
+  const pin2 = hashPin('5678') // Receptionist PIN
+  const pin3 = hashPin('9012') // Stylist PIN
+
+  await db.user.create({ data: { name: 'Admin', pin: pin1, role: 'admin', active: true } })
+  await db.user.create({ data: { name: 'Alice', pin: pin2, role: 'receptionist', active: true, staffId: staff[3].id } })
+  await db.user.create({ data: { name: 'Marie', pin: pin3, role: 'stylist', active: true, staffId: staff[0].id } })
 
   // Create more customers for variety
   const customers = await Promise.all([
@@ -81,7 +92,6 @@ export async function POST() {
   ]
 
   const paymentMethods = ['cash', 'mtn_momo', 'airtel_money']
-  // Distribution: 40% cash, 35% MTN MoMo, 25% Airtel Money
   function getRandomPaymentMethod(): string {
     const r = Math.random()
     if (r < 0.40) return 'cash'
@@ -104,10 +114,8 @@ export async function POST() {
     const isFuture = dayOffset > 0
     const isPast = dayOffset < 0
 
-    // 5-8 appointments per day
     const numAppointments = Math.floor(seededRandom() * 4) + 5
 
-    // Pick time slots spread across the day
     const usedSlots = new Set<number>()
     for (let i = 0; i < numAppointments; i++) {
       let slotIdx: number
@@ -122,30 +130,26 @@ export async function POST() {
       const serviceIdx = Math.floor(seededRandom() * services.length)
       const service = services[serviceIdx]
 
-      // Adjust end time based on service duration
       const [startH, startM] = slot.start.split(':').map(Number)
       const totalMin = startH * 60 + startM + service.duration
       const endH = Math.floor(totalMin / 60)
       const endM = totalMin % 60
       const endTime = `${endH.toString().padStart(2, '0')}:${endM.toString().padStart(2, '0')}`
 
-      // Determine status based on day
       let status: string
       let paymentStatus: string
       let paymentAmount: number
 
       if (isPast) {
-        // Past: mostly completed, some no_show
         const r = seededRandom()
         if (r < 0.80) {
           status = 'completed'
         } else if (r < 0.92) {
           status = 'no_show'
         } else {
-          status = 'completed' // still completed
+          status = 'completed'
         }
 
-        // Payment status for completed: 80% paid, 10% partial, 10% unpaid
         if (status === 'completed') {
           const pr = seededRandom()
           if (pr < 0.80) {
@@ -159,12 +163,10 @@ export async function POST() {
             paymentAmount = 0
           }
         } else {
-          // no_show
           paymentStatus = 'unpaid'
           paymentAmount = 0
         }
       } else if (isToday) {
-        // Today: mix of all statuses
         const r = seededRandom()
         if (r < 0.30) {
           status = 'completed'
@@ -184,7 +186,6 @@ export async function POST() {
           paymentAmount = 0
         }
       } else {
-        // Future: booked or confirmed
         const r = seededRandom()
         status = r < 0.6 ? 'booked' : 'confirmed'
         paymentStatus = 'unpaid'
@@ -235,12 +236,18 @@ export async function POST() {
 
   return NextResponse.json({
     success: true,
-    message: 'Database seeded with 30 days of demo data',
+    message: 'Database seeded with 30 days of demo data + 3 user accounts',
     stats: {
       customers: customers.length,
       staff: staff.length,
       services: services.length,
       appointments: appointmentData.length,
+      users: 3,
+      userAccounts: [
+        { name: 'Admin', role: 'admin', pin: '1234' },
+        { name: 'Alice', role: 'receptionist', pin: '5678' },
+        { name: 'Marie', role: 'stylist', pin: '9012' },
+      ],
     },
   })
 }

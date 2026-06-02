@@ -14,9 +14,11 @@ import {
   Users,
   BarChart3,
   ArrowRight,
+  Lock,
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { useSalonStore } from '@/lib/salon-store'
+import { useAuth } from '@/lib/auth-context'
 
 interface DashboardData {
   todayAppointments: Array<{
@@ -76,6 +78,9 @@ export default function DashboardView() {
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
   const { setActiveTab } = useSalonStore()
+  const { user, permissions } = useAuth()
+  const isStylist = user?.role === 'stylist'
+  const canManagePayments = permissions?.canManagePayments ?? false
 
   useEffect(() => {
     fetch('/api/dashboard')
@@ -113,56 +118,64 @@ export default function DashboardView() {
   return (
     <div className="space-y-6">
       {/* Date header */}
-      <div>
-        <h2 className="text-2xl font-bold">Dashboard</h2>
-        <p className="text-muted-foreground flex items-center gap-2">
-          <CalendarDays className="size-4" />
-          {today}
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold">
+            {isStylist ? 'My Dashboard' : 'Dashboard'}
+          </h2>
+          <p className="text-muted-foreground flex items-center gap-2">
+            <CalendarDays className="size-4" />
+            {today}
+          </p>
+        </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        <Button
-          variant="outline"
-          className="h-auto py-3 px-4 justify-start gap-3 hover:bg-emerald-50 hover:border-emerald-300 transition-colors"
-          onClick={() => setActiveTab('appointments')}
-        >
-          <div className="flex items-center justify-center size-8 rounded-lg bg-emerald-100 shrink-0">
-            <Plus className="size-4 text-emerald-700" />
-          </div>
-          <div className="text-left">
-            <p className="text-sm font-semibold">New Appointment</p>
-            <p className="text-xs text-muted-foreground">Quick booking</p>
-          </div>
-        </Button>
-        <Button
-          variant="outline"
-          className="h-auto py-3 px-4 justify-start gap-3 hover:bg-emerald-50 hover:border-emerald-300 transition-colors"
-          onClick={() => setActiveTab('customers')}
-        >
-          <div className="flex items-center justify-center size-8 rounded-lg bg-teal-100 shrink-0">
-            <Users className="size-4 text-teal-700" />
-          </div>
-          <div className="text-left">
-            <p className="text-sm font-semibold">Add Customer</p>
-            <p className="text-xs text-muted-foreground">New client</p>
-          </div>
-        </Button>
-        <Button
-          variant="outline"
-          className="h-auto py-3 px-4 justify-start gap-3 hover:bg-emerald-50 hover:border-emerald-300 transition-colors col-span-2 sm:col-span-1"
-          onClick={() => setActiveTab('reports')}
-        >
-          <div className="flex items-center justify-center size-8 rounded-lg bg-green-100 shrink-0">
-            <BarChart3 className="size-4 text-green-700" />
-          </div>
-          <div className="text-left">
-            <p className="text-sm font-semibold">View Reports</p>
-            <p className="text-xs text-muted-foreground">Analytics</p>
-          </div>
-        </Button>
-      </div>
+      {/* Quick Actions - only for admin and receptionist */}
+      {!isStylist && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <Button
+            variant="outline"
+            className="h-auto py-3 px-4 justify-start gap-3 hover:bg-emerald-50 hover:border-emerald-300 transition-colors"
+            onClick={() => setActiveTab('appointments')}
+          >
+            <div className="flex items-center justify-center size-8 rounded-lg bg-emerald-100 shrink-0">
+              <Plus className="size-4 text-emerald-700" />
+            </div>
+            <div className="text-left">
+              <p className="text-sm font-semibold">New Appointment</p>
+              <p className="text-xs text-muted-foreground">Quick booking</p>
+            </div>
+          </Button>
+          <Button
+            variant="outline"
+            className="h-auto py-3 px-4 justify-start gap-3 hover:bg-emerald-50 hover:border-emerald-300 transition-colors"
+            onClick={() => setActiveTab('customers')}
+          >
+            <div className="flex items-center justify-center size-8 rounded-lg bg-teal-100 shrink-0">
+              <Users className="size-4 text-teal-700" />
+            </div>
+            <div className="text-left">
+              <p className="text-sm font-semibold">Add Customer</p>
+              <p className="text-xs text-muted-foreground">New client</p>
+            </div>
+          </Button>
+          {permissions?.canAccessModule?.('reports') !== false && (
+            <Button
+              variant="outline"
+              className="h-auto py-3 px-4 justify-start gap-3 hover:bg-emerald-50 hover:border-emerald-300 transition-colors col-span-2 sm:col-span-1"
+              onClick={() => setActiveTab('reports')}
+            >
+              <div className="flex items-center justify-center size-8 rounded-lg bg-green-100 shrink-0">
+                <BarChart3 className="size-4 text-green-700" />
+              </div>
+              <div className="text-left">
+                <p className="text-sm font-semibold">View Reports</p>
+                <p className="text-xs text-muted-foreground">Analytics</p>
+              </div>
+            </Button>
+          )}
+        </div>
+      )}
 
       {/* Stat cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -176,7 +189,7 @@ export default function DashboardView() {
                 <CalendarDays className="size-5 text-emerald-700" />
               </div>
               <div className="flex-1">
-                <p className="text-sm text-muted-foreground">Today&apos;s Appointments</p>
+                <p className="text-sm text-muted-foreground">{isStylist ? 'My Appointments' : "Today's Appointments"}</p>
                 <p className="text-2xl font-bold">{data.totalAppointmentsToday}</p>
               </div>
               <ArrowRight className="size-4 text-muted-foreground/50" />
@@ -184,59 +197,65 @@ export default function DashboardView() {
           </CardContent>
         </Card>
 
-        <Card
-          className="cursor-pointer hover:shadow-md transition-all hover:border-green-300"
-          onClick={() => setActiveTab('reports')}
-        >
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center size-10 rounded-lg bg-green-100">
-                <DollarSign className="size-5 text-green-700" />
+        {!isStylist && (
+          <Card
+            className="cursor-pointer hover:shadow-md transition-all hover:border-green-300"
+            onClick={() => setActiveTab('reports')}
+          >
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center size-10 rounded-lg bg-green-100">
+                  <DollarSign className="size-5 text-green-700" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm text-muted-foreground">Today&apos;s Revenue</p>
+                  <p className="text-2xl font-bold">{formatRWF(data.todayRevenue)}</p>
+                </div>
+                <ArrowRight className="size-4 text-muted-foreground/50" />
               </div>
-              <div className="flex-1">
-                <p className="text-sm text-muted-foreground">Today&apos;s Revenue</p>
-                <p className="text-2xl font-bold">{formatRWF(data.todayRevenue)}</p>
-              </div>
-              <ArrowRight className="size-4 text-muted-foreground/50" />
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
 
-        <Card
-          className="cursor-pointer hover:shadow-md transition-all hover:border-amber-300"
-          onClick={() => setActiveTab('appointments')}
-        >
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center size-10 rounded-lg bg-amber-100">
-                <AlertCircle className="size-5 text-amber-700" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm text-muted-foreground">Pending Payments</p>
-                <p className="text-2xl font-bold">{data.pendingPayments}</p>
-              </div>
-              <ArrowRight className="size-4 text-muted-foreground/50" />
-            </div>
-          </CardContent>
-        </Card>
+        {canManagePayments && (
+          <>
+            <Card
+              className="cursor-pointer hover:shadow-md transition-all hover:border-amber-300"
+              onClick={() => setActiveTab('appointments')}
+            >
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center size-10 rounded-lg bg-amber-100">
+                    <AlertCircle className="size-5 text-amber-700" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm text-muted-foreground">Pending Payments</p>
+                    <p className="text-2xl font-bold">{data.pendingPayments}</p>
+                  </div>
+                  <ArrowRight className="size-4 text-muted-foreground/50" />
+                </div>
+              </CardContent>
+            </Card>
 
-        <Card
-          className="cursor-pointer hover:shadow-md transition-all hover:border-red-300"
-          onClick={() => setActiveTab('appointments')}
-        >
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center size-10 rounded-lg bg-red-100">
-                <Clock className="size-5 text-red-700" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm text-muted-foreground">Pending Amount</p>
-                <p className="text-2xl font-bold">{formatRWF(data.pendingAmount)}</p>
-              </div>
-              <ArrowRight className="size-4 text-muted-foreground/50" />
-            </div>
-          </CardContent>
-        </Card>
+            <Card
+              className="cursor-pointer hover:shadow-md transition-all hover:border-red-300"
+              onClick={() => setActiveTab('appointments')}
+            >
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center size-10 rounded-lg bg-red-100">
+                    <Clock className="size-5 text-red-700" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm text-muted-foreground">Pending Amount</p>
+                    <p className="text-2xl font-bold">{formatRWF(data.pendingAmount)}</p>
+                  </div>
+                  <ArrowRight className="size-4 text-muted-foreground/50" />
+                </div>
+              </CardContent>
+            </Card>
+          </>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -259,12 +278,12 @@ export default function DashboardView() {
         {/* Staff Workload */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-lg">Staff Workload Today</CardTitle>
+            <CardTitle className="text-lg">{isStylist ? 'My Workload' : 'Staff Workload Today'}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               {data.staffWorkload
-                .filter((s) => s.role === 'stylist')
+                .filter((s) => isStylist ? s.id === user?.staffId : s.role === 'stylist')
                 .map((s) => {
                   const totalHours = Math.floor((s.totalMinutes || s.appointmentCount * 45) / 60)
                   const totalMins = (s.totalMinutes || s.appointmentCount * 45) % 60
@@ -288,7 +307,7 @@ export default function DashboardView() {
                     </div>
                   )
                 })}
-              {data.staffWorkload.filter((s) => s.role === 'stylist').length === 0 && (
+              {data.staffWorkload.filter((s) => isStylist ? s.id === user?.staffId : s.role === 'stylist').length === 0 && (
                 <p className="text-sm text-muted-foreground">No staff data.</p>
               )}
             </div>
@@ -296,8 +315,8 @@ export default function DashboardView() {
         </Card>
       </div>
 
-      {/* Pending Payments List */}
-      {data.pendingPaymentsList && data.pendingPaymentsList.length > 0 && (
+      {/* Pending Payments List - only for admin/receptionist */}
+      {canManagePayments && data.pendingPaymentsList && data.pendingPaymentsList.length > 0 && (
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
@@ -340,7 +359,7 @@ export default function DashboardView() {
       {/* Today's Appointments */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-lg">Today&apos;s Appointments</CardTitle>
+          <CardTitle className="text-lg">{isStylist ? 'My Appointments Today' : "Today's Appointments"}</CardTitle>
         </CardHeader>
         <CardContent>
           {data.todayAppointments.length === 0 ? (

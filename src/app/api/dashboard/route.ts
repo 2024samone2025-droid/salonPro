@@ -1,8 +1,18 @@
 import { db } from '@/lib/db'
 import { NextResponse } from 'next/server'
+import { requireAuth } from '@/lib/auth-guard'
 
 export async function GET() {
+  const auth = await requireAuth()
+  if (!auth.authorized) return auth.error
+
   const today = new Date().toISOString().split('T')[0]
+
+  // Build appointment filter based on role
+  const appointmentWhere: Record<string, unknown> = { date: today }
+  if (auth.user?.role === 'stylist' && auth.user.staffId) {
+    appointmentWhere.staffId = auth.user.staffId
+  }
 
   const [
     todayAppointments,
@@ -10,7 +20,7 @@ export async function GET() {
     activeStaff,
   ] = await Promise.all([
     db.appointment.findMany({
-      where: { date: today },
+      where: appointmentWhere,
       include: {
         customer: true,
         staff: true,
@@ -19,7 +29,8 @@ export async function GET() {
       },
       orderBy: { startTime: 'asc' },
     }),
-    db.payment.findMany({
+    // Stylists don't need pending payments data
+    auth.user?.role !== 'stylist' ? db.payment.findMany({
       where: { status: { in: ['unpaid', 'partial'] } },
       include: {
         appointment: {
@@ -29,7 +40,7 @@ export async function GET() {
           },
         },
       },
-    }),
+    }) : Promise.resolve([]),
     db.staff.findMany({
       where: { active: true },
     }),
@@ -52,6 +63,7 @@ export async function GET() {
   })
 
   const staffWorkload = activeStaff.map((s: { id: string; name: string; role: string }) => {
+    // For stylist dashboard, show only own workload
     const staffApts = todayAppointments.filter((a: { staffId: string }) => a.staffId === s.id)
     const totalMinutes = staffApts.reduce((sum: number, a: { service: { duration: number } }) => sum + a.service.duration, 0)
     return {

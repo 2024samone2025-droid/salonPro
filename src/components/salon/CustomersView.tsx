@@ -24,6 +24,7 @@ import {
 import { Search, Plus, Phone, CalendarDays, LayoutGrid, List } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 import { format } from 'date-fns'
+import { useAuth } from '@/lib/auth-context'
 
 interface CustomerAppointment {
   id: string
@@ -71,6 +72,10 @@ export default function CustomersView() {
   const [showDetailDialog, setShowDetailDialog] = useState(false)
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+
+  const { permissions } = useAuth()
+  const canEdit = permissions?.customers === 'full'
+  const isViewOnly = permissions?.customers === 'view'
 
   // Add form
   const [newName, setNewName] = useState('')
@@ -203,13 +208,15 @@ export default function CustomersView() {
               <List className="size-4" />
             </Button>
           </div>
-          <Button
-            className="bg-emerald-600 hover:bg-emerald-700 text-white"
-            onClick={() => setShowAddDialog(true)}
-          >
-            <Plus className="size-4 mr-1" />
-            Add
-          </Button>
+          {canEdit && (
+            <Button
+              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+              onClick={() => setShowAddDialog(true)}
+            >
+              <Plus className="size-4 mr-1" />
+              Add
+            </Button>
+          )}
         </div>
       </div>
 
@@ -224,12 +231,14 @@ export default function CustomersView() {
         <Card>
           <CardContent className="p-8 text-center">
             <p className="text-muted-foreground">No customers found.</p>
-            <Button
-              className="mt-4 bg-emerald-600 hover:bg-emerald-700 text-white"
-              onClick={() => setShowAddDialog(true)}
-            >
-              <Plus className="size-4 mr-1" /> Add Customer
-            </Button>
+            {canEdit && (
+              <Button
+                className="mt-4 bg-emerald-600 hover:bg-emerald-700 text-white"
+                onClick={() => setShowAddDialog(true)}
+              >
+                <Plus className="size-4 mr-1" /> Add Customer
+              </Button>
+            )}
           </CardContent>
         </Card>
       ) : viewMode === 'grid' ? (
@@ -317,6 +326,7 @@ export default function CustomersView() {
       )}
 
       {/* Add Customer Dialog */}
+      {canEdit && (
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
         <DialogContent>
           <DialogHeader>
@@ -360,6 +370,7 @@ export default function CustomersView() {
           </div>
         </DialogContent>
       </Dialog>
+      )}
 
       {/* Customer Detail Dialog */}
       <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
@@ -375,33 +386,41 @@ export default function CustomersView() {
                   <Label>Name</Label>
                   <Input
                     value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
+                    onChange={(e) => canEdit && setEditName(e.target.value)}
                     className="mt-1"
+                    readOnly={!canEdit}
                   />
                 </div>
                 <div>
                   <Label>Phone</Label>
                   <Input
                     value={editPhone}
-                    onChange={(e) => setEditPhone(e.target.value)}
+                    onChange={(e) => canEdit && setEditPhone(e.target.value)}
                     className="mt-1"
+                    readOnly={!canEdit}
                   />
                 </div>
                 <div>
                   <Label>Notes</Label>
                   <Textarea
                     value={editNotes}
-                    onChange={(e) => setEditNotes(e.target.value)}
+                    onChange={(e) => canEdit && setEditNotes(e.target.value)}
                     className="mt-1"
                     rows={2}
+                    readOnly={!canEdit}
                   />
                 </div>
-                <Button
-                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
-                  onClick={handleUpdateCustomer}
-                >
-                  Save Changes
-                </Button>
+                {canEdit && (
+                  <Button
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+                    onClick={handleUpdateCustomer}
+                  >
+                    Save Changes
+                  </Button>
+                )}
+                {isViewOnly && (
+                  <p className="text-xs text-muted-foreground text-center">Read-only access — contact admin to make changes</p>
+                )}
               </div>
 
               {/* Visit History */}

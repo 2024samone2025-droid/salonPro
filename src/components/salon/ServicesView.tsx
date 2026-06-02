@@ -5,7 +5,6 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
@@ -16,6 +15,7 @@ import {
 } from '@/components/ui/dialog'
 import { Plus, Scissors, Clock } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
+import { useAuth } from '@/lib/auth-context'
 
 interface Service {
   id: string
@@ -35,6 +35,9 @@ export default function ServicesView() {
   const [loading, setLoading] = useState(true)
   const [showDialog, setShowDialog] = useState(false)
   const [editing, setEditing] = useState<Service | null>(null)
+
+  const { permissions } = useAuth()
+  const canManage = permissions?.canManageServices ?? false
 
   const [name, setName] = useState('')
   const [price, setPrice] = useState('')
@@ -58,6 +61,7 @@ export default function ServicesView() {
   }, [fetchServices])
 
   const openAdd = () => {
+    if (!canManage) return
     setEditing(null)
     setName('')
     setPrice('')
@@ -66,6 +70,7 @@ export default function ServicesView() {
   }
 
   const openEdit = (s: Service) => {
+    if (!canManage) return
     setEditing(s)
     setName(s.name)
     setPrice(s.price.toString())
@@ -99,6 +104,7 @@ export default function ServicesView() {
   }
 
   const handleToggleActive = async (s: Service) => {
+    if (!canManage) return
     try {
       const res = await fetch('/api/services', {
         method: 'PUT',
@@ -120,15 +126,17 @@ export default function ServicesView() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">Services</h2>
-          <p className="text-muted-foreground text-sm">{services.length} services</p>
+          <p className="text-muted-foreground text-sm">{services.length} services {!canManage && '• View only'}</p>
         </div>
-        <Button
-          className="bg-emerald-600 hover:bg-emerald-700 text-white"
-          onClick={openAdd}
-        >
-          <Plus className="size-4 mr-1" />
-          Add Service
-        </Button>
+        {canManage && (
+          <Button
+            className="bg-emerald-600 hover:bg-emerald-700 text-white"
+            onClick={openAdd}
+          >
+            <Plus className="size-4 mr-1" />
+            Add Service
+          </Button>
+        )}
       </div>
 
       {/* Service List */}
@@ -143,12 +151,14 @@ export default function ServicesView() {
           <CardContent className="p-8 text-center">
             <Scissors className="size-12 mx-auto text-muted-foreground mb-3" />
             <p className="text-muted-foreground">No services yet.</p>
-            <Button
-              className="mt-4 bg-emerald-600 hover:bg-emerald-700 text-white"
-              onClick={openAdd}
-            >
-              <Plus className="size-4 mr-1" /> Add Service
-            </Button>
+            {canManage && (
+              <Button
+                className="mt-4 bg-emerald-600 hover:bg-emerald-700 text-white"
+                onClick={openAdd}
+              >
+                <Plus className="size-4 mr-1" /> Add Service
+              </Button>
+            )}
           </CardContent>
         </Card>
       ) : (
@@ -161,7 +171,7 @@ export default function ServicesView() {
               <CardContent className="p-4">
                 <div className="flex items-start justify-between">
                   <div
-                    className="flex-1 cursor-pointer"
+                    className={`flex-1 ${canManage ? 'cursor-pointer' : ''}`}
                     onClick={() => openEdit(s)}
                   >
                     <p className="font-medium">{s.name}</p>
@@ -173,15 +183,21 @@ export default function ServicesView() {
                       {s.duration} min
                     </p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground">
+                  {canManage ? (
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground">
+                        {s.active ? 'Active' : 'Inactive'}
+                      </span>
+                      <Switch
+                        checked={s.active}
+                        onCheckedChange={() => handleToggleActive(s)}
+                      />
+                    </div>
+                  ) : (
+                    <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
                       {s.active ? 'Active' : 'Inactive'}
                     </span>
-                    <Switch
-                      checked={s.active}
-                      onCheckedChange={() => handleToggleActive(s)}
-                    />
-                  </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -189,51 +205,53 @@ export default function ServicesView() {
         </div>
       )}
 
-      {/* Add/Edit Dialog */}
-      <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{editing ? 'Edit Service' : 'Add Service'}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            <div>
-              <Label>Service Name</Label>
-              <Input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="e.g., Haircut"
-                className="mt-1"
-              />
+      {/* Add/Edit Dialog - only for admin */}
+      {canManage && (
+        <Dialog open={showDialog} onOpenChange={setShowDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{editing ? 'Edit Service' : 'Add Service'}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3">
+              <div>
+                <Label>Service Name</Label>
+                <Input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="e.g., Haircut"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label>Price (RWF)</Label>
+                <Input
+                  type="number"
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                  placeholder="5000"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label>Duration (minutes)</Label>
+                <Input
+                  type="number"
+                  value={duration}
+                  onChange={(e) => setDuration(e.target.value)}
+                  placeholder="30"
+                  className="mt-1"
+                />
+              </div>
+              <Button
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+                onClick={handleSave}
+              >
+                {editing ? 'Save Changes' : 'Add Service'}
+              </Button>
             </div>
-            <div>
-              <Label>Price (RWF)</Label>
-              <Input
-                type="number"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                placeholder="5000"
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <Label>Duration (minutes)</Label>
-              <Input
-                type="number"
-                value={duration}
-                onChange={(e) => setDuration(e.target.value)}
-                placeholder="30"
-                className="mt-1"
-              />
-            </div>
-            <Button
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
-              onClick={handleSave}
-            >
-              {editing ? 'Save Changes' : 'Add Service'}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   )
 }

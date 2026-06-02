@@ -29,6 +29,7 @@ model Staff {
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
   appointments Appointment[]
+  users     User[]
 
   @@index([role])
 }
@@ -86,4 +87,19 @@ model Payment {
 
   @@index([status])
   @@index([method])
+}
+
+model User {
+  id        String  @id @default(cuid())
+  name      String
+  pin       String  // SHA-256 hashed PIN
+  role      String  @default("receptionist") // admin, receptionist, stylist
+  active    Boolean @default(true)
+  staffId   String? // optional link to Staff record
+  staff     Staff?  @relation(fields: [staffId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([role])
+  @@index([pin])
 }

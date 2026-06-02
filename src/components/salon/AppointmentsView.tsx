@@ -11,6 +11,7 @@ import { format, addDays, startOfWeek } from 'date-fns'
 import { useSalonStore } from '@/lib/salon-store'
 import QuickBookingForm from './QuickBookingForm'
 import AppointmentDialog from './AppointmentDialog'
+import { useAuth } from '@/lib/auth-context'
 
 interface Appointment {
   id: string
@@ -63,6 +64,9 @@ const timeSlots = Array.from({ length: END_HOUR - START_HOUR }, (_, i) => {
 
 export default function AppointmentsView() {
   const { selectedDate, setSelectedDate } = useSalonStore()
+  const { user, permissions } = useAuth()
+  const isStylist = user?.role === 'stylist'
+  const staffFilter = isStylist && user.staffId ? user.staffId : null
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [loading, setLoading] = useState(true)
   const [viewMode, setViewMode] = useState<'day' | 'week'>('day')
@@ -86,6 +90,10 @@ export default function AppointmentsView() {
         const to = format(addDays(weekStart, 6), 'yyyy-MM-dd')
         url = `/api/appointments?from=${from}&to=${to}`
       }
+      // Stylists only see their own appointments
+      if (staffFilter) {
+        url += `&staffId=${staffFilter}`
+      }
       const res = await fetch(url)
       const data = await res.json()
       setAppointments(data)
@@ -94,7 +102,7 @@ export default function AppointmentsView() {
     } finally {
       setLoading(false)
     }
-  }, [selectedDate, viewMode])
+  }, [selectedDate, viewMode, staffFilter])
 
   useEffect(() => {
     fetchAppointments()

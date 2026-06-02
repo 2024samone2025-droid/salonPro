@@ -14,7 +14,8 @@ import {
 import { Input } from '@/components/ui/input'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 import { format, subMonths, subWeeks } from 'date-fns'
-import { DollarSign, TrendingUp, Users, Scissors, AlertCircle, CheckCircle2 } from 'lucide-react'
+import { DollarSign, TrendingUp, Users, Scissors, AlertCircle, CheckCircle2, Lock } from 'lucide-react'
+import { useAuth } from '@/lib/auth-context'
 
 function formatRWF(amount: number) {
   return new Intl.NumberFormat('en-RW').format(amount) + ' RWF'
@@ -87,6 +88,9 @@ function Sparkline({ data }: { data: number[] }) {
 }
 
 export default function ReportsView() {
+  const { permissions } = useAuth()
+  const canView = permissions?.reports !== 'none'
+
   const [data, setData] = useState<ReportData | null>(null)
   const [loading, setLoading] = useState(true)
   const [period, setPeriod] = useState('daily')
@@ -155,6 +159,16 @@ export default function ReportsView() {
     if (olderAvg === 0) return null
     return ((recentAvg - olderAvg) / olderAvg) * 100
   }, [data])
+
+  if (!canView) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+        <Lock className="size-12 mb-4 opacity-30" />
+        <h3 className="text-lg font-semibold">Access Restricted</h3>
+        <p className="text-sm mt-1">Reports are available for Admin and Receptionist roles only.</p>
+      </div>
+    )
+  }
 
   if (loading) {
     return (

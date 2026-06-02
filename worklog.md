@@ -103,3 +103,60 @@ Stage Summary:
 - 211 demo appointments for realistic testing
 - Command palette for quick navigation (Ctrl+K)
 - ESLint: 0 errors, all APIs return 200
+
+---
+Task ID: 5
+Agent: Main Agent
+Task: Implement User Access Control (PIN-based auth with role-based permissions)
+
+Work Log:
+- Added User model to Prisma schema (name, hashed PIN, role, staffId link)
+- Created auth utility library (src/lib/auth.ts) with:
+  - SHA-256 PIN hashing via Web Crypto API
+  - HMAC-signed session tokens (base64 + SHA-256 HMAC)
+  - Session cookie management (HttpOnly, 7-day expiry)
+  - ROLE_PERMISSIONS matrix for 3 roles: admin, receptionist, stylist
+- Created 3 auth API routes:
+  - POST /api/auth/login - validates name+PIN, sets session cookie
+  - POST /api/auth/logout - clears session cookie
+  - GET /api/auth/me - returns current user + permissions
+- Created auth context (src/lib/auth-context.tsx) with:
+  - AuthProvider wrapping entire app
+  - useAuth() hook for components
+  - usePermission() and useCanAccess() helper hooks
+- Created LoginPage component with:
+  - PIN-based login form with show/hide PIN toggle
+  - Demo account quick-fill buttons
+  - Loading states and error feedback
+- Updated page.tsx with auth flow (AuthProvider → login gate → authenticated app)
+- Updated Sidebar with:
+  - Role-based navigation filtering (stylists can't see Staff/Reports)
+  - User info display with role badge
+  - Sign out button
+- Updated all views with role-based restrictions:
+  - DashboardView: stylists see own data only, hide revenue/payments
+  - AppointmentsView: stylists see own appointments only, no quick booking
+  - CustomersView: stylists have read-only access
+  - StaffView: receptionists view-only, stylists blocked
+  - ServicesView: receptionists/stylists view-only
+  - ReportsView: stylists see "Access Restricted" page
+  - AppointmentDialog: stylists can update status but not manage payments/delete
+- Created auth guard middleware (src/lib/auth-guard.ts) for API protection
+- Protected all API routes:
+  - /api/appointments - stylist: own appointments only, can update status/notes
+  - /api/customers - stylist: read-only
+  - /api/staff - admin: full CRUD, others: view only
+  - /api/services - admin: full CRUD, others: view only
+  - /api/payments - admin/receptionist only
+  - /api/dashboard - all authenticated, stylists see filtered data
+  - /api/reports - admin/receptionist only
+- Updated seed data with 3 demo users (Admin/1234, Alice/5678, Marie/9012)
+- ESLint: 0 errors, build succeeds
+
+Stage Summary:
+- Full PIN-based authentication with 3 roles
+- Permission matrix: Admin (full), Receptionist (appointments+customers), Stylist (own appointments+view)
+- Session management via HMAC-signed HttpOnly cookies
+- All API routes protected with auth guards
+- All frontend views respect role-based permissions
+- Demo accounts: Admin (1234), Alice-Receptionist (5678), Marie-Stylist (9012)

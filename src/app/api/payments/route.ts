@@ -1,7 +1,11 @@
 import { db } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
+import { requireAuth } from '@/lib/auth-guard'
 
 export async function GET(req: NextRequest) {
+  const auth = await requireAuth()
+  if (!auth.authorized) return auth.error
+
   const params = req.nextUrl.searchParams
   const where: Record<string, unknown> = {}
   if (params.get('status')) where.status = params.get('status')
@@ -22,6 +26,10 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  // Only admin and receptionist can manage payments
+  const auth = await requireAuth('canManagePayments')
+  if (!auth.authorized) return auth.error
+
   const body = await req.json()
   const payment = await db.payment.create({
     data: {
@@ -38,6 +46,10 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
+  // Only admin and receptionist can manage payments
+  const auth = await requireAuth('canManagePayments')
+  if (!auth.authorized) return auth.error
+
   const body = await req.json()
   const { id, ...data } = body
   if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 })

@@ -1,7 +1,12 @@
 import { db } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
+import { requireAuth } from '@/lib/auth-guard'
 
 export async function GET(req: NextRequest) {
+  // Anyone authenticated can view services
+  const auth = await requireAuth()
+  if (!auth.authorized) return auth.error
+
   const active = req.nextUrl.searchParams.get('active')
   const where: Record<string, unknown> = {}
   if (active === 'true') where.active = true
@@ -13,6 +18,10 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  // Only admin can add services
+  const auth = await requireAuth('canManageServices')
+  if (!auth.authorized) return auth.error
+
   const body = await req.json()
   const service = await db.service.create({
     data: {
@@ -26,6 +35,10 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
+  // Only admin can edit services
+  const auth = await requireAuth('canManageServices')
+  if (!auth.authorized) return auth.error
+
   const body = await req.json()
   const { id, ...data } = body
   if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 })
@@ -34,6 +47,10 @@ export async function PUT(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  // Only admin can delete services
+  const auth = await requireAuth('canManageServices')
+  if (!auth.authorized) return auth.error
+
   const id = req.nextUrl.searchParams.get('id')
   if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 })
   await db.service.delete({ where: { id } })

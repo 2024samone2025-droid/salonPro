@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { toast } from '@/hooks/use-toast'
+import { useAuth } from '@/lib/auth-context'
 
 interface Appointment {
   id: string
@@ -86,6 +87,11 @@ export default function AppointmentDialog({ appointment, open, onClose, onUpdate
   const [notes, setNotes] = useState('')
   const [updating, setUpdating] = useState(false)
 
+  const { permissions } = useAuth()
+  const canUpdateStatus = permissions?.canUpdateAppointmentStatus ?? false
+  const canManagePayments = permissions?.canManagePayments ?? false
+  const canDelete = permissions?.canDeleteRecords ?? false
+
   useEffect(() => {
     if (appointment) {
       setPaymentStatus(appointment.payment?.status || 'unpaid')
@@ -120,7 +126,6 @@ export default function AppointmentDialog({ appointment, open, onClose, onUpdate
 
   const handlePaymentUpdate = async () => {
     if (!appointment.payment?.id) {
-      // Create payment
       try {
         const res = await fetch('/api/payments', {
           method: 'POST',
@@ -140,7 +145,6 @@ export default function AppointmentDialog({ appointment, open, onClose, onUpdate
         toast({ title: 'Error', description: 'Failed to create payment', variant: 'destructive' })
       }
     } else {
-      // Update payment
       try {
         const res = await fetch('/api/payments', {
           method: 'PUT',
@@ -220,8 +224,8 @@ export default function AppointmentDialog({ appointment, open, onClose, onUpdate
             </div>
           </div>
 
-          {/* Status change buttons */}
-          {nextStatuses.length > 0 && (
+          {/* Status change buttons - only if user has permission */}
+          {canUpdateStatus && nextStatuses.length > 0 && (
             <>
               <Separator />
               <div>
@@ -244,57 +248,79 @@ export default function AppointmentDialog({ appointment, open, onClose, onUpdate
             </>
           )}
 
-          {/* Payment section */}
-          <Separator />
-          <div>
-            <Label className="text-sm font-medium">Payment</Label>
-            <div className="grid grid-cols-3 gap-2 mt-2">
+          {/* Payment section - only if user has permission */}
+          {canManagePayments && (
+            <>
+              <Separator />
               <div>
-                <Label className="text-xs text-muted-foreground">Status</Label>
-                <Select value={paymentStatus} onValueChange={setPaymentStatus}>
-                  <SelectTrigger className="h-8 text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="unpaid">Unpaid</SelectItem>
-                    <SelectItem value="partial">Partial</SelectItem>
-                    <SelectItem value="paid">Paid</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label className="text-sm font-medium">Payment</Label>
+                <div className="grid grid-cols-3 gap-2 mt-2">
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Status</Label>
+                    <Select value={paymentStatus} onValueChange={setPaymentStatus}>
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="unpaid">Unpaid</SelectItem>
+                        <SelectItem value="partial">Partial</SelectItem>
+                        <SelectItem value="paid">Paid</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Method</Label>
+                    <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="cash">Cash</SelectItem>
+                        <SelectItem value="mtn_momo">MTN MoMo</SelectItem>
+                        <SelectItem value="airtel_money">Airtel Money</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Amount (RWF)</Label>
+                    <Input
+                      type="number"
+                      value={paymentAmount}
+                      onChange={(e) => setPaymentAmount(e.target.value)}
+                      className="h-8 text-xs"
+                      placeholder={appointment.service.price.toString()}
+                    />
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  className="mt-2 w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+                  onClick={handlePaymentUpdate}
+                  disabled={updating}
+                >
+                  Update Payment
+                </Button>
               </div>
+            </>
+          )}
+
+          {/* Show payment info for stylists (read-only) */}
+          {!canManagePayments && appointment.payment && (
+            <>
+              <Separator />
               <div>
-                <Label className="text-xs text-muted-foreground">Method</Label>
-                <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                  <SelectTrigger className="h-8 text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="cash">Cash</SelectItem>
-                    <SelectItem value="mtn_momo">MTN MoMo</SelectItem>
-                    <SelectItem value="airtel_money">Airtel Money</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label className="text-sm font-medium">Payment Info</Label>
+                <div className="flex items-center gap-2 mt-2">
+                  <Badge className={`${appointment.payment.status === 'paid' ? 'bg-green-100 text-green-800' : appointment.payment.status === 'partial' ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800'} border-0`}>
+                    {appointment.payment.status === 'paid' ? 'Paid' : appointment.payment.status === 'partial' ? 'Partial' : 'Unpaid'}
+                  </Badge>
+                  {appointment.payment.status !== 'unpaid' && (
+                    <span className="text-sm">{formatRWF(appointment.payment.amount)} via {methodLabels[appointment.payment.method]}</span>
+                  )}
+                </div>
               </div>
-              <div>
-                <Label className="text-xs text-muted-foreground">Amount (RWF)</Label>
-                <Input
-                  type="number"
-                  value={paymentAmount}
-                  onChange={(e) => setPaymentAmount(e.target.value)}
-                  className="h-8 text-xs"
-                  placeholder={appointment.service.price.toString()}
-                />
-              </div>
-            </div>
-            <Button
-              size="sm"
-              className="mt-2 w-full bg-emerald-600 hover:bg-emerald-700 text-white"
-              onClick={handlePaymentUpdate}
-              disabled={updating}
-            >
-              Update Payment
-            </Button>
-          </div>
+            </>
+          )}
 
           {/* Notes */}
           <Separator />
@@ -325,8 +351,8 @@ export default function AppointmentDialog({ appointment, open, onClose, onUpdate
             </Button>
           </div>
 
-          {/* Cancel/Delete */}
-          {appointment.status !== 'completed' && (
+          {/* Cancel/Delete - only if user has permission */}
+          {canDelete && appointment.status !== 'completed' && (
             <div className="pt-2">
               <Button
                 size="sm"

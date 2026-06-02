@@ -1,5 +1,6 @@
 'use client'
 
+import { AuthProvider, useAuth } from '@/lib/auth-context'
 import { useSalonStore } from '@/lib/salon-store'
 import Sidebar from '@/components/salon/Sidebar'
 import DashboardView from '@/components/salon/DashboardView'
@@ -9,6 +10,8 @@ import StaffView from '@/components/salon/StaffView'
 import ServicesView from '@/components/salon/ServicesView'
 import ReportsView from '@/components/salon/ReportsView'
 import CommandPalette from '@/components/salon/CommandPalette'
+import LoginPage from '@/components/salon/LoginPage'
+import { Skeleton } from '@/components/ui/skeleton'
 
 function MainContent() {
   const { activeTab } = useSalonStore()
@@ -31,7 +34,7 @@ function MainContent() {
   }
 }
 
-export default function Home() {
+function AuthenticatedApp() {
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-emerald-50/50 via-background to-teal-50/30">
       <div className="flex flex-1">
@@ -47,5 +50,34 @@ export default function Home() {
       </footer>
       <CommandPalette />
     </div>
+  )
+}
+
+function AppShell() {
+  const { user, loading } = useAuth()
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-background to-teal-50">
+        <div className="space-y-4 text-center">
+          <div className="size-12 border-3 border-emerald-200 border-t-emerald-600 rounded-full animate-spin mx-auto" />
+          <p className="text-sm text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return <LoginPage />
+  }
+
+  return <AuthenticatedApp />
+}
+
+export default function Home() {
+  return (
+    <AuthProvider>
+      <AppShell />
+    </AuthProvider>
   )
 }

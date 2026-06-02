@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useSalonStore, ViewTab } from '@/lib/salon-store'
+import { useAuth, type UserRole } from '@/lib/auth-context'
 import { cn } from '@/lib/utils'
 import {
   LayoutDashboard,
@@ -14,25 +15,39 @@ import {
   X,
   Sparkles,
   Search,
+  LogOut,
+  Shield,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 
-const navItems: { tab: ViewTab; label: string; icon: React.ElementType }[] = [
-  { tab: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { tab: 'appointments', label: 'Appointments', icon: CalendarDays },
-  { tab: 'customers', label: 'Customers', icon: Users },
-  { tab: 'staff', label: 'Staff', icon: UserCog },
-  { tab: 'services', label: 'Services', icon: Scissors },
-  { tab: 'reports', label: 'Reports', icon: BarChart3 },
+const allNavItems: { tab: ViewTab; label: string; icon: React.ElementType; roles: UserRole[] }[] = [
+  { tab: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['admin', 'receptionist', 'stylist'] },
+  { tab: 'appointments', label: 'Appointments', icon: CalendarDays, roles: ['admin', 'receptionist', 'stylist'] },
+  { tab: 'customers', label: 'Customers', icon: Users, roles: ['admin', 'receptionist', 'stylist'] },
+  { tab: 'staff', label: 'Staff', icon: UserCog, roles: ['admin', 'receptionist'] },
+  { tab: 'services', label: 'Services', icon: Scissors, roles: ['admin', 'receptionist', 'stylist'] },
+  { tab: 'reports', label: 'Reports', icon: BarChart3, roles: ['admin', 'receptionist'] },
 ]
+
+const roleLabels: Record<UserRole, string> = {
+  admin: 'Admin',
+  receptionist: 'Receptionist',
+  stylist: 'Stylist',
+}
+
+const roleColors: Record<UserRole, string> = {
+  admin: 'bg-amber-100 text-amber-800 border-amber-200',
+  receptionist: 'bg-purple-100 text-purple-800 border-purple-200',
+  stylist: 'bg-teal-100 text-teal-800 border-teal-200',
+}
 
 export default function Sidebar() {
   const { activeTab, setActiveTab, sidebarOpen, setSidebarOpen, setCommandOpen } = useSalonStore()
+  const { user, permissions, logout } = useAuth()
   const [todayCount, setTodayCount] = useState<number | null>(null)
 
   useEffect(() => {
-    // Fetch today's appointment count for the badge
     const today = new Date().toISOString().split('T')[0]
     fetch(`/api/appointments?date=${today}`)
       .then((r) => r.json())
@@ -41,6 +56,16 @@ export default function Sidebar() {
       })
       .catch(() => {})
   }, [activeTab])
+
+  // Filter nav items based on user role
+  const navItems = allNavItems.filter((item) => {
+    if (!user) return false
+    return item.roles.includes(user.role as UserRole)
+  })
+
+  const handleLogout = async () => {
+    await logout()
+  }
 
   return (
     <>
@@ -129,10 +154,33 @@ export default function Sidebar() {
           })}
         </nav>
 
+        {/* User info & Logout */}
+        <div className="px-4 py-4 border-t border-emerald-800/50">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="flex items-center justify-center size-9 rounded-full bg-emerald-700/50 shrink-0">
+              <Shield className="size-4 text-emerald-300" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-emerald-100 truncate">{user?.name || 'User'}</p>
+              <Badge className={`${roleColors[user?.role as UserRole] || ''} border text-[10px] px-1.5 py-0`}>
+                {roleLabels[user?.role as UserRole] || user?.role}
+              </Badge>
+            </div>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full justify-start text-emerald-400/70 hover:text-red-300 hover:bg-red-900/20 transition-colors"
+            onClick={handleLogout}
+          >
+            <LogOut className="size-4 mr-2" />
+            Sign Out
+          </Button>
+        </div>
+
         {/* Footer */}
-        <div className="px-6 py-5 border-t border-emerald-800/50">
-          <p className="text-xs text-emerald-400/50">© 2025 SalonPro Rwanda</p>
-          <p className="text-[10px] text-emerald-500/30 mt-1">v1.0.0</p>
+        <div className="px-6 py-3 border-t border-emerald-800/50">
+          <p className="text-[10px] text-emerald-500/30">v1.1.0 • Access Control</p>
         </div>
       </aside>
     </>

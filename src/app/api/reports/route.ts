@@ -1,7 +1,15 @@
 import { db } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
+import { requireAuth } from '@/lib/auth-guard'
 
 export async function GET(req: NextRequest) {
+  // Reports require admin or receptionist role
+  const auth = await requireAuth()
+  if (!auth.authorized) return auth.error
+
+  if (auth.user?.role === 'stylist') {
+    return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
+  }
   const params = req.nextUrl.searchParams
   const period = params.get('period') || 'daily'
   const fromParam = params.get('from')

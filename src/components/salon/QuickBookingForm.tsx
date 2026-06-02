@@ -14,6 +14,7 @@ import {
 import { Card, CardContent } from '@/components/ui/card'
 import { Plus, Search, Zap } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
+import { useAuth } from '@/lib/auth-context'
 
 interface Customer {
   id: string
@@ -41,6 +42,9 @@ interface QuickBookingFormProps {
 }
 
 export default function QuickBookingForm({ selectedDate, onBookingCreated }: QuickBookingFormProps) {
+  const { permissions, user } = useAuth()
+  const canCreate = permissions?.canCreateAppointment ?? false
+
   const [customers, setCustomers] = useState<Customer[]>([])
   const [staff, setStaff] = useState<Staff[]>([])
   const [services, setServices] = useState<Service[]>([])
@@ -157,6 +161,9 @@ export default function QuickBookingForm({ selectedDate, onBookingCreated }: Qui
       setSubmitting(false)
     }
   }
+
+  // Stylists shouldn't see the quick booking form
+  if (!canCreate) return null
 
   return (
     <Card className="border-emerald-200 bg-emerald-50/50">

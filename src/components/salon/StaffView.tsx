@@ -21,8 +21,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Plus, Phone, UserCog } from 'lucide-react'
+import { Plus, Phone, UserCog, Lock } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
+import { useAuth } from '@/lib/auth-context'
 
 interface StaffMember {
   id: string
@@ -49,6 +50,10 @@ export default function StaffView() {
   const [showDialog, setShowDialog] = useState(false)
   const [editing, setEditing] = useState<StaffMember | null>(null)
 
+  const { permissions } = useAuth()
+  const canManage = permissions?.canManageStaff ?? false
+  const isViewOnly = permissions?.staff === 'view'
+
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [role, setRole] = useState('stylist')
@@ -71,6 +76,7 @@ export default function StaffView() {
   }, [fetchStaff])
 
   const openAdd = () => {
+    if (!canManage) return
     setEditing(null)
     setName('')
     setPhone('')
@@ -79,6 +85,7 @@ export default function StaffView() {
   }
 
   const openEdit = (s: StaffMember) => {
+    if (!canManage) return
     setEditing(s)
     setName(s.name)
     setPhone(s.phone)
@@ -113,6 +120,7 @@ export default function StaffView() {
   }
 
   const handleToggleActive = async (s: StaffMember) => {
+    if (!canManage) return
     try {
       const res = await fetch('/api/staff', {
         method: 'PUT',
@@ -134,15 +142,17 @@ export default function StaffView() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">Staff</h2>
-          <p className="text-muted-foreground text-sm">{staff.length} staff members</p>
+          <p className="text-muted-foreground text-sm">{staff.length} staff members {!canManage && '• View only'}</p>
         </div>
-        <Button
-          className="bg-emerald-600 hover:bg-emerald-700 text-white"
-          onClick={openAdd}
-        >
-          <Plus className="size-4 mr-1" />
-          Add Staff
-        </Button>
+        {canManage && (
+          <Button
+            className="bg-emerald-600 hover:bg-emerald-700 text-white"
+            onClick={openAdd}
+          >
+            <Plus className="size-4 mr-1" />
+            Add Staff
+          </Button>
+        )}
       </div>
 
       {/* Staff List */}
@@ -157,12 +167,14 @@ export default function StaffView() {
           <CardContent className="p-8 text-center">
             <UserCog className="size-12 mx-auto text-muted-foreground mb-3" />
             <p className="text-muted-foreground">No staff members yet.</p>
-            <Button
-              className="mt-4 bg-emerald-600 hover:bg-emerald-700 text-white"
-              onClick={openAdd}
-            >
-              <Plus className="size-4 mr-1" /> Add Staff Member
-            </Button>
+            {canManage && (
+              <Button
+                className="mt-4 bg-emerald-600 hover:bg-emerald-700 text-white"
+                onClick={openAdd}
+              >
+                <Plus className="size-4 mr-1" /> Add Staff Member
+              </Button>
+            )}
           </CardContent>
         </Card>
       ) : (
@@ -175,7 +187,7 @@ export default function StaffView() {
               <CardContent className="p-4">
                 <div className="flex items-start justify-between">
                   <div
-                    className="flex-1 cursor-pointer"
+                    className={`flex-1 ${canManage ? 'cursor-pointer' : ''}`}
                     onClick={() => openEdit(s)}
                   >
                     <p className="font-medium">{s.name}</p>
@@ -187,15 +199,21 @@ export default function StaffView() {
                       {roleLabels[s.role] || s.role}
                     </Badge>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground">
+                  {canManage ? (
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground">
+                        {s.active ? 'Active' : 'Inactive'}
+                      </span>
+                      <Switch
+                        checked={s.active}
+                        onCheckedChange={() => handleToggleActive(s)}
+                      />
+                    </div>
+                  ) : (
+                    <Badge variant="outline" className="text-xs">
                       {s.active ? 'Active' : 'Inactive'}
-                    </span>
-                    <Switch
-                      checked={s.active}
-                      onCheckedChange={() => handleToggleActive(s)}
-                    />
-                  </div>
+                    </Badge>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -203,52 +221,54 @@ export default function StaffView() {
         </div>
       )}
 
-      {/* Add/Edit Dialog */}
-      <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{editing ? 'Edit Staff Member' : 'Add Staff Member'}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            <div>
-              <Label>Name</Label>
-              <Input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Staff name"
-                className="mt-1"
-              />
+      {/* Add/Edit Dialog - only for admin */}
+      {canManage && (
+        <Dialog open={showDialog} onOpenChange={setShowDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{editing ? 'Edit Staff Member' : 'Add Staff Member'}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3">
+              <div>
+                <Label>Name</Label>
+                <Input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Staff name"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label>Phone</Label>
+                <Input
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+250788XXXXXX"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label>Role</Label>
+                <Select value={role} onValueChange={setRole}>
+                  <SelectTrigger className="mt-1 w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="stylist">Stylist</SelectItem>
+                    <SelectItem value="receptionist">Receptionist</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+                onClick={handleSave}
+              >
+                {editing ? 'Save Changes' : 'Add Staff Member'}
+              </Button>
             </div>
-            <div>
-              <Label>Phone</Label>
-              <Input
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="+250788XXXXXX"
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <Label>Role</Label>
-              <Select value={role} onValueChange={setRole}>
-                <SelectTrigger className="mt-1 w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="stylist">Stylist</SelectItem>
-                  <SelectItem value="receptionist">Receptionist</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <Button
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
-              onClick={handleSave}
-            >
-              {editing ? 'Save Changes' : 'Add Staff Member'}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   )
 }
