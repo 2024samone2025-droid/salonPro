@@ -70,14 +70,14 @@
   --chart-3: oklch(0.765 0.177 163.223);             /* emerald-400 */
   --chart-4: oklch(0.845 0.143 164.978);             /* emerald-300 */
   --chart-5: oklch(0.432 0.095 166.913);             /* emerald-800 */
-  /* Sidebar: Vercel-style near-black */
-  --sidebar: oklch(0.145 0 0);                       /* #111111 */
-  --sidebar-foreground: oklch(0.922 0 0);            /* #e5e5e5 */
-  --sidebar-primary: oklch(1 0 0);                   /* #ffffff white accent */
-  --sidebar-primary-foreground: oklch(0.145 0 0);    /* #111111 */
-  --sidebar-accent: oklch(0.205 0 0);                /* #1a1a1a hover */
-  --sidebar-accent-foreground: oklch(0.922 0 0);     /* #e5e5e5 */
-  --sidebar-border: oklch(0.25 0 0);                 /* #2a2a2a subtle border */
+  /* Sidebar: Light mode — clean light sidebar */
+  --sidebar: oklch(0.985 0 0);                       /* #fafafa light gray-white */
+  --sidebar-foreground: oklch(0.145 0 0);            /* #111111 dark text */
+  --sidebar-primary: oklch(0.145 0 0);               /* #111111 dark primary */
+  --sidebar-primary-foreground: oklch(1 0 0);        /* #ffffff */
+  --sidebar-accent: oklch(0.965 0 0);                /* #f5f5f5 hover */
+  --sidebar-accent-foreground: oklch(0.205 0 0);     /* #171717 */
+  --sidebar-border: oklch(0.922 0 0);                /* #e5e5e5 subtle border */
   --sidebar-ring: oklch(0.145 0 0);                  /* #000000 */
 }
 
@@ -125,18 +125,9 @@
   }
 }
 
-/* ─── Vercel-style sidebar ─── */
-/* Always dark — like Vercel's dashboard sidebar */
-[data-sidebar="sidebar"] {
-  background: oklch(0.085 0 0) !important;  /* #080808 near-black */
-  color: oklch(0.922 0 0);                  /* #e5e5e5 */
-}
-
-/* In light mode, make sidebar slightly lighter than dark mode */
-:root [data-sidebar="sidebar"] {
-  background: oklch(0.115 0 0) !important;  /* #0a0a0a */
-  color: oklch(0.922 0 0);
-}
+/* ─── Sidebar respects theme via CSS variables ─── */
+/* Light/dark sidebar colors are defined in :root / .dark above */
+/* The sidebar component uses bg-sidebar text-sidebar-foreground etc. */
 
 /* ─── Vercel-style scrollbar ─── */
 @layer base {

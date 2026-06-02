@@ -38,7 +38,7 @@ const statusConfig: Record<string, { label: string; cardClass: string; dotClass:
   booked: { label: 'Booked', cardClass: 'bg-blue-500/8 text-blue-700 dark:text-blue-300 border-blue-500/20 dark:border-blue-500/30', dotClass: 'bg-blue-500', borderClass: 'border-l-blue-500' },
   confirmed: { label: 'Confirmed', cardClass: 'bg-emerald-500/8 text-emerald-700 dark:text-emerald-300 border-emerald-500/20 dark:border-emerald-500/30', dotClass: 'bg-emerald-500', borderClass: 'border-l-emerald-500' },
   in_progress: { label: 'In Progress', cardClass: 'bg-amber-500/8 text-amber-700 dark:text-amber-300 border-amber-500/20 dark:border-amber-500/30', dotClass: 'bg-amber-500', borderClass: 'border-l-amber-500' },
-  completed: { label: 'Completed', cardClass: 'bg-neutral-500/8 text-neutral-600 dark:text-neutral-400 border-neutral-500/20 dark:border-neutral-500/30', dotClass: 'bg-neutral-400', borderClass: 'border-l-neutral-400' },
+  completed: { label: 'Completed', cardClass: 'bg-muted/80 text-muted-foreground border-muted-foreground/20', dotClass: 'bg-muted-foreground', borderClass: 'border-l-muted-foreground' },
   no_show: { label: 'No Show', cardClass: 'bg-red-500/8 text-red-700 dark:text-red-300 border-red-500/20 dark:border-red-500/30', dotClass: 'bg-red-500', borderClass: 'border-l-red-500' },
 }
 
@@ -226,7 +226,7 @@ export default function AppointmentsView() {
             return (
               <div
                 key={apt.id}
-                className={`absolute rounded-lg border-l-[3px] p-1.5 cursor-pointer hover:opacity-80 transition-opacity overflow-hidden shadow-sm ${config?.cardClass || 'bg-muted border-border'} ${config?.borderClass || 'border-l-gray-400'}`}
+                className={`absolute rounded-lg border-l-[3px] p-1.5 cursor-pointer hover:opacity-80 transition-opacity overflow-hidden shadow-sm ${config?.cardClass || 'bg-muted border-border'} ${config?.borderClass || 'border-l-border'}`}
                 style={{
                   top: `${top + 2}px`,
                   height: `${height - 4}px`,
@@ -317,7 +317,7 @@ export default function AppointmentsView() {
                     return (
                       <div
                         key={apt.id}
-                        className={`rounded-md border-l-[3px] p-1.5 cursor-pointer hover:opacity-80 transition-opacity text-xs shadow-sm ${config?.cardClass || 'bg-muted'} ${config?.borderClass || 'border-l-gray-400'}`}
+                        className={`rounded-md border-l-[3px] p-1.5 cursor-pointer hover:opacity-80 transition-opacity text-xs shadow-sm ${config?.cardClass || 'bg-muted'} ${config?.borderClass || 'border-l-border'}`}
                         onClick={() => handleAppointmentClick(apt)}
                       >
                         <div className="flex items-center gap-1">

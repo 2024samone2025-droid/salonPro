@@ -87,41 +87,41 @@ export default function SalonSidebar() {
   return (
     <Sidebar
       collapsible="offcanvas"
-      className="border-r-0"
+      className="border-r border-sidebar-border"
     >
-      {/* Header: Logo — Vercel-style minimal */}
+      {/* Header: Logo */}
       <SidebarHeader className="px-4 pt-4 pb-3">
         <div className="flex items-center gap-2.5">
-          <div className="flex items-center justify-center size-7 rounded-md bg-white shrink-0">
-            <Triangle className="size-4 text-black fill-black" />
+          <div className="flex items-center justify-center size-7 rounded-md bg-sidebar-primary shrink-0">
+            <Triangle className="size-4 text-sidebar-primary-foreground fill-sidebar-primary-foreground" />
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="text-sm font-semibold text-white leading-none">SalonPro</span>
-            <span className="text-[10px] text-neutral-500 leading-none">Rwanda</span>
+            <span className="text-sm font-semibold text-sidebar-foreground leading-none">SalonPro</span>
+            <span className="text-[10px] text-sidebar-foreground/40 leading-none">Rwanda</span>
           </div>
         </div>
       </SidebarHeader>
 
-      <SidebarSeparator className="bg-neutral-800" />
+      <SidebarSeparator />
 
-      {/* Search — Vercel-style command button */}
+      {/* Search command button */}
       <div className="px-3 pt-3 pb-1">
         <button
           onClick={() => setCommandOpen(true)}
-          className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[13px] text-neutral-400 bg-neutral-900 border border-neutral-800 hover:bg-neutral-800 hover:text-neutral-300 hover:border-neutral-700 transition-colors"
+          className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[13px] text-sidebar-foreground/50 bg-sidebar-accent border border-sidebar-border hover:bg-sidebar-accent/80 hover:text-sidebar-foreground/70 hover:border-sidebar-foreground/20 transition-colors"
         >
           <Search className="size-3.5" />
           <span className="flex-1 text-left">Search...</span>
-          <kbd className="text-[10px] text-neutral-600 px-1.5 py-0.5 rounded border border-neutral-800 font-mono">
+          <kbd className="text-[10px] text-sidebar-foreground/30 px-1.5 py-0.5 rounded border border-sidebar-border font-mono">
             ⌘K
           </kbd>
         </button>
       </div>
 
-      {/* Navigation — Vercel-style clean nav */}
+      {/* Navigation */}
       <SidebarContent className="px-2 pt-1">
         <SidebarGroup>
-          <SidebarGroupLabel className="text-neutral-600 text-[11px] font-medium uppercase tracking-widest px-2">
+          <SidebarGroupLabel className="text-sidebar-foreground/40 text-[11px] font-medium uppercase tracking-widest px-2">
             Menu
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -139,19 +139,19 @@ export default function SalonSidebar() {
                         transition-colors duration-150
                         ${
                           isActive
-                            ? 'bg-neutral-800 text-white'
-                            : 'text-neutral-400 hover:bg-neutral-800/60 hover:text-neutral-200'
+                            ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
+                            : 'text-sidebar-foreground/60 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground/90'
                         }
                       `}
                     >
                       <Icon
                         className={`size-4 transition-colors ${
-                          isActive ? 'text-white' : 'text-neutral-500 group-hover:text-neutral-300'
+                          isActive ? 'text-sidebar-accent-foreground' : 'text-sidebar-foreground/40 group-hover:text-sidebar-foreground/70'
                         }`}
                       />
                       <span>{item.label}</span>
                       {item.tab === 'appointments' && todayCount !== null && (
-                        <SidebarMenuBadge className="bg-white text-black border-0 text-[10px] min-w-[18px] h-[18px] justify-center font-medium">
+                        <SidebarMenuBadge className="bg-sidebar-primary text-sidebar-primary-foreground border-0 text-[10px] min-w-[18px] h-[18px] justify-center font-medium">
                           {todayCount}
                         </SidebarMenuBadge>
                       )}
@@ -164,20 +164,20 @@ export default function SalonSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      {/* Footer: User info & Logout — Vercel-style */}
+      {/* Footer: User info & Logout */}
       <SidebarFooter className="px-3 pb-3 pt-2">
-        <div className="border-t border-neutral-800 pt-3">
+        <div className="border-t border-sidebar-border pt-3">
           <div className="flex items-center gap-2.5 px-1 mb-2">
-            <Avatar className="size-7 border border-neutral-700">
-              <AvatarFallback className="bg-neutral-800 text-neutral-300 text-[11px] font-medium">
+            <Avatar className="size-7 border border-sidebar-border">
+              <AvatarFallback className="bg-sidebar-accent text-sidebar-foreground/70 text-[11px] font-medium">
                 {user?.name ? getInitials(user.name) : '??'}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
-              <p className="text-[13px] font-medium text-neutral-200 truncate leading-tight">
+              <p className="text-[13px] font-medium text-sidebar-foreground truncate leading-tight">
                 {user?.name || 'User'}
               </p>
-              <p className="text-[11px] text-neutral-500 leading-tight">
+              <p className="text-[11px] text-sidebar-foreground/40 leading-tight">
                 {roleLabels[user?.role as UserRole] || user?.role}
               </p>
             </div>
@@ -185,13 +185,13 @@ export default function SalonSidebar() {
           <Button
             variant="ghost"
             size="sm"
-            className="w-full justify-start text-neutral-500 hover:text-red-400 hover:bg-red-500/10 transition-colors text-[13px] h-8"
+            className="w-full justify-start text-sidebar-foreground/40 hover:text-destructive hover:bg-destructive/10 transition-colors text-[13px] h-8"
             onClick={handleLogout}
           >
             <LogOut className="size-3.5 mr-2" />
             Sign Out
           </Button>
-          <p className="text-[10px] text-neutral-700 text-center mt-1.5 font-mono">
+          <p className="text-[10px] text-sidebar-foreground/20 text-center mt-1.5 font-mono">
             v1.3.0
           </p>
         </div>
