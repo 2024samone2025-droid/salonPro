@@ -32,7 +32,16 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
+        style={{ backgroundColor: 'white', color: '#111' }}
       >
+        <noscript>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', fontFamily: 'system-ui, sans-serif' }}>
+            <div style={{ textAlign: 'center' }}>
+              <h1 style={{ fontSize: '1.25rem', fontWeight: 600 }}>SalonPro Rwanda</h1>
+              <p style={{ color: '#737373', marginTop: '0.5rem' }}>Please enable JavaScript to use this application.</p>
+            </div>
+          </div>
+        </noscript>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

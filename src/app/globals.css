@@ -122,6 +122,13 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Fallback in case CSS variables fail to load */
+    background-color: #ffffff;
+    color: #111111;
+  }
+  .dark body {
+    background-color: #0a0a0a;
+    color: #ededed;
   }
 }
 

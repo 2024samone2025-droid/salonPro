@@ -77,11 +77,14 @@ function AppShell() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="space-y-3 text-center">
-          <div className="relative mx-auto size-10">
-            <Loader2 className="size-10 text-foreground/20 animate-spin" />
+        <div className="space-y-4 text-center">
+          <div className="relative mx-auto">
+            <Triangle className="size-8 text-foreground animate-pulse" />
           </div>
-          <p className="text-sm text-muted-foreground">Loading...</p>
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-foreground">SalonPro</p>
+            <p className="text-xs text-muted-foreground">Loading...</p>
+          </div>
         </div>
       </div>
     )
