@@ -1,0 +1,1 @@
+-- Baseline: database already contains the expected schema
