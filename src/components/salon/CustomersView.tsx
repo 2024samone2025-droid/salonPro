@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -42,6 +42,7 @@ import {
 import { toast } from 'sonner'
 import { format } from 'date-fns'
 import { useAuth } from '@/lib/auth-context'
+import { STATUS_CONFIG, type AppointmentStatus } from '@/lib/constants'
 
 interface CustomerAppointment {
   id: string
@@ -61,24 +62,12 @@ interface Customer {
   appointments: CustomerAppointment[]
 }
 
-const statusLabels: Record<string, string> = {
-  booked: 'Booked',
-  confirmed: 'Confirmed',
-  in_progress: 'In Progress',
-  completed: 'Completed',
-  no_show: 'No Show',
-}
-
-const statusColors: Record<string, string> = {
-  booked: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
-  confirmed: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
-  in_progress: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
-  completed: 'bg-muted text-muted-foreground',
-  no_show: 'bg-red-500/10 text-red-600 dark:text-red-400',
-}
-
 function formatRWF(amount: number) {
-  return new Intl.NumberFormat('en-RW').format(amount) + ' RWF'
+  return new Intl.NumberFormat('en-RW', {
+    style: 'currency',
+    currency: 'RWF',
+    maximumFractionDigits: 0,
+  }).format(amount)
 }
 
 function getInitials(name: string) {
@@ -99,6 +88,7 @@ export default function CustomersView() {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [saving, setSaving] = useState(false)
+  const isInitialMount = useRef(true)
 
   const { permissions, authFetch } = useAuth()
   const canEdit = permissions?.customers === 'full'
@@ -115,7 +105,10 @@ export default function CustomersView() {
   const [editNotes, setEditNotes] = useState('')
 
   const fetchCustomers = useCallback(async () => {
-    setLoading(true)
+    if (!isInitialMount.current) {
+      setLoading(true)
+    }
+    isInitialMount.current = false
     try {
       const url = searchQuery ? `/api/customers?q=${encodeURIComponent(searchQuery)}` : '/api/customers'
       const res = await authFetch(url)
@@ -236,7 +229,7 @@ export default function CustomersView() {
               placeholder="Search by name or phone..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 w-full sm:w-64"
+              className="pl-9 h-10 w-full sm:w-64 shadow-sm"
             />
           </div>
           <ToggleGroup
@@ -244,22 +237,22 @@ export default function CustomersView() {
             value={viewMode}
             onValueChange={(v) => { if (v) setViewMode(v as 'grid' | 'list') }}
             variant="outline"
-            size="sm"
+            className="border rounded-md p-1 bg-muted/50 hidden sm:flex"
           >
-            <ToggleGroupItem value="grid" aria-label="Grid view" className="min-w-[44px]">
+            <ToggleGroupItem value="grid" aria-label="Grid view" className="size-8 p-0">
               <LayoutGrid className="size-4" />
             </ToggleGroupItem>
-            <ToggleGroupItem value="list" aria-label="List view" className="min-w-[44px]">
+            <ToggleGroupItem value="list" aria-label="List view" className="size-8 p-0">
               <List className="size-4" />
             </ToggleGroupItem>
           </ToggleGroup>
           {canEdit && (
             <Button
-              className="h-9 sm:h-10"
+              className="h-10 gap-2 shadow-sm shrink-0"
               onClick={() => setShowAddDialog(true)}
             >
-              <Plus className="size-4 mr-1.5" />
-              Add
+              <Plus className="size-4" />
+              Add Customer
             </Button>
           )}
         </div>
@@ -580,9 +573,9 @@ export default function CustomersView() {
                           </div>
                           <div className="flex flex-col items-end gap-1.5 ml-3 shrink-0">
                             <Badge
-                              className={`${statusColors[apt.status] || 'bg-muted text-muted-foreground'} border-0 text-xs`}
+                              className={cn(STATUS_CONFIG[apt.status as AppointmentStatus]?.badgeClass, "border text-[11px] px-2 py-0.5 shadow-sm")}
                             >
-                              {statusLabels[apt.status] || apt.status}
+                              {STATUS_CONFIG[apt.status as AppointmentStatus]?.label || apt.status}
                             </Badge>
                             {apt.service?.price > 0 && (
                               <span className="text-xs font-semibold text-primary">

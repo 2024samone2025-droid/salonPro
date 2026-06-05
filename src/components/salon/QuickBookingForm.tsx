@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -61,7 +61,6 @@ export default function QuickBookingForm({ selectedDate, onBookingCreated }: Qui
   const [services, setServices] = useState<Service[]>([])
 
   const [searchQuery, setSearchQuery] = useState('')
-  const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([])
   const [showDropdown, setShowDropdown] = useState(false)
   const [showNewCustomer, setShowNewCustomer] = useState(false)
   const [newCustomerName, setNewCustomerName] = useState('')
@@ -88,20 +87,17 @@ export default function QuickBookingForm({ selectedDate, onBookingCreated }: Qui
     })
   }, [authFetch])
 
-  useEffect(() => {
-    if (searchQuery.length > 0) {
-      const q = searchQuery.toLowerCase()
-      setFilteredCustomers(
-        customers.filter(
-          (c) => c.name.toLowerCase().includes(q) || c.phone.includes(q)
-        )
-      )
-      setShowDropdown(true)
-    } else {
-      setFilteredCustomers([])
-      setShowDropdown(false)
-    }
+  const filteredCustomers = useMemo(() => {
+    if (searchQuery.length === 0) return []
+    const q = searchQuery.toLowerCase()
+    return customers.filter(
+      (c) => c.name.toLowerCase().includes(q) || c.phone.includes(q)
+    )
   }, [searchQuery, customers])
+
+  useEffect(() => {
+    setShowDropdown(searchQuery.length > 0)
+  }, [searchQuery.length])
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -266,7 +262,6 @@ export default function QuickBookingForm({ selectedDate, onBookingCreated }: Qui
                       setCustomerId(c.id)
                       setSearchQuery('')
                       setShowDropdown(false)
-                      setFilteredCustomers([])
                     }}
                   >
                     <span className="font-medium">{c.name}</span>

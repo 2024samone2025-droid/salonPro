@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -86,6 +86,7 @@ export default function StaffView() {
   const [showDialog, setShowDialog] = useState(false)
   const [editing, setEditing] = useState<StaffMember | null>(null)
   const [saving, setSaving] = useState(false)
+  const isInitialMount = useRef(true)
 
   const { permissions, authFetch } = useAuth()
   const canManage = permissions?.canManageStaff ?? false
@@ -96,7 +97,10 @@ export default function StaffView() {
   const [role, setRole] = useState('stylist')
 
   const fetchStaff = useCallback(async () => {
-    setLoading(true)
+    if (!isInitialMount.current) {
+      setLoading(true)
+    }
+    isInitialMount.current = false
     try {
       const res = await authFetch('/api/staff')
       if (!res.ok) throw new Error('Failed to fetch')
@@ -198,8 +202,9 @@ export default function StaffView() {
         {canManage && (
           <Button
             onClick={openAdd}
+            className="h-10 gap-2 shadow-sm w-full sm:w-auto shrink-0"
           >
-            <Plus className="size-4 mr-1.5" />
+            <Plus className="size-4" />
             Add Staff
           </Button>
         )}

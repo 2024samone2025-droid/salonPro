@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -47,6 +47,7 @@ export default function ServicesView() {
   const [showDialog, setShowDialog] = useState(false)
   const [editing, setEditing] = useState<Service | null>(null)
   const [saving, setSaving] = useState(false)
+  const isInitialMount = useRef(true)
 
   const { permissions, authFetch } = useAuth()
   const canManage = permissions?.canManageServices ?? false
@@ -56,7 +57,10 @@ export default function ServicesView() {
   const [duration, setDuration] = useState('')
 
   const fetchServices = useCallback(async () => {
-    setLoading(true)
+    if (!isInitialMount.current) {
+      setLoading(true)
+    }
+    isInitialMount.current = false
     try {
       const res = await authFetch('/api/services')
       if (!res.ok) throw new Error('Failed to fetch')
@@ -166,8 +170,9 @@ export default function ServicesView() {
         {canManage && (
           <Button
             onClick={openAdd}
+            className="h-10 gap-2 shadow-sm w-full sm:w-auto shrink-0"
           >
-            <Plus className="size-4 mr-1.5" />
+            <Plus className="size-4" />
             Add Service
           </Button>
         )}

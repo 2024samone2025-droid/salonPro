@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useSalonStore, type ViewTab } from '@/lib/salon-store'
 import { useAuth, type UserRole } from '@/lib/auth-context'
+import { cn } from '@/lib/utils'
 import {
   Sidebar,
   SidebarContent,
@@ -87,32 +88,31 @@ export default function SalonSidebar() {
   return (
     <Sidebar
       collapsible="offcanvas"
-      className="border-r border-sidebar-border"
+      className="border-r border-sidebar-border bg-sidebar"
     >
       {/* Header: Logo */}
-      <SidebarHeader className="px-4 pt-4 pb-3">
-        <div className="flex items-center gap-2.5">
+      <SidebarHeader className="h-11 px-4 flex items-center border-b border-sidebar-border">
+        <div className="flex items-center gap-2">
           <div className="flex items-center justify-center size-7 rounded-md bg-sidebar-primary shrink-0">
-            <Triangle className="size-4 text-sidebar-primary-foreground fill-sidebar-primary-foreground" />
+            <Triangle className="size-4 text-sidebar-primary-foreground fill-sidebar-primary-foreground" aria-hidden="true" />
           </div>
-          <div className="flex items-center gap-1.5">
-            <span className="text-sm font-semibold text-sidebar-foreground leading-none">SalonPro</span>
+          <div className="flex items-center gap-1">
+            <span className="text-[13px] font-semibold text-sidebar-foreground leading-none">SalonPro</span>
             <span className="text-[10px] text-sidebar-foreground/40 leading-none">Rwanda</span>
           </div>
         </div>
       </SidebarHeader>
-
-      <SidebarSeparator />
 
       {/* Search command button */}
       <div className="px-3 pt-3 pb-1">
         <button
           onClick={() => setCommandOpen(true)}
           className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[13px] text-sidebar-foreground/50 bg-sidebar-accent border border-sidebar-border hover:bg-sidebar-accent/80 hover:text-sidebar-foreground/70 hover:border-sidebar-foreground/20 transition-colors"
+          aria-label="Open search command (⌘K)"
         >
-          <Search className="size-3.5" />
+          <Search className="size-3.5" aria-hidden="true" />
           <span className="flex-1 text-left">Search...</span>
-          <kbd className="text-[10px] text-sidebar-foreground/30 px-1.5 py-0.5 rounded border border-sidebar-border font-mono">
+          <kbd className="text-[10px] text-sidebar-foreground/30 px-1.5 py-0.5 rounded border border-sidebar-border font-mono" aria-hidden="true">
             ⌘K
           </kbd>
         </button>
@@ -134,20 +134,19 @@ export default function SalonSidebar() {
                     <SidebarMenuButton
                       isActive={isActive}
                       onClick={() => setActiveTab(item.tab)}
-                      className={`
-                        group relative flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-[13px]
-                        transition-colors duration-150
-                        ${
-                          isActive
-                            ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
-                            : 'text-sidebar-foreground/60 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground/90'
-                        }
-                      `}
+                      className={cn(
+                        "group relative flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-[13px] transition-colors duration-150",
+                        isActive
+                          ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
+                          : 'text-sidebar-foreground/60 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground/90'
+                      )}
                     >
                       <Icon
-                        className={`size-4 transition-colors ${
+                        className={cn(
+                          "size-4 transition-colors",
                           isActive ? 'text-sidebar-accent-foreground' : 'text-sidebar-foreground/40 group-hover:text-sidebar-foreground/70'
-                        }`}
+                        )}
+                        aria-hidden="true"
                       />
                       <span>{item.label}</span>
                       {item.tab === 'appointments' && todayCount !== null && (
@@ -187,8 +186,9 @@ export default function SalonSidebar() {
             size="sm"
             className="w-full justify-start text-sidebar-foreground/40 hover:text-destructive hover:bg-destructive/10 transition-colors text-[13px] h-8"
             onClick={handleLogout}
+            aria-label="Sign out"
           >
-            <LogOut className="size-3.5 mr-2" />
+            <LogOut className="size-3.5 mr-2" aria-hidden="true" />
             Sign Out
           </Button>
           <p className="text-[10px] text-sidebar-foreground/20 text-center mt-1.5 font-mono">

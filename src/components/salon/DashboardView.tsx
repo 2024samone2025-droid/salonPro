@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import {
   Card,
   CardContent,
@@ -29,6 +29,8 @@ import {
 import { format } from 'date-fns'
 import { useSalonStore } from '@/lib/salon-store'
 import { useAuth } from '@/lib/auth-context'
+import { formatRWF, cn } from '@/lib/utils'
+import { STATUS_CONFIG, type AppointmentStatus } from '@/lib/constants'
 
 interface DashboardData {
   todayAppointments: Array<{
@@ -64,18 +66,6 @@ interface DashboardData {
   totalAppointmentsToday: number
 }
 
-function formatRWF(amount: number) {
-  return new Intl.NumberFormat('en-RW').format(amount) + ' RWF'
-}
-
-const statusConfig: Record<string, { label: string; bgClass: string; dotClass: string }> = {
-  booked: { label: 'Booked', bgClass: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-500/10', dotClass: 'bg-blue-500' },
-  confirmed: { label: 'Confirmed', bgClass: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10', dotClass: 'bg-emerald-500' },
-  in_progress: { label: 'In Progress', bgClass: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10', dotClass: 'bg-amber-500' },
-  completed: { label: 'Completed', bgClass: 'bg-muted text-muted-foreground hover:bg-muted', dotClass: 'bg-muted-foreground' },
-  no_show: { label: 'No Show', bgClass: 'bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-500/10', dotClass: 'bg-red-500' },
-}
-
 export default function DashboardView() {
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -84,49 +74,42 @@ export default function DashboardView() {
   const { user, permissions, authFetch } = useAuth()
   const isStylist = user?.role === 'stylist'
   const canManagePayments = permissions?.canManagePayments ?? false
+  const isInitialMount = useRef(true)
 
-  const fetchDashboard = useCallback(() => {
-    setLoading(true)
+  const fetchDashboard = useCallback((showLoading = true) => {
+    if (showLoading && !isInitialMount.current) setLoading(true)
+    isInitialMount.current = false
     setError(null)
-    authFetch('/api/dashboard')
+    
+    const controller = new AbortController()
+    
+    authFetch('/api/dashboard', { signal: controller.signal })
       .then((r) => {
         if (!r.ok) throw new Error(`Failed to fetch (${r.status})`)
         return r.json()
       })
       .then((d) => {
         setData(d)
+        setLoading(false)
         setError(null)
       })
       .catch((err) => {
+        if (err.name === 'AbortError') return
         console.error('Dashboard fetch error:', err)
         setError(err.message || 'Failed to load dashboard data')
         setData(null)
+        setLoading(false)
       })
-      .finally(() => setLoading(false))
+
+    return () => controller.abort()
   }, [authFetch])
 
   useEffect(() => {
-    let cancelled = false
-    authFetch('/api/dashboard')
-      .then((r) => {
-        if (!r.ok) throw new Error(`Failed to fetch (${r.status})`)
-        return r.json()
-      })
-      .then((d) => {
-        if (!cancelled) {
-          setData(d)
-          setLoading(false)
-        }
-      })
-      .catch((err) => {
-        if (!cancelled) {
-          console.error('Dashboard fetch error:', err)
-          setError(err.message || 'Failed to load dashboard data')
-          setLoading(false)
-        }
-      })
-    return () => { cancelled = true }
-  }, [authFetch])
+    const cleanup = fetchDashboard(true)
+    return () => {
+      if (typeof cleanup === 'function') cleanup()
+    }
+  }, [fetchDashboard])
 
   if (loading) {
     return (
@@ -160,7 +143,7 @@ export default function DashboardView() {
     <div className="flex flex-col items-center justify-center py-16">
       <AlertCircle className="size-10 text-muted-foreground/30 mb-3" />
       <p className="text-muted-foreground text-sm mb-3">{error || 'Failed to load dashboard data.'}</p>
-      <Button variant="outline" size="sm" onClick={fetchDashboard}>
+      <Button variant="outline" size="sm" onClick={() => fetchDashboard()}>
         Retry
       </Button>
     </div>
@@ -233,7 +216,7 @@ export default function DashboardView() {
       {/* Stat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <Card
-          className="cursor-pointer hover:shadow-md transition-all group"
+          className="cursor-pointer hover:shadow-md transition-all group border"
           onClick={() => setActiveTab('appointments')}
         >
           <CardContent className="pt-4 pb-3 px-4">
@@ -249,7 +232,7 @@ export default function DashboardView() {
 
         {!isStylist && (
           <Card
-            className="cursor-pointer hover:shadow-md transition-all group"
+            className="cursor-pointer hover:shadow-md transition-all group border"
             onClick={() => setActiveTab('reports')}
           >
             <CardContent className="pt-4 pb-3 px-4">
@@ -267,7 +250,7 @@ export default function DashboardView() {
         {canManagePayments && (
           <>
             <Card
-              className="cursor-pointer hover:shadow-md transition-all group"
+              className="cursor-pointer hover:shadow-md transition-all group border"
               onClick={() => setActiveTab('appointments')}
             >
               <CardContent className="pt-4 pb-3 px-4">
@@ -282,7 +265,7 @@ export default function DashboardView() {
             </Card>
 
             <Card
-              className="cursor-pointer hover:shadow-md transition-all group"
+              className="cursor-pointer hover:shadow-md transition-all group border"
               onClick={() => setActiveTab('appointments')}
             >
               <CardContent className="pt-4 pb-3 px-4">
@@ -311,14 +294,18 @@ export default function DashboardView() {
           <CardContent>
             <div className="flex flex-wrap gap-1.5 sm:gap-2">
               {Object.entries(data.statusBreakdown).map(([status, count]) => {
-                const config = statusConfig[status]
+                const config = STATUS_CONFIG[status as AppointmentStatus]
                 return (
                   <Badge
                     key={status}
                     variant="secondary"
-                    className={`${config?.bgClass || 'bg-zinc-100 text-zinc-600'} border-0 text-xs sm:text-sm px-2.5 sm:px-3 py-1 sm:py-1.5 gap-1.5 font-medium`}
+                    className={cn(
+                      config?.bgClass || 'bg-zinc-100',
+                      config?.textClass || 'text-zinc-600',
+                      "border-0 text-xs sm:text-sm px-2.5 sm:px-3 py-1 sm:py-1.5 gap-1.5 font-medium hover:opacity-80 transition-opacity"
+                    )}
                   >
-                    <span className={`size-1.5 sm:size-2 rounded-full ${config?.dotClass || 'bg-zinc-400'}`} />
+                    <span className={cn("size-1.5 sm:size-2 rounded-full", config?.dotClass || 'bg-zinc-400')} />
                     {config?.label || status}: {count}
                   </Badge>
                 )
@@ -456,7 +443,7 @@ export default function DashboardView() {
             <ScrollArea className="max-h-96">
               <div className="space-y-2">
                 {data.todayAppointments.map((apt) => {
-                  const config = statusConfig[apt.status]
+                  const config = STATUS_CONFIG[apt.status as AppointmentStatus]
                   return (
                     <div
                       key={apt.id}
@@ -475,9 +462,13 @@ export default function DashboardView() {
                       </div>
                       <Badge
                         variant="secondary"
-                        className={`${config?.bgClass || ''} border-0 shrink-0 ml-2 text-xs`}
+                        className={cn(
+                          config?.bgClass || '',
+                          config?.textClass || '',
+                          "border-0 shrink-0 ml-2 text-xs"
+                        )}
                       >
-                        <span className={`size-1.5 rounded-full ${config?.dotClass || 'bg-zinc-400'}`} />
+                        <span className={cn("size-1.5 rounded-full", config?.dotClass || 'bg-zinc-400')} />
                         {config?.label || apt.status}
                       </Badge>
                     </div>

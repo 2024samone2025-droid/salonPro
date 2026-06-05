@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useSalonStore, ViewTab } from '@/lib/salon-store'
 import {
   CommandDialog,
@@ -19,8 +19,10 @@ import {
   Scissors,
   BarChart3,
   Search,
+  Loader2,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
+import { cn } from '@/lib/utils'
 
 const navItems: { tab: ViewTab; label: string; icon: React.ElementType }[] = [
   { tab: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -50,9 +52,15 @@ export default function CommandPalette() {
   const { authFetch } = useAuth()
   const [customers, setCustomers] = useState<CustomerResult[]>([])
   const [appointments, setAppointments] = useState<AppointmentResult[]>([])
+  const [loading, setLoading] = useState(false)
+  const isInitialMount = useRef(true)
 
   useEffect(() => {
     if (commandOpen) {
+      if (!isInitialMount.current) {
+        setLoading(true)
+      }
+      isInitialMount.current = false
       // Load search data when palette opens
       Promise.all([
         authFetch('/api/customers').then((r) => r.ok ? r.json() : []),
@@ -60,9 +68,11 @@ export default function CommandPalette() {
       ]).then(([custs, apts]) => {
         setCustomers(Array.isArray(custs) ? custs : [])
         setAppointments(Array.isArray(apts) ? apts : [])
+      }).finally(() => {
+        setLoading(false)
       })
     }
-  }, [commandOpen])
+  }, [commandOpen, authFetch])
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -84,22 +94,31 @@ export default function CommandPalette() {
     <CommandDialog open={commandOpen} onOpenChange={setCommandOpen}>
       <CommandInput placeholder="Search customers, appointments, or navigate..." />
       <CommandList>
-        <CommandEmpty>No results found.</CommandEmpty>
+        {loading ? (
+          <div className="flex items-center justify-center py-6">
+            <Loader2 className="size-4 animate-spin text-muted-foreground mr-2" />
+            <span className="text-sm text-muted-foreground">Loading data...</span>
+          </div>
+        ) : (
+          <CommandEmpty>No results found.</CommandEmpty>
+        )}
 
-        <CommandGroup heading="Navigate">
-          {navItems.map((item) => {
-            const Icon = item.icon
-            return (
-              <CommandItem
-                key={item.tab}
-                onSelect={() => handleSelect(item.tab)}
-              >
-                <Icon className="size-4 mr-2" />
-                {item.label}
-              </CommandItem>
-            )
-          })}
-        </CommandGroup>
+        {!loading && (
+          <CommandGroup heading="Navigate">
+            {navItems.map((item) => {
+              const Icon = item.icon
+              return (
+                <CommandItem
+                  key={item.tab}
+                  onSelect={() => handleSelect(item.tab)}
+                >
+                  <Icon className="size-4 mr-2" />
+                  {item.label}
+                </CommandItem>
+              )
+            })}
+          </CommandGroup>
+        )}
 
         {customers.length > 0 && (
           <>

@@ -44,10 +44,10 @@ function AuthenticatedApp() {
       <Sidebar />
       <SidebarInset className="min-h-svh flex flex-col">
         {/* Header — Vercel-style minimal top bar */}
-        <header className="flex h-11 items-center gap-2 border-b bg-background/95 backdrop-blur-sm px-3 sm:px-4 sticky top-0 z-10">
+        <header className="flex h-11 items-center gap-2 border-b border-sidebar-border bg-sidebar px-2 sm:px-4 fixed top-0 left-0 right-0 z-10 sm:left-[var(--sidebar-width)]">
           <SidebarTrigger className="-ml-1 size-7" />
           <Separator orientation="vertical" className="h-4" />
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1">
             <Triangle className="size-3 fill-foreground text-foreground" />
             <span className="text-[13px] font-medium text-muted-foreground hidden sm:inline">SalonPro</span>
           </div>
@@ -56,7 +56,7 @@ function AuthenticatedApp() {
           </div>
         </header>
         {/* Content area */}
-        <div className="flex-1 p-4 sm:p-6 md:p-8 overflow-auto min-w-0">
+        <div className="flex-1 p-4 sm:p-6 md:p-8 overflow-auto min-w-0 pt-15">
           <MainContent />
         </div>
         {/* Footer — minimal Vercel-style */}
