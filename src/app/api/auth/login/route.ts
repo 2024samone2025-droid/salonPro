@@ -5,6 +5,8 @@ import { NextRequest, NextResponse } from 'next/server'
 export async function POST(req: NextRequest) {
   try {
     const { name, pin } = await req.json()
+    console.log('[LOGIN_DEBUG] DATABASE_URL:', process.env.DATABASE_URL ? 'SET' : 'MISSING')
+    console.log('[LOGIN_DEBUG] NODE_ENV:', process.env.NODE_ENV)
 
     if (!name || !pin) {
       return NextResponse.json({ error: 'Name and PIN are required' }, { status: 400 })
