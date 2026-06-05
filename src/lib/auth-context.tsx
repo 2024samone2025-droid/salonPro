@@ -54,7 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     isInitialMount.current = false
     try {
-      const token = localStorage.getItem(TOKEN_KEY)
+      const token = typeof window !== 'undefined' ? localStorage.getItem(TOKEN_KEY) : null
       const headers: Record<string, string> = {}
       if (token) {
         headers['Authorization'] = `Bearer ${token}`
@@ -122,7 +122,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    * This works even in iframe/sandbox environments where cookies may not be sent.
    */
   const authFetch = useCallback(async (url: string, options: RequestInit = {}): Promise<Response> => {
-    const token = localStorage.getItem(TOKEN_KEY)
+    const token = typeof window !== 'undefined' ? localStorage.getItem(TOKEN_KEY) : null
     const headers = new Headers(options.headers || {})
     if (token) {
       headers.set('Authorization', `Bearer ${token}`)
@@ -140,7 +140,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext)
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider')
+    return {
+      user: null,
+      permissions: null,
+      loading: false,
+      login: async () => ({ success: false }),
+      logout: async () => {},
+      refreshSession: async () => {},
+      authFetch: async () => new Response(),
+    }
   }
   return context
 }
