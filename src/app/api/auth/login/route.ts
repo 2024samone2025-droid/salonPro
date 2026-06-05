@@ -10,17 +10,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Name and PIN are required' }, { status: 400 })
     }
 
-    // TEMPORARY DEBUG: check DB connection in production
-    if (process.env.NODE_ENV === 'production') {
-      try {
-        await db.$queryRaw`SELECT 1`
-        console.log('[DB_DEBUG] DB connection OK')
-      } catch (e: any) {
-        console.log('[DB_DEBUG] DB error:', e.message)
-        return NextResponse.json({ error: 'Database connection failed', detail: e.message }, { status: 500 })
-      }
-    }
-
     // Find user by name (case-insensitive search)
     const allUsers = await db.user.findMany({ where: { active: true } })
     const user = allUsers.find((u) => u.name.toLowerCase() === name.toLowerCase())
