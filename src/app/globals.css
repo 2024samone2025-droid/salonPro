@@ -1,147 +1,74 @@
-@import "tailwindcss";
-@import "tw-animate-css";
-
-@custom-variant dark (&:is(.dark *));
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: 'Inter', sans-serif;
-  --font-mono: var(--font-geist-mono);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-}
-
-/* ─── Vercel-inspired Design System ─── */
-/* Light mode: clean white with black accents (like Vercel.com) */
-:root {
-  --radius: 0.5rem;
-  --background: oklch(1 0 0);                        /* #ffffff pure white */
-  --foreground: oklch(0.145 0 0);                    /* #111111 near-black */
-  --card: oklch(1 0 0);                              /* #ffffff */
-  --card-foreground: oklch(0.145 0 0);               /* #111111 */
-  --popover: oklch(1 0 0);                           /* #ffffff */
-  --popover-foreground: oklch(0.145 0 0);            /* #111111 */
-  --primary: oklch(0.145 0 0);                       /* #000000 black — Vercel's primary */
-  --primary-foreground: oklch(1 0 0);                /* #ffffff */
-  --secondary: oklch(0.965 0 0);                     /* #f5f5f5 very light gray */
-  --secondary-foreground: oklch(0.205 0 0);          /* #171717 */
-  --muted: oklch(0.965 0 0);                         /* #f5f5f5 */
-  --muted-foreground: oklch(0.556 0 0);              /* #737373 neutral-500 */
-  --accent: oklch(0.965 0 0);                        /* #f5f5f5 */
-  --accent-foreground: oklch(0.205 0 0);             /* #171717 */
-  --destructive: oklch(0.577 0.245 27.325);          /* red */
-  --border: oklch(0.922 0 0);                        /* #e5e5e5 neutral-200 */
-  --input: oklch(0.922 0 0);                         /* #e5e5e5 */
-  --ring: oklch(0.145 0 0);                          /* #000000 */
-  --chart-1: oklch(0.546 0.245 26.33);               /* blue-500 (#3b82f6) */
-  --chart-2: oklch(0.696 0.17 162.48);               /* emerald-500 */
-  --chart-3: oklch(0.765 0.177 163.223);             /* emerald-400 */
-  --chart-4: oklch(0.845 0.143 164.978);             /* emerald-300 */
-  --chart-5: oklch(0.432 0.095 166.913);             /* emerald-800 */
-  /* Sidebar: Light mode — clean light sidebar */
-  --sidebar: oklch(0.985 0 0);                       /* #fafafa light gray-white */
-  --sidebar-foreground: oklch(0.145 0 0);            /* #111111 dark text */
-  --sidebar-primary: oklch(0.145 0 0);               /* #111111 dark primary */
-  --sidebar-primary-foreground: oklch(1 0 0);        /* #ffffff */
-  --sidebar-accent: oklch(0.965 0 0);                /* #f5f5f5 hover */
-  --sidebar-accent-foreground: oklch(0.205 0 0);     /* #171717 */
-  --sidebar-border: oklch(0.922 0 0);                /* #e5e5e5 subtle border */
-  --sidebar-ring: oklch(0.145 0 0);                  /* #000000 */
-}
-
-/* Dark mode: Vercel-inspired with specific requested background colors */
-.dark {
-  --background: #191919;                             /* Main page background */
-  --card: #262626;                                   /* Card/surface background */
-  --popover: #262626;                                /* Elevated card surface */
-  --sidebar: #262626;                                /* Sidebar background */
-  --sidebar-border: #424242;                         /* Sidebar right border */
-  --sidebar-accent: #424242;                         /* Active nav item background */
-  
-  --foreground: oklch(0.965 0 0);                    /* #ededed near-white */
-  --card-foreground: oklch(0.965 0 0);               /* #ededed */
-  --popover-foreground: oklch(0.965 0 0);            /* #ededed */
-  --primary: oklch(1 0 0);                           /* #ffffff white — Vercel's dark-mode primary */
-  --primary-foreground: oklch(0.115 0 0);            /* #0a0a0a */
-  --secondary: oklch(0.205 0 0);                     /* #1a1a1a */
-  --secondary-foreground: oklch(0.965 0 0);          /* #ededed */
-  --muted: oklch(0.205 0 0);                         /* #1a1a1a */
-  --muted-foreground: oklch(0.7 0.01 250);           /* Brightened for contrast */
-  --accent: oklch(0.205 0 0);                        /* #1a1a1a */
-  --accent-foreground: oklch(0.965 0 0);             /* #ededed */
-  --destructive: oklch(0.704 0.191 22.216);          /* lighter red for dark bg */
-  --border: oklch(0.25 0 0);                         /* #2a2a2a */
-  --input: oklch(0.25 0 0);                          /* #2a2a2a */
-  --ring: oklch(1 0 0);                              /* #ffffff */
-  --chart-1: oklch(0.546 0.245 26.33);               /* blue-500 */
-  --chart-2: oklch(0.696 0.17 162.48);               /* emerald-500 */
-  --chart-3: oklch(0.765 0.177 163.223);             /* emerald-400 */
-  --chart-4: oklch(0.845 0.143 164.978);             /* emerald-300 */
-  --chart-5: oklch(0.432 0.095 166.913);             /* emerald-800 */
-  --sidebar-foreground: oklch(0.922 0 0);            /* #e5e5e5 */
-  --sidebar-primary: oklch(1 0 0);                   /* #ffffff */
-  --sidebar-primary-foreground: oklch(0.085 0 0);    /* #080808 */
-  --sidebar-accent-foreground: oklch(0.922 0 0);     /* #e5e5e5 */
-  --sidebar-ring: oklch(1 0 0);                      /* #ffffff */
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 @layer base {
+  :root {
+    --radius: 0.5rem;
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 240 5.9% 10%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 240 10% 3.9%;
+    --sidebar: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 0 0% 9.4%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 14.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 14.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 9%;
+    --secondary: 0 0% 14.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 70%;
+    --accent: 0 0% 14.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 14.9%;
+    --input: 0 0% 14.9%;
+    --ring: 0 0% 83.1%;
+    --sidebar: 0 0% 14.9%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 0 0% 98%;
+    --sidebar-primary-foreground: 0 0% 9%;
+    --sidebar-accent: 0 0% 25.9%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 0 0% 25.9%;
+    --sidebar-ring: 0 0% 83.1%;
+  }
+
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
   }
   body {
     @apply bg-background text-foreground;
     -webkit-font-smoothing: antialiased;
-  }
-  .dark body {
-    background-color: #191919;
-    color: #ededed;
-  }
-}
-
-/* ─── Sidebar respects theme via CSS variables ─── */
-/* Light/dark sidebar colors are defined in :root / .dark above */
-/* The sidebar component uses bg-sidebar text-sidebar-foreground etc. */
-
-/* ─── Vercel-style scrollbar ─── */
-@layer base {
-  * {
-    scrollbar-width: thin;
-    scrollbar-color: oklch(0.4 0 0) transparent;
-  }
-  .dark * {
-    scrollbar-color: oklch(0.35 0 0) transparent;
   }
 }
