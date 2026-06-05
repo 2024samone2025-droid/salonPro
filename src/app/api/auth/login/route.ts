@@ -5,11 +5,20 @@ import { NextRequest, NextResponse } from 'next/server'
 export async function POST(req: NextRequest) {
   try {
     const { name, pin } = await req.json()
-    console.log('[LOGIN_DEBUG] DATABASE_URL:', process.env.DATABASE_URL ? 'SET' : 'MISSING')
-    console.log('[LOGIN_DEBUG] NODE_ENV:', process.env.NODE_ENV)
 
     if (!name || !pin) {
       return NextResponse.json({ error: 'Name and PIN are required' }, { status: 400 })
+    }
+
+    // TEMPORARY DEBUG: check DB connection in production
+    if (process.env.NODE_ENV === 'production') {
+      try {
+        await db.$queryRaw`SELECT 1`
+        console.log('[DB_DEBUG] DB connection OK')
+      } catch (e: any) {
+        console.log('[DB_DEBUG] DB error:', e.message)
+        return NextResponse.json({ error: 'Database connection failed', detail: e.message }, { status: 500 })
+      }
     }
 
     // Find user by name (case-insensitive search)
