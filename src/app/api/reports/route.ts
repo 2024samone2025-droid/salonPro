@@ -96,11 +96,11 @@ export async function GET(req: NextRequest) {
 
   // Payment method breakdown
   const paymentMethods: Record<string, number> = {}
-  appointments
-    .filter((a: { payment?: { method: string; status: string } | null }) => a.payment && a.payment.status !== 'unpaid')
-    .forEach((a: { payment: { method: string; amount: number } }) => {
+  appointments.forEach((a: any) => {
+    if (a.payment && a.payment.status !== 'unpaid') {
       paymentMethods[a.payment.method] = (paymentMethods[a.payment.method] || 0) + a.payment.amount
-    })
+    }
+  })
 
   // Status breakdown
   const statusBreakdown: Record<string, number> = {}

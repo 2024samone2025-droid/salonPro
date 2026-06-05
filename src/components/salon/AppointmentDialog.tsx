@@ -39,6 +39,8 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuth } from '@/lib/auth-context'
+import { formatRWF, cn } from '@/lib/utils'
+import { STATUS_CONFIG, PAYMENT_STATUS_CONFIG, type AppointmentStatus, type PaymentStatus } from '@/lib/constants'
 
 interface Appointment {
   id: string
@@ -65,10 +67,6 @@ interface AppointmentDialogProps {
   onUpdate?: () => void
 }
 
-function formatRWF(amount: number) {
-  return new Intl.NumberFormat('en-RW').format(amount) + ' RWF'
-}
-
 function getInitials(name: string) {
   return name
     .split(' ')
@@ -76,22 +74,6 @@ function getInitials(name: string) {
     .join('')
     .toUpperCase()
     .slice(0, 2)
-}
-
-const statusColors: Record<string, string> = {
-  booked: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
-  confirmed: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
-  in_progress: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
-  completed: 'bg-muted text-muted-foreground',
-  no_show: 'bg-red-500/10 text-red-600 dark:text-red-400',
-}
-
-const statusLabels: Record<string, string> = {
-  booked: 'Booked',
-  confirmed: 'Confirmed',
-  in_progress: 'In Progress',
-  completed: 'Completed',
-  no_show: 'No Show',
 }
 
 const statusFlow: Record<string, string[]> = {
@@ -112,23 +94,13 @@ const methodIcons: Record<string, React.ReactNode> = {
   airtel_money: <Smartphone className="size-3.5" />,
 }
 
-const paymentStatusColors: Record<string, string> = {
-  unpaid: 'bg-red-500/10 text-red-700 dark:text-red-400',
-  partial: 'bg-amber-500/10 text-amber-700 dark:text-amber-400',
-  paid: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
-}
-
-const paymentStatusLabels: Record<string, string> = {
-  unpaid: 'Unpaid',
-  partial: 'Partial',
-  paid: 'Paid',
-}
-
 export default function AppointmentDialog({ appointment, open, onClose, onUpdate }: AppointmentDialogProps) {
-  const [paymentStatus, setPaymentStatus] = useState('')
-  const [paymentMethod, setPaymentMethod] = useState('')
-  const [paymentAmount, setPaymentAmount] = useState('')
-  const [notes, setNotes] = useState('')
+  const [paymentStatus, setPaymentStatus] = useState(appointment?.payment?.status || 'unpaid')
+  const [paymentMethod, setPaymentMethod] = useState(appointment?.payment?.method || 'cash')
+  const [paymentAmount, setPaymentAmount] = useState(
+    appointment?.payment?.amount?.toString() || appointment?.service?.price?.toString() || '0'
+  )
+  const [notes, setNotes] = useState(appointment?.notes || '')
   const [updating, setUpdating] = useState(false)
   const [savingNotes, setSavingNotes] = useState(false)
 
@@ -137,6 +109,8 @@ export default function AppointmentDialog({ appointment, open, onClose, onUpdate
   const canManagePayments = permissions?.canManagePayments ?? false
   const canDelete = permissions?.canDeleteRecords ?? false
 
+  // Remove the sync useEffect as we now use keys for remounting
+  /*
   useEffect(() => {
     if (appointment) {
       setPaymentStatus(appointment.payment?.status || 'unpaid')
@@ -147,6 +121,7 @@ export default function AppointmentDialog({ appointment, open, onClose, onUpdate
       setNotes(appointment.notes || '')
     }
   }, [appointment])
+  */
 
   if (!appointment) return null
 
@@ -159,7 +134,7 @@ export default function AppointmentDialog({ appointment, open, onClose, onUpdate
         body: JSON.stringify({ id: appointment.id, status: newStatus }),
       })
       if (res.ok) {
-        toast.success(`Appointment marked as ${statusLabels[newStatus]}`)
+        toast.success(`Appointment marked as ${STATUS_CONFIG[newStatus as AppointmentStatus]?.label || newStatus}`)
         onUpdate?.()
       } else {
         toast.error('Failed to update status')
@@ -265,8 +240,8 @@ export default function AppointmentDialog({ appointment, open, onClose, onUpdate
             Appointment Details
           </DialogTitle>
           <DialogDescription className="flex items-center gap-2 pt-1">
-            <Badge className={`${statusColors[appointment.status]} border-0 text-xs`}>
-              {statusLabels[appointment.status]}
+            <Badge className={cn(STATUS_CONFIG[appointment.status as AppointmentStatus]?.badgeClass, "border text-[11px] px-2 py-0.5 shadow-sm")}>
+              {STATUS_CONFIG[appointment.status as AppointmentStatus]?.label || appointment.status}
             </Badge>
             <span>{appointment.service.name}</span>
           </DialogDescription>
@@ -356,7 +331,7 @@ export default function AppointmentDialog({ appointment, open, onClose, onUpdate
                       ) : (
                         <ArrowRight className="size-4 mr-1.5" />
                       )}
-                      {statusLabels[s]}
+                      {STATUS_CONFIG[s as AppointmentStatus]?.label || s}
                     </Button>
                   ))}
                 </div>
@@ -443,9 +418,9 @@ export default function AppointmentDialog({ appointment, open, onClose, onUpdate
                 <Label className="text-sm font-medium mb-2 flex items-center gap-1.5">
                   <CreditCard className="size-4" /> Payment Info
                 </Label>
-                <div className="flex items-center gap-3 mt-2 p-3 rounded-lg bg-muted/50">
-                  <Badge className={`${paymentStatusColors[appointment.payment.status] || 'bg-muted text-muted-foreground'} border-0 text-xs`}>
-                    {paymentStatusLabels[appointment.payment.status] || appointment.payment.status}
+                <div className="flex items-center gap-3 mt-2 p-3 rounded-lg bg-muted/50 border border-border/50">
+                  <Badge className={cn(PAYMENT_STATUS_CONFIG[appointment.payment.status as PaymentStatus]?.badgeClass, "border text-[11px] px-2 py-0.5")}>
+                    {PAYMENT_STATUS_CONFIG[appointment.payment.status as PaymentStatus]?.label || appointment.payment.status}
                   </Badge>
                   {appointment.payment.status !== 'unpaid' && (
                     <div className="flex items-center gap-1.5 text-sm">
