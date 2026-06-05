@@ -30,10 +30,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1" key="viewport" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
       >
-        <noscript>
+        <noscript key="noscript">
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', fontFamily: 'system-ui, sans-serif' }}>
             <div style={{ textAlign: 'center' }}>
               <h1 style={{ fontSize: '1.25rem', fontWeight: 600 }}>SalonPro Rwanda</h1>
@@ -41,6 +44,7 @@ export default function RootLayout({
             </div>
           </div>
         </noscript>
+        {/* Wrap in providers, but be careful with context during SSR/prerender */}
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
@@ -48,7 +52,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           {children}
-          <Toaster />
+          <Toaster key="toaster" />
         </ThemeProvider>
       </body>
     </html>
