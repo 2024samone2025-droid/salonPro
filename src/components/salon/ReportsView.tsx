@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import {
   Card,
   CardContent,
@@ -129,12 +129,14 @@ function Sparkline({ data }: { data: number[] }) {
 }
 
 export default function ReportsView() {
+  const isInitialMount = useRef(true)
   const { permissions, authFetch } = useAuth()
   const canView = permissions?.reports !== 'none'
 
   const [data, setData] = useState<ReportData | null>(null)
   const [loading, setLoading] = useState(true)
   const [period, setPeriod] = useState('daily')
+
   const [customFrom, setCustomFrom] = useState('')
   const [customTo, setCustomTo] = useState(format(new Date(), 'yyyy-MM-dd'))
 
@@ -160,7 +162,10 @@ export default function ReportsView() {
   }, [period, customFrom, customTo])
 
   const fetchReports = useCallback(async () => {
-    setLoading(true)
+    if (!isInitialMount.current) {
+      setLoading(true)
+    }
+    isInitialMount.current = false
     const params = new URLSearchParams()
     if (from && to) {
       params.set('from', from)

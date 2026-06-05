@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode, useRef } from 'react'
 
 export type UserRole = 'admin' | 'receptionist' | 'stylist'
 
@@ -46,8 +46,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<SessionUser | null>(null)
   const [permissions, setPermissions] = useState<Permissions | null>(null)
   const [loading, setLoading] = useState(true)
+  const isInitialMount = useRef(true)
 
   const refreshSession = useCallback(async () => {
+    if (!isInitialMount.current) {
+      setLoading(true)
+    }
+    isInitialMount.current = false
     try {
       const token = localStorage.getItem(TOKEN_KEY)
       const headers: Record<string, string> = {}
