@@ -15,7 +15,10 @@ const prismaClientSingleton = () => {
   const log = process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error']
   
   // Hardcoded pooled Neon endpoint - used unless DATABASE_URL is explicitly set with a value
-  const connectionString = (process.env.DATABASE_URL || '').trim() || 'postgresql://neondb_owner:npg_fXN3sHexb0oB@ep-proud-flower-aqxvae38-pooler.c-8.us-east-1.aws.neon.tech/neondb?sslmode=require'
+  // This works around Vercel env var cache issues
+  const connectionString = (process.env.DATABASE_URL || '').trim() || 
+    'postgresql://neondb_owner:npg_fXN3sHexb0oB@ep-proud-flower-aqxvae38-pooler.c-8.us-east-1.aws.neon.tech/neondb?sslmode=require'
+  
   console.log('[DB_DEBUG] connectionString:', connectionString?.substring(0, 50) || 'MISSING')
   
   if (isVercel) {
