@@ -1,14 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: "standalone",
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: false,
   },
-  reactStrictMode: false,
+  reactStrictMode: true,
   serverExternalPackages: ["@prisma/client", "prisma"],
 };
-
 module.exports = nextConfig;
