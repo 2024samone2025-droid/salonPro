@@ -11,9 +11,11 @@ if (process.env.NODE_ENV === 'production') {
 const prismaClientSingleton = () => {
   const log = process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error']
   
+  // Hardcoded pooled Neon endpoint - used unless DATABASE_URL is explicitly set with a value
+  const connectionString = (process.env.DATABASE_URL || '').trim() || 'postgresql://neondb_owner:npg_fXN3sHexb0oB@ep-proud-flower-aqxvae38-pooler.c-8.us-east-1.aws.neon.tech/neondb?sslmode=require'
+  
   if (process.env.NODE_ENV === 'production') {
-    // Fallback: use hardcoded pooler connection if env var missing
-    const connectionString = process.env.DATABASE_URL || 'postgresql://neondb_owner:npg_fXN3sHexb0oB@ep-proud-flower-aqxvae38-pooler.c-8.us-east-1.aws.neon.tech/neondb?sslmode=require'
+    neonConfig.webSocketConstructor = ws
     const pool = new Pool({ connectionString })
     const adapter = new PrismaNeon(pool as any)
     return new PrismaClient({ adapter, log: log as any })
