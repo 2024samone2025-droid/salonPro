@@ -144,7 +144,7 @@ export function useAuth() {
       user: null,
       permissions: null,
       loading: false,
-      login: async () => ({ success: false }),
+      login: async () => ({ success: false, error: 'Not initialized' }),
       logout: async () => {},
       refreshSession: async () => {},
       authFetch: async () => new Response(),
