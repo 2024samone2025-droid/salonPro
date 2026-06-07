@@ -2,12 +2,17 @@ import { db } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth-guard'
 
+const FREE_PLAN_LIMITS = {
+  maxCustomers: 100,
+  maxStaff: 5,
+}
+
 export async function GET(req: NextRequest) {
   const auth = await requireAuth(req)
   if (!auth.authorized) return auth.error
 
   const q = req.nextUrl.searchParams.get('q')
-  const where: Record<string, unknown> = {}
+  const where: Record<string, unknown> = { salonId: auth.salonId }
   if (q) {
     where.OR = [
       { name: { contains: q } },
@@ -36,13 +41,21 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  // Only admin/receptionist can add customers
   const auth = await requireAuth(req)
   if (!auth.authorized) return auth.error
 
-  // Stylists have view-only access to customers
   if (auth.user?.role === 'stylist') {
     return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
+  }
+
+  // Check subscription limits
+  const salonId = auth.salonId // Now non-null after successful auth
+  const salon = await db.salon.findUnique({ where: { id: salonId } })
+  if (salon?.plan === 'free') {
+    const customerCount = await db.customer.count({ where: { salonId } })
+    if (customerCount >= FREE_PLAN_LIMITS.maxCustomers) {
+      return NextResponse.json({ error: `Free plan limited to ${FREE_PLAN_LIMITS.maxCustomers} customers. Upgrade to Pro.` }, { status: 403 })
+    }
   }
 
   const body = await req.json()
@@ -51,13 +64,13 @@ export async function POST(req: NextRequest) {
       name: body.name,
       phone: body.phone,
       notes: body.notes || '',
+      salonId,
     },
   })
   return NextResponse.json(customer, { status: 201 })
 }
 
 export async function PUT(req: NextRequest) {
-  // Only admin/receptionist can edit customers
   const auth = await requireAuth(req)
   if (!auth.authorized) return auth.error
 
@@ -70,13 +83,12 @@ export async function PUT(req: NextRequest) {
   if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 })
   const customer = await db.customer.update({
     where: { id },
-    data,
+    data: { ...data, salonId: auth.salonId },
   })
   return NextResponse.json(customer)
 }
 
 export async function DELETE(req: NextRequest) {
-  // Only admin can delete customers
   const auth = await requireAuth(req, 'canDeleteRecords')
   if (!auth.authorized) return auth.error
 

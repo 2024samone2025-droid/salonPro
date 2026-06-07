@@ -22,25 +22,31 @@ async function seed() {
   await db.customer.deleteMany()
   await db.staff.deleteMany()
   await db.service.deleteMany()
+  await db.salon.deleteMany()
+
+  console.log('Creating demo salon...')
+  const salon = await db.salon.create({
+    data: { name: 'Demo Salon', subdomain: 'demo' },
+  })
 
   console.log('Creating services...')
   const services = await Promise.all([
-    db.service.create({ data: { name: 'Haircut', price: 5000, duration: 30, active: true } }),
-    db.service.create({ data: { name: 'Hair Braiding', price: 15000, duration: 120, active: true } }),
-    db.service.create({ data: { name: 'Hair Wash & Style', price: 8000, duration: 45, active: true } }),
-    db.service.create({ data: { name: 'Manicure', price: 6000, duration: 40, active: true } }),
-    db.service.create({ data: { name: 'Pedicure', price: 7000, duration: 50, active: true } }),
-    db.service.create({ data: { name: 'Facial Treatment', price: 12000, duration: 60, active: true } }),
-    db.service.create({ data: { name: 'Makeup', price: 10000, duration: 45, active: true } }),
-    db.service.create({ data: { name: 'Hair Color', price: 20000, duration: 90, active: true } }),
+    db.service.create({ data: { name: 'Haircut', price: 5000, duration: 30, active: true, salonId: salon.id } }),
+    db.service.create({ data: { name: 'Hair Braiding', price: 15000, duration: 120, active: true, salonId: salon.id } }),
+    db.service.create({ data: { name: 'Hair Wash & Style', price: 8000, duration: 45, active: true, salonId: salon.id } }),
+    db.service.create({ data: { name: 'Manicure', price: 6000, duration: 40, active: true, salonId: salon.id } }),
+    db.service.create({ data: { name: 'Pedicure', price: 7000, duration: 50, active: true, salonId: salon.id } }),
+    db.service.create({ data: { name: 'Facial Treatment', price: 12000, duration: 60, active: true, salonId: salon.id } }),
+    db.service.create({ data: { name: 'Makeup', price: 10000, duration: 45, active: true, salonId: salon.id } }),
+    db.service.create({ data: { name: 'Hair Color', price: 20000, duration: 90, active: true, salonId: salon.id } }),
   ])
 
   console.log('Creating staff...')
   const staff = await Promise.all([
-    db.staff.create({ data: { name: 'Marie Uwimana', phone: '+250788123456', role: 'stylist', active: true } }),
-    db.staff.create({ data: { name: 'Jeanne Mukamana', phone: '+250788234567', role: 'stylist', active: true } }),
-    db.staff.create({ data: { name: 'Grace Ingabire', phone: '+250788345678', role: 'stylist', active: true } }),
-    db.staff.create({ data: { name: 'Alice Niyonsaba', phone: '+250788456789', role: 'receptionist', active: true } }),
+    db.staff.create({ data: { name: 'Marie Uwimana', phone: '+250788123456', role: 'stylist', active: true, salonId: salon.id } }),
+    db.staff.create({ data: { name: 'Jeanne Mukamana', phone: '+250788234567', role: 'stylist', active: true, salonId: salon.id } }),
+    db.staff.create({ data: { name: 'Grace Ingabire', phone: '+250788345678', role: 'stylist', active: true, salonId: salon.id } }),
+    db.staff.create({ data: { name: 'Alice Niyonsaba', phone: '+250788456789', role: 'receptionist', active: true, salonId: salon.id } }),
   ])
 
   console.log('Creating users...')
@@ -48,24 +54,24 @@ async function seed() {
   const pin2 = hashPin('5678')
   const pin3 = hashPin('9012')
 
-  await db.user.create({ data: { name: 'Admin', pin: pin1, role: 'admin', active: true } })
-  await db.user.create({ data: { name: 'Alice', pin: pin2, role: 'receptionist', active: true, staffId: staff[3].id } })
-  await db.user.create({ data: { name: 'Marie', pin: pin3, role: 'stylist', active: true, staffId: staff[0].id } })
+  await db.user.create({ data: { name: 'Admin', pin: pin1, role: 'admin', active: true, salonId: salon.id } })
+  await db.user.create({ data: { name: 'Alice', pin: pin2, role: 'receptionist', active: true, staffId: staff[3].id, salonId: salon.id } })
+  await db.user.create({ data: { name: 'Marie', pin: pin3, role: 'stylist', active: true, staffId: staff[0].id, salonId: salon.id } })
 
   console.log('Creating customers...')
   const customers = await Promise.all([
-    db.customer.create({ data: { name: 'Chantal Nyirahabimana', phone: '+250788111111', notes: 'Regular customer, prefers morning appointments' } }),
-    db.customer.create({ data: { name: 'Diane Uwamahoro', phone: '+250788222222', notes: '' } }),
-    db.customer.create({ data: { name: 'Pascal Imanirakiza', phone: '+250788333333', notes: 'Allergic to certain hair products' } }),
-    db.customer.create({ data: { name: 'Clarisse Murekatete', phone: '+250788444444', notes: '' } }),
-    db.customer.create({ data: { name: 'Eric Niyonzima', phone: '+250788555555', notes: 'Prefers Jeanne' } }),
-    db.customer.create({ data: { name: 'Aline Uwimbabazi', phone: '+250788666666', notes: '' } }),
-    db.customer.create({ data: { name: 'Patrick Habimana', phone: '+250788777777', notes: 'Walk-in customer' } }),
-    db.customer.create({ data: { name: 'Sophie Mugisha', phone: '+250788888888', notes: '' } }),
-    db.customer.create({ data: { name: 'Immaculee Niyonsaba', phone: '+250788999999', notes: 'VIP client' } }),
-    db.customer.create({ data: { name: 'Jean Pierre Habimana', phone: '+250788000000', notes: '' } }),
-    db.customer.create({ data: { name: 'Florence Mukamazimpaka', phone: '+250788101010', notes: 'Prefers Grace' } }),
-    db.customer.create({ data: { name: 'Olive Uwimana', phone: '+250788202020', notes: '' } }),
+    db.customer.create({ data: { name: 'Chantal Nyirahabimana', phone: '+250788111111', notes: 'Regular customer, prefers morning appointments', salonId: salon.id } }),
+    db.customer.create({ data: { name: 'Diane Uwamahoro', phone: '+250788222222', notes: '', salonId: salon.id } }),
+    db.customer.create({ data: { name: 'Pascal Imanirakiza', phone: '+250788333333', notes: 'Allergic to certain hair products', salonId: salon.id } }),
+    db.customer.create({ data: { name: 'Clarisse Murekatete', phone: '+250788444444', notes: '', salonId: salon.id } }),
+    db.customer.create({ data: { name: 'Eric Niyonzima', phone: '+250788555555', notes: 'Prefers Jeanne', salonId: salon.id } }),
+    db.customer.create({ data: { name: 'Aline Uwimbabazi', phone: '+250788666666', notes: '', salonId: salon.id } }),
+    db.customer.create({ data: { name: 'Patrick Habimana', phone: '+250788777777', notes: 'Walk-in customer', salonId: salon.id } }),
+    db.customer.create({ data: { name: 'Sophie Mugisha', phone: '+250788888888', notes: '', salonId: salon.id } }),
+    db.customer.create({ data: { name: 'Immaculee Niyonsaba', phone: '+250788999999', notes: 'VIP client', salonId: salon.id } }),
+    db.customer.create({ data: { name: 'Jean Pierre Habimana', phone: '+250788000000', notes: '', salonId: salon.id } }),
+    db.customer.create({ data: { name: 'Florence Mukamazimpaka', phone: '+250788101010', notes: 'Prefers Grace', salonId: salon.id } }),
+    db.customer.create({ data: { name: 'Olive Uwimana', phone: '+250788202020', notes: '', salonId: salon.id } }),
   ])
 
   console.log('Generating appointments...')
@@ -203,6 +209,7 @@ async function seed() {
           customerId: customers[custIdx].id,
           staffId: staff[staffIdx].id,
           serviceId: services[serviceIdx].id,
+          salonId: salon.id,
         },
       })
       await db.payment.create({
@@ -211,6 +218,7 @@ async function seed() {
           method: paymentMethod,
           amount: paymentAmount,
           appointmentId: appointment.id,
+          salonId: salon.id,
         },
       })
       appointmentCount++

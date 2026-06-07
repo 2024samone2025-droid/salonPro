@@ -1,5 +1,6 @@
 'use client'
 
+import React from 'react'
 import { AuthProvider, useAuth } from '@/lib/auth-context'
 import { useSalonStore } from '@/lib/salon-store'
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
@@ -39,30 +40,39 @@ function MainContent() {
 }
 
 function AuthenticatedApp() {
+  const { salon } = useAuth()
+  const { setSalon: setStoreSalon } = useSalonStore()
+
+  // Sync salon to store
+  React.useEffect(() => {
+    if (salon) {
+      setStoreSalon(salon)
+    }
+  }, [salon, setStoreSalon])
+
   return (
     <>
       <Sidebar />
       <SidebarInset className="min-h-svh flex flex-col">
-        {/* Header — Vercel-style minimal top bar */}
         <header className="flex h-11 items-center gap-2 border-b border-sidebar-border bg-sidebar px-2 sm:px-4 fixed top-0 left-0 right-0 z-10 sm:left-[var(--sidebar-width)]">
           <SidebarTrigger className="-ml-1 size-7" />
           <Separator orientation="vertical" className="h-4" />
           <div className="flex items-center gap-1">
             <Triangle className="size-3 fill-foreground text-foreground" />
-            <span className="text-[13px] font-medium text-muted-foreground hidden sm:inline">SalonPro</span>
+            <span className="text-[13px] font-medium text-muted-foreground hidden sm:inline">
+              {salon?.name || 'SalonPro'}
+            </span>
           </div>
           <div className="ml-auto flex items-center gap-1">
             <ThemeToggle />
           </div>
         </header>
-        {/* Content area */}
         <div className="flex-1 p-4 sm:p-6 md:p-8 overflow-auto min-w-0 pt-15">
           <MainContent />
         </div>
-        {/* Footer — minimal Vercel-style */}
         <footer className="border-t py-2 px-4 text-center mt-auto">
           <p className="text-[11px] text-muted-foreground font-mono">
-            © 2025 SalonPro Rwanda
+            © 2025 {salon?.name || 'SalonPro'}
           </p>
         </footer>
       </SidebarInset>

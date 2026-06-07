@@ -5,6 +5,7 @@ interface AuthResult {
   authorized: boolean
   user: SessionUser | null
   permissions: Permissions | null
+  salonId: string
   error?: NextResponse
 }
 
@@ -12,14 +13,12 @@ interface AuthResult {
  * Get session from request - checks cookie first, then Authorization header
  */
 export function getSessionFromRequest(req: NextRequest): SessionUser | null {
-  // 1. Try cookie first
   const cookieToken = req.cookies.get('salonpro_session')?.value
   if (cookieToken) {
     const user = verifySessionToken(cookieToken)
     if (user) return user
   }
 
-  // 2. Try Authorization header as fallback (for iframe/sandbox environments where cookies may not work)
   const authHeader = req.headers.get('authorization')
   if (authHeader?.startsWith('Bearer ')) {
     const token = authHeader.slice(7)
@@ -41,7 +40,6 @@ export async function requireAuth(req?: NextRequest, requiredPermission?: keyof 
   if (req) {
     user = getSessionFromRequest(req)
   } else {
-    // Try cookies() API first, then check if we can access headers
     user = await getSession()
   }
 
@@ -50,7 +48,19 @@ export async function requireAuth(req?: NextRequest, requiredPermission?: keyof 
       authorized: false,
       user: null,
       permissions: null,
+      salonId: '',
       error: NextResponse.json({ error: 'Authentication required' }, { status: 401 }),
+    }
+  }
+
+  // Ensure session user has salonId (required for SaaS)
+  if (!user.salonId) {
+    return {
+      authorized: false,
+      user,
+      permissions: null,
+      salonId: '',
+      error: NextResponse.json({ error: 'Invalid session - no salon context' }, { status: 401 }),
     }
   }
 
@@ -63,6 +73,7 @@ export async function requireAuth(req?: NextRequest, requiredPermission?: keyof 
         authorized: false,
         user,
         permissions,
+        salonId: user.salonId,
         error: NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 }),
       }
     }
@@ -72,6 +83,7 @@ export async function requireAuth(req?: NextRequest, requiredPermission?: keyof 
     authorized: true,
     user,
     permissions,
+    salonId: user.salonId,
   }
 }
 

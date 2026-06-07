@@ -1,21 +1,22 @@
 import { db } from '@/lib/db'
 import { hashPin } from '@/lib/auth'
+import { requireAuth } from '@/lib/auth-guard'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(req: NextRequest) {
+  const auth = await requireAuth(req, 'canManageStaff')
+  if (!auth.authorized) return auth.error
+
   try {
-    const { name, pin, role } = await req.json()
+    const { name, pin } = await req.json()
 
-    if (!name || !pin || !role) {
-      return NextResponse.json({ error: 'Name, PIN, and role are required' }, { status: 400 })
+    if (!name || !pin) {
+      return NextResponse.json({ error: 'Name and PIN are required' }, { status: 400 })
     }
 
-    if (!['admin', 'receptionist', 'stylist'].includes(role)) {
-      return NextResponse.json({ error: 'Invalid role' }, { status: 400 })
-    }
-
+    const salonId = auth.salonId as string
     const existing = await db.user.findFirst({
-      where: { name: { equals: name, mode: 'insensitive' } },
+      where: { name: { equals: name, mode: 'insensitive' }, salonId },
     })
 
     if (existing) {
@@ -26,8 +27,9 @@ export async function POST(req: NextRequest) {
       data: {
         name,
         pin: hashPin(pin),
-        role: role as 'admin' | 'receptionist' | 'stylist',
+        role: 'receptionist',
         active: true,
+        salonId,
       },
     })
 

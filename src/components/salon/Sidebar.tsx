@@ -32,6 +32,7 @@ import {
   Triangle,
   Search,
   LogOut,
+  CreditCard,
 } from 'lucide-react'
 
 const allNavItems: { tab: ViewTab; label: string; icon: React.ElementType; roles: UserRole[] }[] = [
@@ -191,6 +192,18 @@ export default function SalonSidebar() {
             <LogOut className="size-3.5 mr-2" aria-hidden="true" />
             Sign Out
           </Button>
+          {user?.role === 'admin' && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start text-sidebar-foreground/40 hover:text-sidebar-foreground hover:bg-sidebar-accent/60 transition-colors text-[13px] h-8"
+              onClick={() => window.location.href = '/billing'}
+              aria-label="Billing"
+            >
+              <CreditCard className="size-3.5 mr-2" aria-hidden="true" />
+              Billing
+            </Button>
+          )}
           <p className="text-[10px] text-sidebar-foreground/20 text-center mt-1.5 font-mono">
             v1.3.0
           </p>

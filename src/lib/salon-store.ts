@@ -2,6 +2,13 @@ import { create } from 'zustand'
 
 export type ViewTab = 'dashboard' | 'appointments' | 'customers' | 'staff' | 'services' | 'reports'
 
+interface SalonInfo {
+  id: string
+  name: string
+  subdomain: string
+  plan: string
+}
+
 interface SalonStore {
   activeTab: ViewTab
   setActiveTab: (tab: ViewTab) => void
@@ -11,6 +18,8 @@ interface SalonStore {
   setSidebarOpen: (open: boolean) => void
   commandOpen: boolean
   setCommandOpen: (open: boolean) => void
+  salon: SalonInfo | null
+  setSalon: (salon: SalonInfo | null) => void
 }
 
 export const useSalonStore = create<SalonStore>((set) => ({
@@ -22,4 +31,6 @@ export const useSalonStore = create<SalonStore>((set) => ({
   setSidebarOpen: (open) => set({ sidebarOpen: open }),
   commandOpen: false,
   setCommandOpen: (open) => set({ commandOpen: open }),
+  salon: null,
+  setSalon: (salon) => set({ salon }),
 }))

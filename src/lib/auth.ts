@@ -81,6 +81,7 @@ export interface SessionUser {
   name: string
   role: UserRole
   staffId: string | null
+  salonId: string
 }
 
 // Hash PIN using Node.js crypto (synchronous, reliable)
@@ -100,6 +101,7 @@ export function createSessionToken(user: SessionUser): string {
     name: user.name,
     role: user.role,
     staffId: user.staffId,
+    salonId: user.salonId,
     exp: Date.now() + SESSION_MAX_AGE * 1000,
   })
 
@@ -131,6 +133,7 @@ export function verifySessionToken(token: string): SessionUser | null {
       name: data.name,
       role: data.role as UserRole,
       staffId: data.staffId || null,
+      salonId: data.salonId,
     }
   } catch {
     return null

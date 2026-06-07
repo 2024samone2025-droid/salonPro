@@ -3,7 +3,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth-guard'
 
 export async function GET(req: NextRequest) {
-  // Reports require admin or receptionist role
   const auth = await requireAuth(req)
   if (!auth.authorized) return auth.error
 
@@ -14,6 +13,7 @@ export async function GET(req: NextRequest) {
   const period = params.get('period') || 'daily'
   const fromParam = params.get('from')
   const toParam = params.get('to')
+  const salonId = auth.salonId as string
 
   const now = new Date()
   let from: string
@@ -47,6 +47,7 @@ export async function GET(req: NextRequest) {
   const appointments = await db.appointment.findMany({
     where: {
       date: { gte: from, lte: to },
+      salonId,
     },
     include: {
       customer: true,
@@ -57,7 +58,6 @@ export async function GET(req: NextRequest) {
     orderBy: { date: 'asc' },
   })
 
-  // Revenue by date
   const revenueByDate: Record<string, number> = {}
   appointments
     .filter((a: { status: string }) => a.status === 'completed')
@@ -66,7 +66,6 @@ export async function GET(req: NextRequest) {
       revenueByDate[a.date] = (revenueByDate[a.date] || 0) + revenue
     })
 
-  // Top services
   const serviceCount: Record<string, { name: string; count: number; revenue: number }> = {}
   appointments.forEach((a: { service: { id: string; name: string; price: number }; status: string; payment?: { amount: number } | null }) => {
     if (!serviceCount[a.service.id]) {
@@ -80,7 +79,6 @@ export async function GET(req: NextRequest) {
   })
   const topServices = Object.values(serviceCount).sort((a, b) => b.revenue - a.revenue)
 
-  // Top customers
   const customerCount: Record<string, { name: string; visits: number; spent: number }> = {}
   appointments.forEach((a: { customer: { id: string; name: string }; service: { price: number }; status: string; payment?: { amount: number } | null }) => {
     if (!customerCount[a.customer.id]) {
@@ -94,7 +92,6 @@ export async function GET(req: NextRequest) {
   })
   const topCustomers = Object.values(customerCount).sort((a, b) => b.spent - a.spent)
 
-  // Payment method breakdown
   const paymentMethods: Record<string, number> = {}
   appointments.forEach((a: any) => {
     if (a.payment && a.payment.status !== 'unpaid') {
@@ -102,13 +99,11 @@ export async function GET(req: NextRequest) {
     }
   })
 
-  // Status breakdown
   const statusBreakdown: Record<string, number> = {}
   appointments.forEach((a: { status: string }) => {
     statusBreakdown[a.status] = (statusBreakdown[a.status] || 0) + 1
   })
 
-  // Calculate total collected vs outstanding
   let totalCollected = 0
   let totalOutstanding = 0
   appointments
@@ -124,7 +119,6 @@ export async function GET(req: NextRequest) {
       }
     })
 
-  // Format revenue chart data - fill in missing dates
   const revenueChart: Array<{ date: string; revenue: number }> = []
   const startDate = new Date(from)
   const endDate = new Date(to)
