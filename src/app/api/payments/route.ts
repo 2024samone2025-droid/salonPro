@@ -7,7 +7,7 @@ export async function GET(req: NextRequest) {
   if (!auth.authorized) return auth.error
 
   const params = req.nextUrl.searchParams
-  const where: Record<string, unknown> = {}
+  const where: Record<string, unknown> = { salonId: auth.salonId }
   if (params.get('status')) where.status = params.get('status')
   if (params.get('method')) where.method = params.get('method')
   const payments = await db.payment.findMany({
@@ -26,10 +26,10 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  // Only admin and receptionist can manage payments
   const auth = await requireAuth(req, 'canManagePayments')
   if (!auth.authorized) return auth.error
 
+  const salonId = auth.salonId as string
   const body = await req.json()
   const payment = await db.payment.create({
     data: {
@@ -37,6 +37,7 @@ export async function POST(req: NextRequest) {
       method: body.method || 'cash',
       amount: body.amount || 0,
       appointmentId: body.appointmentId,
+      salonId,
     },
     include: {
       appointment: true,
@@ -46,16 +47,16 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
-  // Only admin and receptionist can manage payments
   const auth = await requireAuth(req, 'canManagePayments')
   if (!auth.authorized) return auth.error
 
+  const salonId = auth.salonId as string
   const body = await req.json()
   const { id, ...data } = body
   if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 })
   const payment = await db.payment.update({
     where: { id },
-    data,
+    data: { ...data, salonId },
     include: {
       appointment: true,
     },

@@ -8,9 +8,9 @@ export async function GET(req: NextRequest) {
     if (!auth.authorized) return auth.error
 
     const today = new Date().toISOString().split('T')[0]
+    const salonId = auth.salonId as string
 
-    // Build appointment filter based on role
-    const appointmentWhere: Record<string, unknown> = { date: today }
+    const appointmentWhere: Record<string, unknown> = { date: today, salonId }
     if (auth.user?.role === 'stylist' && auth.user.staffId) {
       appointmentWhere.staffId = auth.user.staffId
     }
@@ -30,11 +30,10 @@ export async function GET(req: NextRequest) {
         },
         orderBy: { startTime: 'asc' },
       }),
-      // Stylists don't need pending payments data
       auth.user?.role !== 'stylist' ? db.payment.findMany({
         where: {
           status: { in: ['unpaid', 'partial'] },
-          appointment: { date: today },
+          appointment: { date: today, salonId },
         },
         include: {
           appointment: {
@@ -48,7 +47,7 @@ export async function GET(req: NextRequest) {
       db.staff.findMany({
         where: {
           active: true,
-          // For stylist, only fetch their own staff record
+          salonId,
           ...(auth.user?.role === 'stylist' && auth.user.staffId
             ? { id: auth.user.staffId }
             : {}),
@@ -63,7 +62,6 @@ export async function GET(req: NextRequest) {
         return sum + a.service.price
       }, 0)
 
-    // Today's pending amounts only
     const pendingAmount = todayPendingPayments.reduce((sum: number, p: { appointment: { service: { price: number } }; amount: number }) => {
       return sum + p.appointment.service.price - p.amount
     }, 0)
@@ -85,7 +83,6 @@ export async function GET(req: NextRequest) {
       }
     })
 
-    // Pending payments list for dashboard (today only)
     const pendingPaymentsList = todayPendingPayments.map((p: {
       id: string
       amount: number

@@ -7,7 +7,7 @@ export async function GET(req: NextRequest) {
   if (!auth.authorized) return auth.error
 
   const params = req.nextUrl.searchParams
-  const where: Record<string, unknown> = {}
+  const where: Record<string, unknown> = { salonId: auth.salonId }
   if (params.get('date')) where.date = params.get('date')
   if (params.get('staffId')) where.staffId = params.get('staffId')
   if (params.get('status')) where.status = params.get('status')
@@ -39,14 +39,12 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  // Only admin and receptionist can create appointments
   const auth = await requireAuth(req, 'canCreateAppointment')
   if (!auth.authorized) return auth.error
 
   try {
     const body = await req.json()
 
-    // Validate required fields
     if (!body.date || !body.startTime || !body.endTime || !body.customerId || !body.staffId || !body.serviceId) {
       return NextResponse.json(
         { error: 'Missing required fields: date, startTime, endTime, customerId, staffId, serviceId' },
@@ -54,6 +52,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    const salonId = auth.salonId as string // Validated by requireAuth
     const appointment = await db.appointment.create({
       data: {
         date: body.date,
@@ -64,20 +63,20 @@ export async function POST(req: NextRequest) {
         customerId: body.customerId,
         staffId: body.staffId,
         serviceId: body.serviceId,
+        salonId,
       },
     })
 
-    // Auto-create payment record
     await db.payment.create({
       data: {
         appointmentId: appointment.id,
         status: 'unpaid',
         method: 'cash',
         amount: 0,
+        salonId,
       },
     })
 
-    // Re-fetch with all relations included
     const fullAppointment = await db.appointment.findUnique({
       where: { id: appointment.id },
       include: {
@@ -104,13 +103,11 @@ export async function PUT(req: NextRequest) {
     const { id, ...data } = body
     if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 })
 
-    // If user is stylist, check they own this appointment
     if (auth.user && auth.user.role === 'stylist') {
       const existing = await db.appointment.findUnique({ where: { id } })
       if (!existing || !canModifyAppointment(auth.user, existing.staffId)) {
         return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
       }
-      // Stylists can only update status and notes
       const allowedData: Record<string, unknown> = {}
       if (data.status !== undefined) allowedData.status = data.status
       if (data.notes !== undefined) allowedData.notes = data.notes
@@ -129,7 +126,7 @@ export async function PUT(req: NextRequest) {
 
     const appointment = await db.appointment.update({
       where: { id },
-      data,
+      data: { ...data, salonId: auth.salonId },
       include: {
         customer: true,
         staff: true,
@@ -145,7 +142,6 @@ export async function PUT(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  // Only admin can delete appointments
   const auth = await requireAuth(req, 'canDeleteRecords')
   if (!auth.authorized) return auth.error
 

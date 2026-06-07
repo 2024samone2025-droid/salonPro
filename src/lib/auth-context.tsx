@@ -25,16 +25,17 @@ export interface SessionUser {
   name: string
   role: UserRole
   staffId: string | null
+  salonId: string
 }
 
 interface AuthContextType {
   user: SessionUser | null
   permissions: Permissions | null
   loading: boolean
+  salon: { id: string; name: string; subdomain: string; plan: string } | null
   login: (name: string, pin: string) => Promise<{ success: boolean; error?: string }>
   logout: () => Promise<void>
   refreshSession: () => Promise<void>
-  /** Fetch wrapper that includes the session token */
   authFetch: (url: string, options?: RequestInit) => Promise<Response>
 }
 
@@ -45,6 +46,7 @@ const TOKEN_KEY = 'salonpro_token'
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<SessionUser | null>(null)
   const [permissions, setPermissions] = useState<Permissions | null>(null)
+  const [salon, setSalon] = useState<{ id: string; name: string; subdomain: string; plan: string } | null>(null)
   const [loading, setLoading] = useState(true)
   const isInitialMount = useRef(true)
 
@@ -65,14 +67,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const data = await res.json()
         setUser(data.user)
         setPermissions(data.permissions)
+        setSalon(data.salon)
       } else {
         setUser(null)
         setPermissions(null)
+        setSalon(null)
         localStorage.removeItem(TOKEN_KEY)
       }
     } catch {
       setUser(null)
       setPermissions(null)
+      setSalon(null)
     } finally {
       setLoading(false)
     }
@@ -84,20 +89,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (name: string, pin: string): Promise<{ success: boolean; error?: string }> => {
     try {
-      const res = await fetch('/api/auth/login', {
+      // Include salon param for dev mode
+      const salonParam = new URLSearchParams(window.location.search).get('salon') || 'demo'
+      const res = await fetch(`/api/auth/login?salon=${salonParam}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, pin }),
       })
       const data = await res.json()
       if (res.ok) {
-        // Store user and permissions from login response
         setUser(data.user)
         setPermissions(data.permissions)
-        // Store the token in localStorage for Authorization header fallback
         if (data.token) {
           localStorage.setItem(TOKEN_KEY, data.token)
         }
+        // Salon info is already in response
+        setSalon(data.salon)
         return { success: true }
       }
       return { success: false, error: data.error || 'Login failed' }
@@ -114,13 +121,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     setUser(null)
     setPermissions(null)
+    setSalon(null)
     localStorage.removeItem(TOKEN_KEY)
   }
 
-  /**
-   * Authenticated fetch that includes the session token via Authorization header.
-   * This works even in iframe/sandbox environments where cookies may not be sent.
-   */
   const authFetch = useCallback(async (url: string, options: RequestInit = {}): Promise<Response> => {
     const token = typeof window !== 'undefined' ? localStorage.getItem(TOKEN_KEY) : null
     const headers = new Headers(options.headers || {})
@@ -131,7 +135,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user, permissions, loading, login, logout, refreshSession, authFetch }}>
+    <AuthContext.Provider value={{ user, permissions, loading, salon, login, logout, refreshSession, authFetch }}>
       {children}
     </AuthContext.Provider>
   )
@@ -144,6 +148,7 @@ export function useAuth() {
       user: null,
       permissions: null,
       loading: false,
+      salon: null,
       login: async () => ({ success: false, error: 'Not initialized' }),
       logout: async () => {},
       refreshSession: async () => {},
