@@ -9,12 +9,14 @@ datasource db {
 }
 
 model Salon {
-  id        String   @id @default(cuid())
-  name      String
-  subdomain String   @unique
-  plan      String   @default("free") // free, pro
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                String   @id @default(cuid())
+  name              String
+  subdomain         String   @unique
+  plan              String   @default("free") // free, pro
+  stripeCustomerId  String?
+  stripeSubscriptionId String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   customers     Customer[]
   staff         Staff[]
