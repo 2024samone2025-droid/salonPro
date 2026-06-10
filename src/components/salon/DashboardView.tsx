@@ -27,7 +27,7 @@ import {
   TrendingUp,
 } from 'lucide-react'
 import { format } from 'date-fns'
-import { useSalonStore } from '@/lib/salon-store'
+import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 import { formatRWF, cn } from '@/lib/utils'
 import { STATUS_CONFIG, type AppointmentStatus } from '@/lib/constants'
@@ -70,7 +70,7 @@ export default function DashboardView() {
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const { setActiveTab } = useSalonStore()
+  const router = useRouter()
   const { user, permissions, authFetch } = useAuth()
   const isStylist = user?.role === 'stylist'
   const canManagePayments = permissions?.canManagePayments ?? false
@@ -172,7 +172,7 @@ export default function DashboardView() {
           <Button
             variant="outline"
             className="h-auto py-3 px-4 justify-start gap-3 hover:bg-primary/5 hover:border-primary/20 transition-colors"
-            onClick={() => setActiveTab('appointments')}
+            onClick={() => router.push('/appointments')}
           >
             <div className="flex items-center justify-center size-8 sm:size-9 rounded-lg bg-primary/10 shrink-0">
               <Plus className="size-4 text-primary" />
@@ -185,7 +185,7 @@ export default function DashboardView() {
           <Button
             variant="outline"
             className="h-auto py-3 px-4 justify-start gap-3 hover:bg-primary/5 hover:border-primary/20 transition-colors"
-            onClick={() => setActiveTab('customers')}
+            onClick={() => router.push('/customers')}
           >
             <div className="flex items-center justify-center size-8 sm:size-9 rounded-lg bg-primary/10 shrink-0">
               <Users className="size-4 text-primary" />
@@ -199,7 +199,7 @@ export default function DashboardView() {
             <Button
               variant="outline"
               className="h-auto py-3 px-4 justify-start gap-3 hover:bg-primary/5 hover:border-primary/20 transition-colors col-span-2 sm:col-span-1"
-              onClick={() => setActiveTab('reports')}
+              onClick={() => router.push('/reports')}
             >
               <div className="flex items-center justify-center size-8 sm:size-9 rounded-lg bg-primary/10 shrink-0">
                 <BarChart3 className="size-4 text-primary" />
@@ -217,7 +217,7 @@ export default function DashboardView() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <Card
           className="cursor-pointer hover:shadow-md transition-all group border"
-          onClick={() => setActiveTab('appointments')}
+          onClick={() => router.push('/appointments')}
         >
           <CardContent className="pt-4 pb-3 px-4">
             <div className="flex items-center gap-2 mb-2">
@@ -233,7 +233,7 @@ export default function DashboardView() {
         {!isStylist && (
           <Card
             className="cursor-pointer hover:shadow-md transition-all group border"
-            onClick={() => setActiveTab('reports')}
+            onClick={() => router.push('/reports')}
           >
             <CardContent className="pt-4 pb-3 px-4">
               <div className="flex items-center gap-2 mb-2">
@@ -251,7 +251,7 @@ export default function DashboardView() {
           <>
             <Card
               className="cursor-pointer hover:shadow-md transition-all group border"
-              onClick={() => setActiveTab('appointments')}
+              onClick={() => router.push('/appointments')}
             >
               <CardContent className="pt-4 pb-3 px-4">
                 <div className="flex items-center gap-2 mb-2">
@@ -266,7 +266,7 @@ export default function DashboardView() {
 
             <Card
               className="cursor-pointer hover:shadow-md transition-all group border"
-              onClick={() => setActiveTab('appointments')}
+              onClick={() => router.push('/appointments')}
             >
               <CardContent className="pt-4 pb-3 px-4">
                 <div className="flex items-center gap-2 mb-2">
@@ -384,7 +384,7 @@ export default function DashboardView() {
                   variant="ghost"
                   size="sm"
                   className="text-primary hover:text-primary/80"
-                  onClick={() => setActiveTab('appointments')}
+                  onClick={() => router.push('/appointments')}
                 >
                   View All <ArrowRight className="size-3 ml-1" />
                 </Button>

@@ -1,50 +1,56 @@
-# Memory — UI Spec Foundation Bootstrap (on SaaS Multi-Tenancy branch)
+# Memory — Views → Real Routes Migration (built, verification interrupted)
 
 Last updated: 2026-06-10
 
 ## What was built
 
-This session was spec-only — no app code changed. Bootstrapped the spec-driven UI foundation via /ui-ux-architect:
+Two work blocks this session, both on branch `feature/saas-multi-tenancy` (all uncommitted):
 
-- `specs/ui/design-system.md` — target tokens: raspberry accent `#BE185D` (light) / `#F472B6` (dark) over warm stone neutrals; Bricolage Grotesque display + Geist Sans body + Geist Mono for RWF amounts; type scale 1.25; radius 8/12/16/full; comfortable density (44px rows); component inventory mapped to the existing `src/components/ui/` shadcn set (EmptyState is the one component that still needs creating).
-- `specs/ui/app-shell.md` — three shells: AppShell (sidebar + topbar), AuthShell (centered card: signup/login), MarketingShell (top nav + footer). Mobile target: bottom tab bar (Dashboard / Appointments / Customers / More-sheet) instead of a hamburger drawer. Overlay policy: Sheet for create/edit, Dialog for confirms only, sonner toasts with undo, Alert banner for trial/billing notices. ASCII wireframes for Dashboard, Appointments, Marketing landing.
-- `specs/ui/routes.md` — route table + hierarchy, tenancy note (subdomain via middleware, dev `?salon=`), and two flagged architecture problems (see Problems).
-- `specs/ui/screens/` — empty; filled per-feature by ui-ux-architect Feature mode.
-- Persistent agent memory: `~/.claude/projects/-home-m25-projects-salonPro/memory/ui-spec-foundation.md`.
+**Block 1 — design system applied to code:**
+- `globals.css` + `tailwind.config.ts`: raspberry/warm-stone tokens (light + dark) per `specs/ui/design-system.md`, including new semantic `success`/`warning`/`info` tokens and `--chart-1…5` (which were referenced in the Tailwind config but never defined). `--radius: 0.625rem`.
+- `layout.tsx`: Bricolage Grotesque loaded as `--font-display`; `fontFamily.sans/display/mono` mapped in Tailwind — the body was never actually rendering Geist before (variables existed but `sans` was unmapped).
+- `src/components/marketing/LandingPage.tsx`: single source of truth for marketing (merged the two diverged copies), correct CTA hierarchy, Free + Pro ($29/mo, copied from billing) pricing.
 
-**Carried over from 2026-06-07 session (still current):** full SaaS multi-tenancy transformation — `Salon` model + `salonId` FKs across all models, subdomain middleware (`x-salon-subdomain` header), salon-scoped API routes, demo-mode billing endpoints (`/api/billing/checkout` upgrades directly, no real Stripe), `/signup` onboarding, `/billing` page, admin-only Billing nav. Seed: demo salon (subdomain `demo`), users Admin/1234, Alice/5678 (receptionist), Marie/9012 (stylist).
+**Block 2 — views → real routes migration (per confirmed /architect plan):**
+- `src/app/(app)/layout.tsx`: client layout owning SidebarProvider → AuthProvider → auth gate (loading → splash; no user → `router.replace('/login' + search)`) → Sidebar + topbar + CommandPalette + Toaster. Lifted from old `AuthenticatedApp`.
+- Six thin pages: `(app)/{dashboard,appointments,customers,staff,services,reports}/page.tsx`, each rendering its existing View component.
+- `(app)/billing/page.tsx`: moved from `src/app/billing/` (old dir deleted), stripped its own min-h-screen wrapper + fixed ThemeToggle; now gets the sidebar and — importantly — a real AuthProvider (it previously rendered with the `useAuth` no-provider fallback, i.e. null salon).
+- `src/app/page.tsx`: now just renders `LandingPage` (server component). `/` is ALWAYS marketing per user decision.
+- `src/components/marketing/MarketingHeader.tsx` (new, client): wraps itself in AuthProvider; signed-out → ghost "Log in" + primary "Start free trial"; signed-in → avatar (initials) with dropdown (Dashboard, Log out). Reserves header space while auth loads to avoid layout shift.
+- `Sidebar.tsx`: nav items are now `href`-based `<Link>`s inside `SidebarMenuButton asChild`; active = `pathname === href` via `usePathname`; today-count effect keyed on `pathname`; Billing button is a `<Link>` (no more full reload).
+- `CommandPalette.tsx`: all navigation via `router.push`; entity results push `/customers` / `/appointments`.
+- `DashboardView.tsx`: nine `setActiveTab(...)` quick-links → `router.push(...)`.
+- `salon-store.ts`: `activeTab`/`setActiveTab`/`ViewTab` deleted; keeps `selectedDate`, `sidebarOpen`, `commandOpen`, `salon`.
+- `src/app/login/page.tsx`: success redirect now `/dashboard` (+ preserved `?salon=`).
+- `src/app/marketing/` deleted (redundant once `/` is always marketing).
+- Specs updated earlier in session: `specs/ui/routes.md` (route table, resolved/open architecture notes incl. USD-vs-RWF currency inconsistency), `app-shell.md`, `design-system.md` amendment log. NOTE: routes.md still describes views as client-side state — needs updating to the new real routes once verified.
 
 ## Decisions made
 
-**This session (UI):**
-- Spec-driven UI from now on: every new visible feature gets `specs/ui/screens/<feature>-screen.md` with the full default/empty/loading/error/mobile state table before building; no inline new tokens/components — changes go through the design-system.md amendment log.
-- Design direction "boutique, not bank": raspberry + warm stone replacing the stock shadcn near-black theme. Spec is the target; `globals.css` deliberately not migrated yet, pending user reaction.
-- Mobile navigation target is a bottom tab bar, not a drawer — front-desk staff book appointments constantly on phones.
-
-**Standing (multi-tenancy, from previous session):**
-- Shared DB with `salonId` FK (not schema-per-tenant); salon lookup in API handlers (Prisma is edge-incompatible, so not in middleware); dev subdomain via `?salon=` query param; demo-mode direct upgrade instead of real Stripe; admin-only billing access.
+- `/` is always marketing, even signed in; header shows avatar dropdown instead of auth buttons. Dashboard lives at `/dashboard`. (User's explicit choice over redirect-to-dashboard.)
+- Auth gating is client-side in `(app)/layout.tsx` — matches the existing localStorage-token + `/api/auth/me` session model; no middleware change.
+- URL is the single navigation truth; zustand no longer holds nav state.
+- Spec-driven UI workflow stands: new screens get `specs/ui/screens/<feature>-screen.md` first.
 
 ## Problems solved
 
-None code-level this session. Two architecture problems identified and documented in `specs/ui/routes.md`:
-
-1. All six app views (Dashboard/Appointments/Customers/Staff/Services/Reports) are client-side state in `src/app/page.tsx`, not URLs — no deep links, broken back button. Recommended: promote to real routes under a shared AppShell layout (sidebar already maps 1:1).
-2. Marketing page is duplicated: `MarketingSection` inline in `page.tsx` AND the new uncommitted `src/app/marketing/page.tsx` — they will drift; keep one source of truth. Also: the marketing header CTA hierarchy is inverted (Login is the filled primary, Sign Up is ghost — should be reversed since signup is the conversion goal).
+- `useAuth()` silently returns a null-user fallback when no AuthProvider is mounted (see `auth-context.tsx` ~line 145) — this masked the fact that the old standalone `/billing` page never had real auth context. Beware: any component using `useAuth` outside a provider fails silently, not loudly.
+- Block 1: `LoginPage.tsx` was imported nowhere (login unreachable; marketing header linked to a dead `#login` anchor) — fixed with `/login` route.
+- Stale `.next` artifacts after deleting routes: `.next/types` referenced deleted `src/app/billing`/`marketing` pages (tsc errors), and a partial `.next` deletion corrupted webpack chunks (`Cannot find module './611.js'` during "Collecting page data"). Fix in flight: full `rm -rf .next && npm run build`.
 
 ## Current state
 
-- Branch `feature/saas-multi-tenancy`. Uncommitted: modified `src/app/page.tsx`, new `src/app/marketing/`, new `specs/ui/`.
-- specs/ui foundation complete, awaiting user reaction; any correction gets folded into the specs so future screens inherit it.
-- App code still on stock shadcn theme; no screen specs written yet; EmptyState component not built.
-- ⏳ Still pending from last session: `npx prisma db push` for the `stripeCustomerId`/`stripeSubscriptionId` columns, then test signup → login → billing upgrade → verify free-plan limits lift.
+- All migration code is written; `next build` "Compiled successfully" — compile and types are fine.
+- **Verification incomplete**: the final clean rebuild (`rm -rf .next && npm run build`) was interrupted by the user. The webpack-chunk error is a stale-cache artifact, not a code error, but this is unproven until the clean build finishes. No runtime smoke test done (login → /dashboard → sidebar nav → /billing → marketing header avatar).
+- Block 1 work (theme, fonts, landing page, /login) was fully verified earlier (tsc + eslint + production build all green before Block 2 began).
+- Still pending from 2026-06-07: `npx prisma db push` for `stripeCustomerId`/`stripeSubscriptionId` columns; billing-flow end-to-end test. Seed users: Admin/1234, Alice/5678, Marie/9012; demo salon subdomain `demo` (dev tenancy via `?salon=demo`).
 
 ## Next session starts with
 
-Get the user's reaction to `specs/ui/design-system.md` and `app-shell.md`. Then, in order: (1) migrate `globals.css` tokens to raspberry/stone + add Bricolage Grotesque in `layout.tsx`, (2) resolve the marketing-page duplication, (3) fix the marketing header CTA hierarchy. (The views→routes migration is bigger — schedule separately. The pending `prisma db push` + billing-flow test from 2026-06-07 is still open too.)
+`rm -rf .next && npm run build` — must pass clean. Then smoke-test: `/` shows marketing (avatar when signed in), `/login` → `/dashboard`, sidebar links navigate with active marking, ⌘K palette navigates, dashboard quick-links work, `/billing` shows salon name + sidebar, unauthed `/appointments` redirects to `/login`. Then update `specs/ui/routes.md` to reflect real routes and mark architecture note 1 resolved.
 
 ## Open questions
 
-- Does the user approve the raspberry/warm-stone direction and the mobile bottom-tab plan?
-- Keep marketing on unauthed `/` (recommended; delete `/marketing`), or move it to `/marketing`?
-- When to do the client-side-views → real-routes migration?
-- (Carried over) Plan downgrade: immediate limit enforcement or grace period? How to handle subdomain conflicts at signup?
+- Currency: $29 USD (billing + marketing) vs RWF everywhere else — pick one (likely RWF), touches Stripe config.
+- Mobile bottom-tab bar (spec'd in app-shell.md) — not yet built; sidebar still collapses offcanvas on mobile.
+- (Carried) Plan downgrade grace period; subdomain conflict handling at signup.

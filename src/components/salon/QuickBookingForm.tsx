@@ -188,6 +188,11 @@ export default function QuickBookingForm({ selectedDate, onBookingCreated }: Qui
         setNewCustomerName('')
         setNewCustomerPhone('')
         onBookingCreated?.()
+      } else if (res.status === 409) {
+        const data = await res.json().catch(() => null)
+        toast.error('Double booking', {
+          description: data?.message || 'This stylist is already booked for that time.',
+        })
       } else {
         toast.error('Failed to book appointment')
       }

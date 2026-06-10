@@ -12,7 +12,7 @@ function LoginGate() {
   useEffect(() => {
     if (!loading && user) {
       // Preserve ?salon= so dev-mode tenancy survives the redirect
-      router.replace(`/${window.location.search}`)
+      router.replace(`/dashboard${window.location.search}`)
     }
   }, [user, loading, router])
 

@@ -1,7 +1,8 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Check, Triangle, Calendar, Users, Scissors, BarChart3, CreditCard, Smartphone } from 'lucide-react'
+import { Check, Calendar, Users, Scissors, BarChart3, CreditCard, Smartphone } from 'lucide-react'
+import MarketingHeader from './MarketingHeader'
 
 const features = [
   {
@@ -45,24 +46,7 @@ const features = [
 export default function LandingPage() {
   return (
     <div className="min-h-screen w-full bg-background">
-      <header className="border-b bg-background/80 backdrop-blur-sm sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="flex items-center justify-center size-8 rounded-md bg-primary">
-              <Triangle className="size-5 text-primary-foreground" fill="currentColor" />
-            </div>
-            <span className="text-xl font-semibold">SalonPro</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Link href="/login">
-              <Button variant="ghost">Log in</Button>
-            </Link>
-            <Link href="/signup">
-              <Button>Start free trial</Button>
-            </Link>
-          </div>
-        </div>
-      </header>
+      <MarketingHeader />
 
       <main className="max-w-6xl mx-auto px-4 py-16">
         <section className="text-center mb-16">
