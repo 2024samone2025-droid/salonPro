@@ -12,8 +12,9 @@ Tenancy: salon resolved from subdomain (dev: `?salon=` query param) via `src/mid
 | `/` → Services view | AppShell | service catalog + prices | — |
 | `/` → Reports view | AppShell | revenue and activity reports | — |
 | `/signup` | AuthShell | create salon + admin account (onboarding) | — |
+| `/login` | AuthShell | staff sign-in (name + PIN); redirects to `/` when authed | — |
 | `/billing` | AppShell | plan status, upgrade to Pro (admin-only) | — |
-| `/marketing` | MarketingShell | ⚠ duplicate of unauthed `/` — see note below | — |
+| `/marketing` | MarketingShell | renders shared `LandingPage` — kept as alias of unauthed `/`, candidate for deletion | — |
 
 Hierarchy:
 ```
@@ -21,11 +22,14 @@ Hierarchy:
 ├── [views]             Dashboard · Appointments · Customers · Staff · Services · Reports
 │                       — currently client-side state in page.tsx, not URLs
 ├── signup
+├── login
 ├── billing
-└── marketing           ⚠ consolidate (see below)
+└── marketing           alias of unauthed / (shared LandingPage component)
 ```
 
-## Architecture notes (flagged at bootstrap)
+## Architecture notes
 
-1. **Views are state, not URLs.** All six app views render from `/` via a client-side switcher in `page.tsx`. Cost: no deep links ("send me the reports page"), back button doesn't work between views, no per-view code splitting. Recommended migration when convenient: promote to real routes (`/appointments`, `/customers`, `/staff`, `/services`, `/reports`) under a shared AppShell layout. Sidebar already maps 1:1.
-2. **Two marketing surfaces.** `MarketingSection` lives inline in `page.tsx` AND as the new uncommitted `/marketing` page. Pick one source of truth: keep the unauthed-`/` render (better for SEO/conversion — visitors land on the root domain) and delete `/marketing`, or extract one shared component both render. Two copies will drift.
+1. **Views are state, not URLs** (open). All six app views render from `/` via a client-side switcher in `page.tsx`. Cost: no deep links ("send me the reports page"), back button doesn't work between views, no per-view code splitting. Recommended migration when convenient: promote to real routes (`/appointments`, `/customers`, `/staff`, `/services`, `/reports`) under a shared AppShell layout. Sidebar already maps 1:1.
+2. **Marketing duplication** (resolved 2026-06-10). Both unauthed `/` and `/marketing` now render the single `src/components/marketing/LandingPage.tsx`. `/marketing` is a thin alias kept so nothing links into a 404 — delete the folder once confirmed nothing references it.
+3. **Login reachability** (resolved 2026-06-10). `LoginPage.tsx` was rendered nowhere; the old marketing header linked to a dead `#login` anchor. Now `/login` (AuthShell) renders it and redirects to `/` on success, preserving `?salon=`.
+4. **Currency inconsistency** (open). Billing + marketing pricing show **$29/month**; product copy and service prices use **RWF**. Pick one — likely RWF for a Rwanda-market product — and update `billing/page.tsx`, `LandingPage.tsx`, and Stripe price config together.

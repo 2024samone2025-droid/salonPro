@@ -59,4 +59,6 @@ Rules: accent appears on ≤ 10% of any screen — one filled accent button per 
 ## Amendment log
 | Date | Change | Reason |
 |---|---|---|
-| 2026-06-10 | Initial system. Note: `globals.css` still carries stock shadcn near-black primary; this spec defines the target tokens to migrate to. | Bootstrap |
+| 2026-06-10 | Initial system. | Bootstrap |
+| 2026-06-10 | Tokens implemented in `globals.css` (raspberry/stone, light + dark, semantic success/warning/info, chart-1…5). Radius implemented via shadcn scale `--radius: 0.625rem` → sm 6 / md 8 / lg 10px: inputs/buttons land on the spec'd 8px, cards render 10px not 12px. Fonts wired: `font-sans`/`font-display`/`font-mono` mapped in `tailwind.config.ts`; Bricolage Grotesque loaded in `layout.tsx`. | Migration off stock shadcn theme |
+| 2026-06-10 | Pricing display currency is **USD ($29/mo Pro)** to match `billing/page.tsx`; service prices remain RWF. Open inconsistency — see routes.md. | Don't invent prices |
