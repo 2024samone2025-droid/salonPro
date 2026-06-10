@@ -49,7 +49,7 @@ export default function LoginPage() {
           <div className="inline-flex items-center justify-center size-10 sm:size-12 rounded-md bg-foreground mb-3 sm:mb-4">
             <Triangle className="size-5 sm:size-6 text-background fill-background" />
           </div>
-          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">{salon?.name || 'SalonPro'}</h1>
+          <h1 className="font-display text-xl sm:text-2xl font-semibold tracking-tight">{salon?.name || 'SalonPro'}</h1>
           <p className="text-[13px] sm:text-sm text-muted-foreground mt-0.5">Salon Management System</p>
         </div>
 
@@ -136,10 +136,11 @@ export default function LoginPage() {
                 ].map((account) => {
                   const Icon = account.icon
                   return (
-                    <button
+                    <Button
                       key={account.name}
                       type="button"
-                      className="w-full flex items-center justify-between px-3 py-2 sm:py-2.5 rounded-md text-left font-normal hover:bg-muted/50 transition-colors border border-transparent hover:border-border min-h-[44px]"
+                      variant="ghost"
+                      className="h-auto min-h-[44px] w-full justify-between border border-transparent px-3 py-2 text-left font-normal whitespace-normal hover:border-border hover:bg-muted/50 sm:py-2.5"
                       onClick={() => { setName(account.name); setPin(account.pin); setError('') }}
                     >
                       <div className="flex items-center gap-2.5">
@@ -152,7 +153,7 @@ export default function LoginPage() {
                       <span className="text-[11px] sm:text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded font-mono">
                         {account.pin}
                       </span>
-                    </button>
+                    </Button>
                   )
                 })}
               </div>

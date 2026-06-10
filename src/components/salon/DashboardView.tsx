@@ -27,7 +27,7 @@ import {
   TrendingUp,
 } from 'lucide-react'
 import { format } from 'date-fns'
-import { useSalonStore } from '@/lib/salon-store'
+import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 import { formatRWF, cn } from '@/lib/utils'
 import { STATUS_CONFIG, type AppointmentStatus } from '@/lib/constants'
@@ -70,7 +70,7 @@ export default function DashboardView() {
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const { setActiveTab } = useSalonStore()
+  const router = useRouter()
   const { user, permissions, authFetch } = useAuth()
   const isStylist = user?.role === 'stylist'
   const canManagePayments = permissions?.canManagePayments ?? false
@@ -156,7 +156,7 @@ export default function DashboardView() {
       {/* Date header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl sm:text-2xl font-bold tracking-tight">
+          <h2 className="font-display text-xl sm:text-2xl font-bold tracking-tight">
             {isStylist ? 'My Dashboard' : 'Dashboard'}
           </h2>
           <CardDescription className="flex items-center gap-2 mt-1">
@@ -171,11 +171,11 @@ export default function DashboardView() {
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           <Button
             variant="outline"
-            className="h-auto py-3 px-4 justify-start gap-3 hover:bg-primary/5 hover:border-primary/20 transition-colors"
-            onClick={() => setActiveTab('appointments')}
+            className="h-auto py-3 px-4 justify-start gap-3 hover:bg-accent/60 transition-colors"
+            onClick={() => router.push('/appointments')}
           >
-            <div className="flex items-center justify-center size-8 sm:size-9 rounded-lg bg-primary/10 shrink-0">
-              <Plus className="size-4 text-primary" />
+            <div className="flex items-center justify-center size-8 sm:size-9 rounded-lg bg-muted shrink-0">
+              <Plus className="size-4 text-muted-foreground" />
             </div>
             <div className="text-left">
               <p className="text-xs sm:text-sm font-semibold">New Appointment</p>
@@ -184,11 +184,11 @@ export default function DashboardView() {
           </Button>
           <Button
             variant="outline"
-            className="h-auto py-3 px-4 justify-start gap-3 hover:bg-primary/5 hover:border-primary/20 transition-colors"
-            onClick={() => setActiveTab('customers')}
+            className="h-auto py-3 px-4 justify-start gap-3 hover:bg-accent/60 transition-colors"
+            onClick={() => router.push('/customers')}
           >
-            <div className="flex items-center justify-center size-8 sm:size-9 rounded-lg bg-primary/10 shrink-0">
-              <Users className="size-4 text-primary" />
+            <div className="flex items-center justify-center size-8 sm:size-9 rounded-lg bg-muted shrink-0">
+              <Users className="size-4 text-muted-foreground" />
             </div>
             <div className="text-left">
               <p className="text-xs sm:text-sm font-semibold">Add Customer</p>
@@ -198,11 +198,11 @@ export default function DashboardView() {
           {permissions && permissions.reports !== 'none' && (
             <Button
               variant="outline"
-              className="h-auto py-3 px-4 justify-start gap-3 hover:bg-primary/5 hover:border-primary/20 transition-colors col-span-2 sm:col-span-1"
-              onClick={() => setActiveTab('reports')}
+              className="h-auto py-3 px-4 justify-start gap-3 hover:bg-accent/60 transition-colors col-span-2 sm:col-span-1"
+              onClick={() => router.push('/reports')}
             >
-              <div className="flex items-center justify-center size-8 sm:size-9 rounded-lg bg-primary/10 shrink-0">
-                <BarChart3 className="size-4 text-primary" />
+              <div className="flex items-center justify-center size-8 sm:size-9 rounded-lg bg-muted shrink-0">
+                <BarChart3 className="size-4 text-muted-foreground" />
               </div>
               <div className="text-left">
                 <p className="text-xs sm:text-sm font-semibold">View Reports</p>
@@ -217,32 +217,32 @@ export default function DashboardView() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <Card
           className="cursor-pointer hover:shadow-md transition-all group border"
-          onClick={() => setActiveTab('appointments')}
+          onClick={() => router.push('/appointments')}
         >
           <CardContent className="pt-4 pb-3 px-4">
             <div className="flex items-center gap-2 mb-2">
-              <div className="flex items-center justify-center size-8 rounded-lg bg-primary/10 shrink-0 group-hover:bg-primary/15 transition-colors">
-                <CalendarDays className="size-4 text-primary" />
+              <div className="flex items-center justify-center size-8 rounded-lg bg-muted shrink-0 group-hover:bg-accent transition-colors">
+                <CalendarDays className="size-4 text-muted-foreground" />
               </div>
               <CardDescription className="text-[11px] sm:text-xs leading-tight">{isStylist ? 'My Appointments' : "Today's Appointments"}</CardDescription>
             </div>
-            <span className="text-2xl sm:text-3xl font-bold tracking-tight">{data.totalAppointmentsToday}</span>
+            <span className="font-display text-2xl sm:text-3xl font-bold tracking-tight tabular-nums">{data.totalAppointmentsToday}</span>
           </CardContent>
         </Card>
 
         {!isStylist && (
           <Card
             className="cursor-pointer hover:shadow-md transition-all group border"
-            onClick={() => setActiveTab('reports')}
+            onClick={() => router.push('/reports')}
           >
             <CardContent className="pt-4 pb-3 px-4">
               <div className="flex items-center gap-2 mb-2">
-                <div className="flex items-center justify-center size-8 rounded-lg bg-emerald-500/10 shrink-0 group-hover:bg-emerald-500/15 transition-colors">
-                  <TrendingUp className="size-4 text-emerald-600 dark:text-emerald-400" />
+                <div className="flex items-center justify-center size-8 rounded-lg bg-muted shrink-0 group-hover:bg-accent transition-colors">
+                  <TrendingUp className="size-4 text-muted-foreground" />
                 </div>
                 <CardDescription className="text-[11px] sm:text-xs leading-tight">Today&apos;s Revenue</CardDescription>
               </div>
-              <span className="text-base sm:text-xl font-bold tracking-tight">{formatRWF(data.todayRevenue)}</span>
+              <span className="font-display text-base sm:text-xl font-bold tracking-tight tabular-nums">{formatRWF(data.todayRevenue)}</span>
             </CardContent>
           </Card>
         )}
@@ -251,31 +251,31 @@ export default function DashboardView() {
           <>
             <Card
               className="cursor-pointer hover:shadow-md transition-all group border"
-              onClick={() => setActiveTab('appointments')}
+              onClick={() => router.push('/appointments')}
             >
               <CardContent className="pt-4 pb-3 px-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <div className="flex items-center justify-center size-8 rounded-lg bg-amber-500/10 shrink-0 group-hover:bg-amber-500/15 transition-colors">
-                    <AlertCircle className="size-4 text-amber-600 dark:text-amber-400" />
+                  <div className="flex items-center justify-center size-8 rounded-lg bg-muted shrink-0 group-hover:bg-accent transition-colors">
+                    <AlertCircle className="size-4 text-muted-foreground" />
                   </div>
                   <CardDescription className="text-[11px] sm:text-xs leading-tight">Pending Payments</CardDescription>
                 </div>
-                <span className="text-2xl sm:text-3xl font-bold tracking-tight">{data.pendingPayments}</span>
+                <span className="font-display text-2xl sm:text-3xl font-bold tracking-tight tabular-nums">{data.pendingPayments}</span>
               </CardContent>
             </Card>
 
             <Card
               className="cursor-pointer hover:shadow-md transition-all group border"
-              onClick={() => setActiveTab('appointments')}
+              onClick={() => router.push('/appointments')}
             >
               <CardContent className="pt-4 pb-3 px-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <div className="flex items-center justify-center size-8 rounded-lg bg-red-500/10 shrink-0 group-hover:bg-red-500/15 transition-colors">
-                    <Clock className="size-4 text-red-600 dark:text-red-400" />
+                  <div className="flex items-center justify-center size-8 rounded-lg bg-muted shrink-0 group-hover:bg-accent transition-colors">
+                    <Clock className="size-4 text-muted-foreground" />
                   </div>
                   <CardDescription className="text-[11px] sm:text-xs leading-tight">Outstanding</CardDescription>
                 </div>
-                <span className="text-base sm:text-xl font-bold tracking-tight">{formatRWF(data.pendingAmount)}</span>
+                <span className="font-display text-base sm:text-xl font-bold tracking-tight tabular-nums">{formatRWF(data.pendingAmount)}</span>
               </CardContent>
             </Card>
           </>
@@ -300,12 +300,12 @@ export default function DashboardView() {
                     key={status}
                     variant="secondary"
                     className={cn(
-                      config?.bgClass || 'bg-zinc-100',
-                      config?.textClass || 'text-zinc-600',
+                      config?.bgClass || 'bg-muted',
+                      config?.textClass || 'text-muted-foreground',
                       "border-0 text-xs sm:text-sm px-2.5 sm:px-3 py-1 sm:py-1.5 gap-1.5 font-medium hover:opacity-80 transition-opacity"
                     )}
                   >
-                    <span className={cn("size-1.5 sm:size-2 rounded-full", config?.dotClass || 'bg-zinc-400')} />
+                    <span className={cn("size-1.5 sm:size-2 rounded-full", config?.dotClass || 'bg-muted-foreground')} />
                     {config?.label || status}: {count}
                   </Badge>
                 )
@@ -348,7 +348,7 @@ export default function DashboardView() {
                           value={percentage}
                           className={`h-2 flex-1 ${
                             percentage > 75
-                              ? '[&>[data-slot=progress-indicator]]:bg-amber-500'
+                              ? '[&>[data-slot=progress-indicator]]:bg-warning'
                               : percentage > 50
                               ? '[&>[data-slot=progress-indicator]]:bg-primary'
                               : '[&>[data-slot=progress-indicator]]:bg-muted-foreground/30'
@@ -384,7 +384,7 @@ export default function DashboardView() {
                   variant="ghost"
                   size="sm"
                   className="text-primary hover:text-primary/80"
-                  onClick={() => setActiveTab('appointments')}
+                  onClick={() => router.push('/appointments')}
                 >
                   View All <ArrowRight className="size-3 ml-1" />
                 </Button>
@@ -408,7 +408,7 @@ export default function DashboardView() {
                           <p className="text-xs text-muted-foreground truncate">{p.appointment.service.name}</p>
                           {p.amount > 0 && (
                             <div className="mt-1.5">
-                              <Progress value={paidPercent} className="h-1.5 [&>[data-slot=progress-indicator]]:bg-amber-400" />
+                              <Progress value={paidPercent} className="h-1.5 [&>[data-slot=progress-indicator]]:bg-warning" />
                             </div>
                           )}
                         </div>
@@ -468,7 +468,7 @@ export default function DashboardView() {
                           "border-0 shrink-0 ml-2 text-xs"
                         )}
                       >
-                        <span className={cn("size-1.5 rounded-full", config?.dotClass || 'bg-zinc-400')} />
+                        <span className={cn("size-1.5 rounded-full", config?.dotClass || 'bg-muted-foreground')} />
                         {config?.label || apt.status}
                       </Badge>
                     </div>

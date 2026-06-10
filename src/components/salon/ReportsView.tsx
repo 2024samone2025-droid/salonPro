@@ -49,25 +49,10 @@ import {
   ArrowDownRight,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
+import { STATUS_CONFIG, type AppointmentStatus } from '@/lib/constants'
 
 function formatRWF(amount: number) {
   return new Intl.NumberFormat('en-RW').format(amount) + ' RWF'
-}
-
-const statusLabels: Record<string, string> = {
-  booked: 'Booked',
-  confirmed: 'Confirmed',
-  in_progress: 'In Progress',
-  completed: 'Completed',
-  no_show: 'No Show',
-}
-
-const statusColors: Record<string, string> = {
-  booked: '#3b82f6',
-  confirmed: '#10b981',
-  in_progress: '#f59e0b',
-  completed: '#22c55e',
-  no_show: '#ef4444',
 }
 
 const methodLabels: Record<string, string> = {
@@ -76,13 +61,14 @@ const methodLabels: Record<string, string> = {
   airtel_money: 'Airtel Money',
 }
 
+// Provider-recognizable hues, drawn from the theme tokens (MTN amber, Airtel red)
 const methodColors: Record<string, string> = {
-  cash: '#10b981',
-  mtn_momo: '#f59e0b',
-  airtel_money: '#ef4444',
+  cash: 'hsl(var(--chart-4))',
+  mtn_momo: 'hsl(var(--chart-2))',
+  airtel_money: 'hsl(var(--destructive))',
 }
 
-const pieColors = ['#10b981', '#f59e0b', '#ef4444']
+const fallbackChartColor = 'hsl(var(--muted-foreground))'
 
 interface ReportData {
   revenueChart: Array<{ date: string; revenue: number }>
@@ -112,7 +98,7 @@ function Sparkline({ data }: { data: number[] }) {
     .join(' ')
 
   const isPositive = data[data.length - 1] >= data[0]
-  const color = isPositive ? '#10b981' : '#ef4444'
+  const color = isPositive ? 'hsl(var(--success))' : 'hsl(var(--destructive))'
 
   return (
     <svg width={width} height={height} className="inline-block ml-2">
@@ -241,13 +227,13 @@ export default function ReportsView() {
   const paymentPieData = Object.entries(data.paymentMethods).map(([method, amount]) => ({
     name: methodLabels[method] || method,
     value: amount,
-    color: methodColors[method] || pieColors[0],
+    color: methodColors[method] || fallbackChartColor,
   }))
 
   const statusPieData = Object.entries(data.statusBreakdown).map(([status, count]) => ({
-    name: statusLabels[status] || status,
+    name: STATUS_CONFIG[status as AppointmentStatus]?.label || status,
     value: count,
-    color: statusColors[status] || '#8884d8',
+    color: STATUS_CONFIG[status as AppointmentStatus]?.chartColor || fallbackChartColor,
   }))
 
   // Sparkline data: last 7 data points
@@ -262,7 +248,7 @@ export default function ReportsView() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Reports</h2>
+          <h2 className="font-display text-2xl font-bold tracking-tight">Reports</h2>
           <CardDescription className="flex items-center gap-2 mt-1">
             <CalendarDays className="size-3.5" />
             {format(new Date(from + 'T00:00:00'), 'MMM d, yyyy')} — {format(new Date(to + 'T00:00:00'), 'MMM d, yyyy')}
@@ -310,16 +296,16 @@ export default function ReportsView() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center size-10 rounded-xl bg-primary/10 shrink-0">
-                <Banknote className="size-5 text-primary" />
+              <div className="flex items-center justify-center size-10 rounded-xl bg-muted shrink-0">
+                <Banknote className="size-5 text-muted-foreground" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center">
-                  <p className="text-base sm:text-lg font-bold truncate">{formatRWF(data.totalRevenue)}</p>
+                  <p className="font-display text-base sm:text-lg font-bold tabular-nums truncate">{formatRWF(data.totalRevenue)}</p>
                   <Sparkline data={sparklineData} />
                 </div>
                 {trendPercent !== null && (
-                  <div className={`flex items-center gap-0.5 text-xs font-medium ${trendPercent >= 0 ? 'text-primary' : 'text-red-600 dark:text-red-400'}`}>
+                  <div className={`flex items-center gap-0.5 text-xs font-medium ${trendPercent >= 0 ? 'text-success' : 'text-destructive'}`}>
                     {trendPercent >= 0 ? (
                       <ArrowUpRight className="size-3" />
                     ) : (
@@ -339,11 +325,11 @@ export default function ReportsView() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center size-10 rounded-xl bg-emerald-500/10 shrink-0">
-                <CheckCircle2 className="size-5 text-emerald-600 dark:text-emerald-400" />
+              <div className="flex items-center justify-center size-10 rounded-xl bg-muted shrink-0">
+                <CheckCircle2 className="size-5 text-muted-foreground" />
               </div>
               <div className="min-w-0">
-                <p className="text-base sm:text-lg font-bold text-emerald-600 dark:text-emerald-400 truncate">{formatRWF(data.totalCollected)}</p>
+                <p className="font-display text-base sm:text-lg font-bold text-success tabular-nums truncate">{formatRWF(data.totalCollected)}</p>
                 <p className="text-xs text-muted-foreground">{collectionRate}% collection rate</p>
               </div>
             </div>
@@ -356,11 +342,11 @@ export default function ReportsView() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center size-10 rounded-xl bg-amber-500/10 shrink-0">
-                <AlertCircle className="size-5 text-amber-600 dark:text-amber-400" />
+              <div className="flex items-center justify-center size-10 rounded-xl bg-muted shrink-0">
+                <AlertCircle className="size-5 text-muted-foreground" />
               </div>
               <div className="min-w-0">
-                <p className="text-base sm:text-lg font-bold text-amber-600 dark:text-amber-400 truncate">{formatRWF(data.totalOutstanding)}</p>
+                <p className="font-display text-base sm:text-lg font-bold text-warning tabular-nums truncate">{formatRWF(data.totalOutstanding)}</p>
                 <p className="text-xs text-muted-foreground">Pending payments</p>
               </div>
             </div>
@@ -373,11 +359,11 @@ export default function ReportsView() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center size-10 rounded-xl bg-blue-500/10 shrink-0">
-                <TrendingUp className="size-5 text-blue-600 dark:text-blue-400" />
+              <div className="flex items-center justify-center size-10 rounded-xl bg-muted shrink-0">
+                <TrendingUp className="size-5 text-muted-foreground" />
               </div>
               <div className="min-w-0">
-                <p className="text-base sm:text-lg font-bold truncate">{data.totalAppointments}</p>
+                <p className="font-display text-base sm:text-lg font-bold tabular-nums truncate">{data.totalAppointments}</p>
                 <p className="text-xs text-muted-foreground">{data.topServices.length} services</p>
               </div>
             </div>
@@ -413,7 +399,7 @@ export default function ReportsView() {
                 <div className="w-full h-[300px] sm:h-[340px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={data.revenueChart} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                       <XAxis
                         dataKey="date"
                         tick={{ fontSize: 11 }}
@@ -450,7 +436,7 @@ export default function ReportsView() {
                           boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
                         }}
                       />
-                      <Bar dataKey="revenue" fill="#10b981" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="revenue" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -519,7 +505,7 @@ export default function ReportsView() {
                             </div>
                             <div className="flex items-center gap-2">
                               <span className="text-muted-foreground">{percent}%</span>
-                              <span className="font-medium">{formatRWF(entry.value)}</span>
+                              <span className="font-mono text-xs font-medium">{formatRWF(entry.value)}</span>
                             </div>
                           </div>
                         )
@@ -607,8 +593,8 @@ export default function ReportsView() {
             <Card>
               <CardHeader>
                 <div className="flex items-center gap-2">
-                  <div className="flex items-center justify-center size-8 rounded-lg bg-primary/10">
-                    <Scissors className="size-4 text-primary" />
+                  <div className="flex items-center justify-center size-8 rounded-lg bg-muted">
+                    <Scissors className="size-4 text-muted-foreground" />
                   </div>
                   <div>
                     <CardTitle className="text-lg">Top Services</CardTitle>
@@ -642,7 +628,7 @@ export default function ReportsView() {
                                 <p className="text-xs text-muted-foreground">{s.count} booking{s.count !== 1 ? 's' : ''}</p>
                               </div>
                             </div>
-                            <span className="text-sm font-bold text-foreground shrink-0 ml-2">
+                            <span className="font-mono text-[13px] font-semibold text-foreground shrink-0 ml-2">
                               {formatRWF(s.revenue)}
                             </span>
                           </div>
@@ -664,8 +650,8 @@ export default function ReportsView() {
             <Card>
               <CardHeader>
                 <div className="flex items-center gap-2">
-                  <div className="flex items-center justify-center size-8 rounded-lg bg-blue-500/10">
-                    <Users className="size-4 text-blue-600 dark:text-blue-400" />
+                  <div className="flex items-center justify-center size-8 rounded-lg bg-muted">
+                    <Users className="size-4 text-muted-foreground" />
                   </div>
                   <div>
                     <CardTitle className="text-lg">Top Customers</CardTitle>
@@ -699,7 +685,7 @@ export default function ReportsView() {
                                 <p className="text-xs text-muted-foreground">{c.visits} visit{c.visits !== 1 ? 's' : ''}</p>
                               </div>
                             </div>
-                            <span className="text-sm font-bold text-foreground shrink-0 ml-2">
+                            <span className="font-mono text-[13px] font-semibold text-foreground shrink-0 ml-2">
                               {formatRWF(c.spent)}
                             </span>
                           </div>

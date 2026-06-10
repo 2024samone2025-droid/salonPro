@@ -2,6 +2,36 @@ import { db } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth, canModifyAppointment } from '@/lib/auth-guard'
 
+// Statuses that no longer occupy the staff member's time and therefore
+// should not block a new booking in the same slot.
+const NON_BLOCKING_STATUSES = ['cancelled', 'no_show']
+
+// Returns the first conflicting appointment for a staff member on a given date
+// whose time range overlaps [startTime, endTime), or null if the slot is free.
+// Times are "HH:mm" strings, which compare correctly lexicographically.
+async function findConflictingAppointment(opts: {
+  salonId: string
+  staffId: string
+  date: string
+  startTime: string
+  endTime: string
+  excludeId?: string
+}) {
+  return db.appointment.findFirst({
+    where: {
+      salonId: opts.salonId,
+      staffId: opts.staffId,
+      date: opts.date,
+      status: { notIn: NON_BLOCKING_STATUSES },
+      ...(opts.excludeId ? { id: { not: opts.excludeId } } : {}),
+      // Overlap: existing.start < new.end AND existing.end > new.start
+      startTime: { lt: opts.endTime },
+      endTime: { gt: opts.startTime },
+    },
+    include: { customer: true, staff: true, service: true },
+  })
+}
+
 export async function GET(req: NextRequest) {
   const auth = await requireAuth(req)
   if (!auth.authorized) return auth.error
@@ -53,6 +83,35 @@ export async function POST(req: NextRequest) {
     }
 
     const salonId = auth.salonId as string // Validated by requireAuth
+
+    if (body.startTime >= body.endTime) {
+      return NextResponse.json({ error: 'End time must be after start time' }, { status: 400 })
+    }
+
+    const conflict = await findConflictingAppointment({
+      salonId,
+      staffId: body.staffId,
+      date: body.date,
+      startTime: body.startTime,
+      endTime: body.endTime,
+    })
+    if (conflict) {
+      return NextResponse.json(
+        {
+          error: 'double_booking',
+          message: `${conflict.staff.name} already has an appointment from ${conflict.startTime} to ${conflict.endTime}${conflict.customer ? ` with ${conflict.customer.name}` : ''}.`,
+          conflict: {
+            id: conflict.id,
+            startTime: conflict.startTime,
+            endTime: conflict.endTime,
+            customerName: conflict.customer?.name ?? null,
+            serviceName: conflict.service?.name ?? null,
+          },
+        },
+        { status: 409 }
+      )
+    }
+
     const appointment = await db.appointment.create({
       data: {
         date: body.date,
@@ -122,6 +181,52 @@ export async function PUT(req: NextRequest) {
         },
       })
       return NextResponse.json(appointment)
+    }
+
+    // When a reschedule touches timing/staff/date, re-check for conflicts.
+    const touchesSlot =
+      data.date !== undefined ||
+      data.startTime !== undefined ||
+      data.endTime !== undefined ||
+      data.staffId !== undefined
+    if (touchesSlot) {
+      const existing = await db.appointment.findUnique({ where: { id } })
+      if (!existing || existing.salonId !== auth.salonId) {
+        return NextResponse.json({ error: 'Appointment not found' }, { status: 404 })
+      }
+      const next = {
+        date: (data.date as string) ?? existing.date,
+        startTime: (data.startTime as string) ?? existing.startTime,
+        endTime: (data.endTime as string) ?? existing.endTime,
+        staffId: (data.staffId as string) ?? existing.staffId,
+      }
+      if (next.startTime >= next.endTime) {
+        return NextResponse.json({ error: 'End time must be after start time' }, { status: 400 })
+      }
+      const conflict = await findConflictingAppointment({
+        salonId: auth.salonId as string,
+        staffId: next.staffId,
+        date: next.date,
+        startTime: next.startTime,
+        endTime: next.endTime,
+        excludeId: id,
+      })
+      if (conflict) {
+        return NextResponse.json(
+          {
+            error: 'double_booking',
+            message: `${conflict.staff.name} already has an appointment from ${conflict.startTime} to ${conflict.endTime}${conflict.customer ? ` with ${conflict.customer.name}` : ''}.`,
+            conflict: {
+              id: conflict.id,
+              startTime: conflict.startTime,
+              endTime: conflict.endTime,
+              customerName: conflict.customer?.name ?? null,
+              serviceName: conflict.service?.name ?? null,
+            },
+          },
+          { status: 409 }
+        )
+      }
     }
 
     const appointment = await db.appointment.update({
