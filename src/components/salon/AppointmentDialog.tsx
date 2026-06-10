@@ -38,8 +38,8 @@ import {
   Smartphone,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { useAuth } from '@/lib/auth-context'
-import { formatRWF, cn } from '@/lib/utils'
+import { useAuth, useMoney } from '@/lib/auth-context'
+import { cn } from '@/lib/utils'
 import { STATUS_CONFIG, PAYMENT_STATUS_CONFIG, type AppointmentStatus, type PaymentStatus } from '@/lib/constants'
 
 interface Appointment {
@@ -95,6 +95,7 @@ const methodIcons: Record<string, React.ReactNode> = {
 }
 
 export default function AppointmentDialog({ appointment, open, onClose, onUpdate }: AppointmentDialogProps) {
+  const formatRWF = useMoney()
   const [paymentStatus, setPaymentStatus] = useState(appointment?.payment?.status || 'unpaid')
   const [paymentMethod, setPaymentMethod] = useState(appointment?.payment?.method || 'cash')
   const [paymentAmount, setPaymentAmount] = useState(

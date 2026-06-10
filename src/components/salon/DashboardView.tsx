@@ -28,8 +28,8 @@ import {
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/lib/auth-context'
-import { formatRWF, cn } from '@/lib/utils'
+import { useAuth, useMoney } from '@/lib/auth-context'
+import { cn } from '@/lib/utils'
 import { STATUS_CONFIG, type AppointmentStatus } from '@/lib/constants'
 
 interface DashboardData {
@@ -67,6 +67,7 @@ interface DashboardData {
 }
 
 export default function DashboardView() {
+  const formatRWF = useMoney()
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)

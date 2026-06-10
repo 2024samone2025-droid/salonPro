@@ -28,7 +28,7 @@ import {
   PartyPopper,
   ArrowRight,
 } from 'lucide-react'
-import { cn, formatRWF } from '@/lib/utils'
+import { cn, formatMoney } from '@/lib/utils'
 
 interface Service {
   id: string
@@ -42,6 +42,7 @@ interface Staff {
 }
 interface SalonInfo {
   salon: { name: string; subdomain: string }
+  currency?: string
   services: Service[]
   staff: Staff[]
 }
@@ -132,6 +133,8 @@ export default function BookingFlow({ subdomain }: { subdomain: string }) {
     () => info?.staff.find((s) => s.id === staffId) || null,
     [info, staffId]
   )
+
+  const formatRWF = (amount: number) => formatMoney(amount, info?.currency || 'RWF')
 
   const loadSlots = useCallback(async () => {
     if (!serviceId || !staffId || !date) return

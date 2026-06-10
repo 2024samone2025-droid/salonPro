@@ -21,7 +21,7 @@ import {
 import { Separator } from '@/components/ui/separator'
 import { Plus, Search, Zap, Loader2, X, UserPlus } from 'lucide-react'
 import { toast } from 'sonner'
-import { useAuth } from '@/lib/auth-context'
+import { useAuth, useMoney } from '@/lib/auth-context'
 
 interface Customer {
   id: string
@@ -48,11 +48,8 @@ interface QuickBookingFormProps {
   onBookingCreated?: () => void
 }
 
-function formatRWF(amount: number) {
-  return new Intl.NumberFormat('en-RW').format(amount) + ' RWF'
-}
-
 export default function QuickBookingForm({ selectedDate, onBookingCreated }: QuickBookingFormProps) {
+  const formatRWF = useMoney()
   const { permissions, user, authFetch } = useAuth()
   const canCreate = permissions?.canCreateAppointment ?? false
 

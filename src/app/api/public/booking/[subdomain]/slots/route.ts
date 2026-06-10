@@ -1,11 +1,8 @@
 import { db } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
+import { parseSalonSettings } from '@/lib/salon-settings'
 
 const NON_BLOCKING_STATUSES = ['cancelled', 'no_show']
-
-const OPEN_MINUTES = 8 * 60 // 08:00
-const CLOSE_MINUTES = 18 * 60 // 18:00
-const SLOT_STEP = 15
 
 function toTime(total: number) {
   return `${Math.floor(total / 60)
@@ -43,6 +40,21 @@ export async function GET(
     return NextResponse.json({ error: 'Salon not found' }, { status: 404 })
   }
 
+  const settings = parseSalonSettings(salon.settings)
+  if (!settings.publicBookingEnabled) {
+    return NextResponse.json({ error: 'Online booking is disabled' }, { status: 404 })
+  }
+
+  // Business hours for the requested weekday (0 = Sunday)
+  const weekday = new Date(date + 'T00:00:00').getDay()
+  const dayHours = settings.businessHours[String(weekday)]
+  if (!dayHours || dayHours.closed) {
+    return NextResponse.json({ slots: [] })
+  }
+  const openMinutes = toMinutes(dayHours.open)
+  const closeMinutes = toMinutes(dayHours.close)
+  const slotStep = settings.slotIntervalMinutes
+
   const service = await db.service.findFirst({
     where: { id: serviceId, salonId: salon.id, active: true },
     select: { duration: true },
@@ -74,7 +86,7 @@ export async function GET(
   const nowMinutes = now.getHours() * 60 + now.getMinutes()
 
   const slots: string[] = []
-  for (let start = OPEN_MINUTES; start + duration <= CLOSE_MINUTES; start += SLOT_STEP) {
+  for (let start = openMinutes; start + duration <= closeMinutes; start += slotStep) {
     const end = start + duration
     if (date === todayStr && start <= nowMinutes) continue
     const overlaps = busy.some((b) => start < b.end && end > b.start)

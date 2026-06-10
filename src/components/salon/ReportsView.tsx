@@ -48,12 +48,8 @@ import {
   ArrowUpRight,
   ArrowDownRight,
 } from 'lucide-react'
-import { useAuth } from '@/lib/auth-context'
+import { useAuth, useMoney } from '@/lib/auth-context'
 import { STATUS_CONFIG, type AppointmentStatus } from '@/lib/constants'
-
-function formatRWF(amount: number) {
-  return new Intl.NumberFormat('en-RW').format(amount) + ' RWF'
-}
 
 const methodLabels: Record<string, string> = {
   cash: 'Cash',
@@ -115,6 +111,7 @@ function Sparkline({ data }: { data: number[] }) {
 }
 
 export default function ReportsView() {
+  const formatRWF = useMoney()
   const isInitialMount = useRef(true)
   const { permissions, authFetch } = useAuth()
   const canView = permissions?.reports !== 'none'

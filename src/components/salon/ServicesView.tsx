@@ -26,7 +26,7 @@ import {
   Timer,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { useAuth } from '@/lib/auth-context'
+import { useAuth, useMoney } from '@/lib/auth-context'
 
 interface Service {
   id: string
@@ -37,11 +37,8 @@ interface Service {
   createdAt: string
 }
 
-function formatRWF(amount: number) {
-  return new Intl.NumberFormat('en-RW').format(amount) + ' RWF'
-}
-
 export default function ServicesView() {
+  const formatRWF = useMoney()
   const [services, setServices] = useState<Service[]>([])
   const [loading, setLoading] = useState(true)
   const [showDialog, setShowDialog] = useState(false)

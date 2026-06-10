@@ -91,7 +91,7 @@ export default function LandingPage() {
               <CardHeader>
                 <CardTitle>Free Plan</CardTitle>
                 <CardDescription>Perfect for small salons getting started</CardDescription>
-                <p className="font-display text-3xl font-bold">$0<span className="text-sm font-normal font-sans text-muted-foreground">/month</span></p>
+                <p className="font-display text-3xl font-bold">0 RWF<span className="text-sm font-normal font-sans text-muted-foreground">/month</span></p>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-2 text-left text-sm mb-6">
@@ -109,7 +109,7 @@ export default function LandingPage() {
               <CardHeader>
                 <CardTitle>Pro Plan</CardTitle>
                 <CardDescription>For growing salons that need more</CardDescription>
-                <p className="font-display text-3xl font-bold">$29<span className="text-sm font-normal font-sans text-muted-foreground">/month</span></p>
+                <p className="font-display text-3xl font-bold tabular-nums">15,000 RWF<span className="text-sm font-normal font-sans text-muted-foreground">/month</span></p>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-2 text-left text-sm mb-6">

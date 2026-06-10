@@ -24,7 +24,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
-import { Triangle, Search, LogOut, CreditCard } from 'lucide-react'
+import { Triangle, Search, LogOut, CreditCard, Settings } from 'lucide-react'
 import { allNavItems, navItemsForRole } from '@/components/salon/nav-items'
 
 const roleLabels: Record<UserRole, string> = {
@@ -177,17 +177,30 @@ export default function SalonSidebar() {
             Sign Out
           </Button>
           {user?.role === 'admin' && (
-            <Button
-              asChild
-              variant="ghost"
-              size="sm"
-              className="w-full justify-start text-sidebar-foreground/40 hover:text-sidebar-foreground hover:bg-sidebar-accent/60 transition-colors text-[13px] h-8"
-            >
-              <Link href="/billing" aria-label="Billing">
-                <CreditCard className="size-3.5 mr-2" aria-hidden="true" />
-                Billing
-              </Link>
-            </Button>
+            <>
+              <Button
+                asChild
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start text-sidebar-foreground/40 hover:text-sidebar-foreground hover:bg-sidebar-accent/60 transition-colors text-[13px] h-8"
+              >
+                <Link href="/settings" aria-label="Settings">
+                  <Settings className="size-3.5 mr-2" aria-hidden="true" />
+                  Settings
+                </Link>
+              </Button>
+              <Button
+                asChild
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start text-sidebar-foreground/40 hover:text-sidebar-foreground hover:bg-sidebar-accent/60 transition-colors text-[13px] h-8"
+              >
+                <Link href="/billing" aria-label="Billing">
+                  <CreditCard className="size-3.5 mr-2" aria-hidden="true" />
+                  Billing
+                </Link>
+              </Button>
+            </>
           )}
           <p className="text-[10px] text-sidebar-foreground/20 text-center mt-1.5 font-mono">
             v1.3.0
