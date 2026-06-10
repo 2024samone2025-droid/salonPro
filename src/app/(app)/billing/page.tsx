@@ -45,21 +45,21 @@ export default function BillingPage() {
   return (
     <div className="max-w-2xl mx-auto">
       <div className="text-center mb-8">
-        <h1 className="text-2xl font-semibold mb-2">{salon?.name} Billing</h1>
+        <h1 className="font-display text-2xl font-semibold mb-2">{salon?.name} Billing</h1>
         <p className="text-muted-foreground">Manage your subscription</p>
       </div>
 
       {success && (
-        <div className="mb-4 p-4 bg-emerald-50 border border-emerald-200 rounded-lg flex items-center gap-2">
-          <CheckCircle className="size-5 text-emerald-600" />
-          <span className="text-emerald-800">Your salon has been upgraded to Pro!</span>
+        <div className="mb-4 p-4 bg-success/10 border border-success/20 rounded-lg flex items-center gap-2">
+          <CheckCircle className="size-5 text-success" />
+          <span className="text-success">Your salon has been upgraded to Pro!</span>
         </div>
       )}
 
       {error && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
-          <AlertCircle className="size-5 text-red-600" />
-          <span className="text-red-800">{error}</span>
+        <div className="mb-4 p-4 bg-destructive/10 border border-destructive/20 rounded-lg flex items-center gap-2">
+          <AlertCircle className="size-5 text-destructive" />
+          <span className="text-destructive">{error}</span>
         </div>
       )}
 
@@ -75,23 +75,23 @@ export default function BillingPage() {
         <CardContent>
           <ul className="space-y-2 mb-4">
             <li className="flex items-start gap-2 text-sm">
-              <Check className="size-4 text-primary mt-0.5" />
+              <Check className="size-4 text-muted-foreground mt-0.5" />
               <span>Unlimited customers</span>
             </li>
             <li className="flex items-start gap-2 text-sm">
-              <Check className="size-4 text-primary mt-0.5" />
+              <Check className="size-4 text-muted-foreground mt-0.5" />
               <span>Unlimited staff members</span>
             </li>
             <li className="flex items-start gap-2 text-sm">
-              <Check className="size-4 text-primary mt-0.5" />
+              <Check className="size-4 text-muted-foreground mt-0.5" />
               <span>Advanced reports</span>
             </li>
             <li className="flex items-start gap-2 text-sm">
-              <Check className="size-4 text-primary mt-0.5" />
+              <Check className="size-4 text-muted-foreground mt-0.5" />
               <span>All payment methods (MTN MoMo & Airtel Money)</span>
             </li>
             <li className="flex items-start gap-2 text-sm">
-              <Check className="size-4 text-primary mt-0.5" />
+              <Check className="size-4 text-muted-foreground mt-0.5" />
               <span>Priority support</span>
             </li>
           </ul>

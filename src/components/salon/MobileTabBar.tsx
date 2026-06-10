@@ -65,19 +65,20 @@ export default function MobileTabBar() {
               </Link>
             )
           })}
-          <button
+          <Button
+            variant="ghost"
             onClick={() => setMoreOpen(true)}
             aria-expanded={moreOpen}
             className={cn(
-              'flex flex-col items-center justify-center gap-0.5 h-14 text-[10px] font-medium transition-colors',
+              'flex h-14 flex-col items-center justify-center gap-0.5 rounded-none px-0 text-[10px] font-medium hover:bg-transparent',
               moreActive
-                ? 'text-primary'
+                ? 'text-primary hover:text-primary'
                 : 'text-sidebar-foreground/50 hover:text-sidebar-foreground/80'
             )}
           >
             <Menu className="size-5" aria-hidden="true" />
             <span>More</span>
-          </button>
+          </Button>
         </div>
       </nav>
 

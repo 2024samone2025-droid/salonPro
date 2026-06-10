@@ -229,8 +229,8 @@ export default function BookingFlow({ subdomain }: { subdomain: string }) {
       <Shell salonName={info.salon.name}>
         <Card>
           <CardHeader className="text-center">
-            <div className="mx-auto mb-2 inline-flex size-12 items-center justify-center rounded-full bg-emerald-500/10">
-              <PartyPopper className="size-6 text-emerald-600 dark:text-emerald-400" />
+            <div className="mx-auto mb-2 inline-flex size-12 items-center justify-center rounded-full bg-success/10">
+              <PartyPopper className="size-6 text-success" />
             </div>
             <CardTitle>You&apos;re booked!</CardTitle>
             <CardDescription>
@@ -308,21 +308,22 @@ export default function BookingFlow({ subdomain }: { subdomain: string }) {
                 </p>
               )}
               {info.services.map((s) => (
-                <button
+                <Button
                   key={s.id}
+                  variant="ghost"
                   onClick={() => {
                     setServiceId(s.id)
                     setStartTime('')
                     setStep('staff')
                   }}
                   className={cn(
-                    'flex w-full items-center justify-between rounded-lg border p-3 text-left transition-colors hover:border-primary hover:bg-primary/[0.03]',
+                    'flex h-auto w-full items-center justify-between rounded-lg border p-3 text-left font-normal whitespace-normal hover:border-primary hover:bg-primary/[0.03]',
                     serviceId === s.id && 'border-primary bg-primary/[0.04]'
                   )}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="flex size-9 items-center justify-center rounded-md bg-primary/10">
-                      <Scissors className="size-4 text-primary" />
+                    <div className="flex size-9 items-center justify-center rounded-md bg-muted">
+                      <Scissors className="size-4 text-muted-foreground" />
                     </div>
                     <div>
                       <p className="text-sm font-medium">{s.name}</p>
@@ -330,7 +331,7 @@ export default function BookingFlow({ subdomain }: { subdomain: string }) {
                     </div>
                   </div>
                   <span className="text-sm font-semibold">{formatRWF(s.price)}</span>
-                </button>
+                </Button>
               ))}
             </>
           )}
@@ -343,23 +344,24 @@ export default function BookingFlow({ subdomain }: { subdomain: string }) {
                 </p>
               )}
               {info.staff.map((st) => (
-                <button
+                <Button
                   key={st.id}
+                  variant="ghost"
                   onClick={() => {
                     setStaffId(st.id)
                     setStartTime('')
                     setStep('datetime')
                   }}
                   className={cn(
-                    'flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-colors hover:border-primary hover:bg-primary/[0.03]',
+                    'flex h-auto w-full items-center justify-start gap-3 rounded-lg border p-3 text-left font-normal whitespace-normal hover:border-primary hover:bg-primary/[0.03]',
                     staffId === st.id && 'border-primary bg-primary/[0.04]'
                   )}
                 >
-                  <div className="flex size-9 items-center justify-center rounded-md bg-primary/10">
-                    <User className="size-4 text-primary" />
+                  <div className="flex size-9 items-center justify-center rounded-md bg-muted">
+                    <User className="size-4 text-muted-foreground" />
                   </div>
                   <p className="text-sm font-medium">{st.name}</p>
-                </button>
+                </Button>
               ))}
             </>
           )}
@@ -391,18 +393,19 @@ export default function BookingFlow({ subdomain }: { subdomain: string }) {
                 ) : (
                   <div className="grid grid-cols-4 gap-2">
                     {slots.map((t) => (
-                      <button
+                      <Button
                         key={t}
+                        variant={startTime === t ? 'default' : 'outline'}
                         onClick={() => setStartTime(t)}
                         className={cn(
-                          'rounded-md border py-2 text-sm transition-colors hover:border-primary',
+                          'h-auto py-2 font-normal shadow-none',
                           startTime === t
-                            ? 'border-primary bg-primary text-primary-foreground'
-                            : 'bg-background'
+                            ? 'border border-primary'
+                            : 'hover:border-primary hover:bg-background hover:text-foreground'
                         )}
                       >
                         {t}
-                      </button>
+                      </Button>
                     ))}
                   </div>
                 )}

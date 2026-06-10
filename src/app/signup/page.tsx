@@ -62,7 +62,7 @@ export default function SalonSignupPage() {
           <div className="inline-flex items-center justify-center size-12 rounded-md bg-foreground mb-4">
             <Triangle className="size-6 text-background fill-background" />
           </div>
-          <h1 className="text-2xl font-semibold tracking-tight">SalonPro</h1>
+          <h1 className="font-display text-2xl font-semibold tracking-tight">SalonPro</h1>
           <p className="text-sm text-muted-foreground mt-1">Create your salon account</p>
         </div>
 
@@ -130,7 +130,7 @@ export default function SalonSignupPage() {
               )}
 
               {success && (
-                <Alert className="border-emerald-200 bg-emerald-50">
+                <Alert className="border-success/30 bg-success/10 text-success">
                   <AlertDescription>{success}</AlertDescription>
                 </Alert>
               )}

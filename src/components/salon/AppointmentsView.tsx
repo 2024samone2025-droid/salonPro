@@ -216,8 +216,8 @@ function DayView({
               style={{ top: `${currentTimeTop}px` }}
             >
               <div className="flex items-center">
-                <div className="size-2.5 rounded-full bg-red-500 -ml-1 shadow-sm shadow-red-500/50" />
-                <div className="h-0.5 flex-1 bg-red-500 shadow-sm shadow-red-500/50" />
+                <div className="size-2.5 rounded-full bg-primary -ml-1 shadow-sm shadow-primary/50" />
+                <div className="h-0.5 flex-1 bg-primary shadow-sm shadow-primary/50" />
               </div>
             </div>
           )}
@@ -279,15 +279,17 @@ function WeekView({ weekDays, selectedDate, appointments, onDaySelect, onAppoint
             const isSelected = dayStr === selectedDate
             const dayApts = appointments.filter((a) => a.date === dayStr)
             return (
-              <button
+              <Button
                 key={day.toISOString()}
-                className={`text-center py-2.5 min-h-[44px] rounded-xl transition-all ${
+                variant="ghost"
+                className={cn(
+                  'h-auto min-h-[44px] flex-col gap-0 rounded-xl px-0 py-2.5 text-center font-normal transition-all',
                   isSelected
-                    ? 'bg-primary text-primary-foreground shadow-md shadow-primary/30'
+                    ? 'bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground'
                     : isTodayDate
-                    ? 'bg-primary/10 text-primary ring-1 ring-primary/30'
-                    : 'hover:bg-accent border border-transparent hover:border-border'
-                }`}
+                    ? 'ring-1 ring-foreground/25 font-medium hover:bg-accent'
+                    : 'border border-transparent hover:border-border hover:bg-accent'
+                )}
                 onClick={() => onDaySelect(dayStr)}
               >
                 <p className="text-xs font-medium uppercase tracking-wide">{format(day, 'EEE')}</p>
@@ -297,14 +299,14 @@ function WeekView({ weekDays, selectedDate, appointments, onDaySelect, onAppoint
                     variant="secondary"
                     className={`text-[10px] px-1.5 py-0 mt-0.5 ${
                       isSelected
-                        ? 'bg-primary/80 text-primary-foreground hover:bg-primary/80'
-                        : 'bg-primary/10 text-primary hover:bg-primary/10'
+                        ? 'bg-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/20'
+                        : 'bg-muted text-muted-foreground hover:bg-muted'
                     }`}
                   >
                     {dayApts.length}
                   </Badge>
                 )}
-              </button>
+              </Button>
             )
           })}
         </div>
@@ -570,7 +572,7 @@ export default function AppointmentsView() {
           <>
             <Separator orientation="vertical" className="h-4" />
             <div className="flex items-center gap-1.5">
-              <div className="size-2.5 rounded-full bg-red-500" aria-hidden="true" />
+              <div className="size-2.5 rounded-full bg-primary" aria-hidden="true" />
               <span className="text-xs text-muted-foreground">Current Time</span>
             </div>
           </>
@@ -580,7 +582,7 @@ export default function AppointmentsView() {
       <Card className="overflow-hidden">
         <CardHeader className="pb-2">
           <CardTitle className="text-base flex items-center gap-2">
-            <CalendarDays className="size-4 text-primary" />
+            <CalendarDays className="size-4 text-muted-foreground" />
             {formattedSelectedDate}
           </CardTitle>
         </CardHeader>

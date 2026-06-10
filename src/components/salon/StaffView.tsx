@@ -57,13 +57,13 @@ const roleBadgeVariant: Record<string, 'default' | 'secondary' | 'outline'> = {
 }
 
 const roleColors: Record<string, string> = {
-  stylist: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/10',
-  receptionist: 'bg-violet-500/10 text-violet-700 dark:text-violet-400 hover:bg-violet-500/10',
+  stylist: 'bg-muted text-muted-foreground hover:bg-muted',
+  receptionist: 'bg-muted text-muted-foreground hover:bg-muted',
 }
 
 const roleAvatarColors: Record<string, string> = {
-  stylist: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
-  receptionist: 'bg-violet-500/10 text-violet-600 dark:text-violet-400',
+  stylist: 'bg-muted text-muted-foreground',
+  receptionist: 'bg-muted text-muted-foreground',
 }
 
 const roleIcons: Record<string, React.ReactNode> = {
@@ -193,7 +193,7 @@ export default function StaffView() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Staff</h2>
+          <h2 className="font-display text-2xl font-bold tracking-tight">Staff</h2>
           <p className="text-muted-foreground text-sm">
             {staff.length} member{staff.length !== 1 ? 's' : ''} &middot; {activeStaff.length} active
             {isViewOnly && ' · View only'}
@@ -232,8 +232,8 @@ export default function StaffView() {
         /* Empty State */
         <Card>
           <CardContent className="p-12 text-center">
-            <div className="mx-auto size-16 rounded-full bg-primary/5 flex items-center justify-center mb-4">
-              <UserCog className="size-8 text-primary" />
+            <div className="mx-auto size-16 rounded-full bg-muted flex items-center justify-center mb-4">
+              <UserCog className="size-8 text-muted-foreground" />
             </div>
             <h3 className="text-lg font-semibold mb-1">No staff members</h3>
             <p className="text-muted-foreground text-sm mb-4">
@@ -294,7 +294,7 @@ export default function StaffView() {
                             />
                           </div>
                         ) : (
-                          <Badge variant="outline" className="text-xs text-primary border-primary/20">
+                          <Badge variant="outline" className="text-xs">
                             Active
                           </Badge>
                         )}

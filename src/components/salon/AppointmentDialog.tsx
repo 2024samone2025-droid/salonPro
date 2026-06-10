@@ -252,7 +252,7 @@ export default function AppointmentDialog({ appointment, open, onClose, onUpdate
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="flex items-start gap-3">
               <Avatar className="size-9 border shrink-0">
-                <AvatarFallback className="bg-primary/5 text-primary text-xs font-semibold">
+                <AvatarFallback className="bg-muted text-muted-foreground text-xs font-semibold">
                   {getInitials(appointment.customer.name)}
                 </AvatarFallback>
               </Avatar>

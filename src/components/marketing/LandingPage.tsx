@@ -66,7 +66,7 @@ export default function LandingPage() {
           {features.map((feature) => (
             <Card key={feature.title}>
               <CardHeader>
-                <feature.icon className="size-8 text-primary mb-2" />
+                <feature.icon className="size-8 text-muted-foreground mb-2" />
                 <CardTitle>{feature.title}</CardTitle>
                 <CardDescription>{feature.description}</CardDescription>
               </CardHeader>
@@ -74,7 +74,7 @@ export default function LandingPage() {
                 <ul className="space-y-2 text-sm">
                   {feature.items.map((item) => (
                     <li key={item} className="flex items-center gap-2">
-                      <Check className="size-4 text-primary" /> {item}
+                      <Check className="size-4 text-muted-foreground" /> {item}
                     </li>
                   ))}
                 </ul>
@@ -95,10 +95,10 @@ export default function LandingPage() {
               </CardHeader>
               <CardContent>
                 <ul className="space-y-2 text-left text-sm mb-6">
-                  <li className="flex items-center gap-2"><Check className="size-4 text-primary" /> Up to 100 customers</li>
-                  <li className="flex items-center gap-2"><Check className="size-4 text-primary" /> Up to 5 staff members</li>
-                  <li className="flex items-center gap-2"><Check className="size-4 text-primary" /> Basic appointment management</li>
-                  <li className="flex items-center gap-2"><Check className="size-4 text-primary" /> Cash payments</li>
+                  <li className="flex items-center gap-2"><Check className="size-4 text-muted-foreground" /> Up to 100 customers</li>
+                  <li className="flex items-center gap-2"><Check className="size-4 text-muted-foreground" /> Up to 5 staff members</li>
+                  <li className="flex items-center gap-2"><Check className="size-4 text-muted-foreground" /> Basic appointment management</li>
+                  <li className="flex items-center gap-2"><Check className="size-4 text-muted-foreground" /> Cash payments</li>
                 </ul>
                 <Link href="/signup" className="block">
                   <Button className="w-full" variant="outline">Get started free</Button>
@@ -113,11 +113,11 @@ export default function LandingPage() {
               </CardHeader>
               <CardContent>
                 <ul className="space-y-2 text-left text-sm mb-6">
-                  <li className="flex items-center gap-2"><Check className="size-4 text-primary" /> Unlimited customers</li>
-                  <li className="flex items-center gap-2"><Check className="size-4 text-primary" /> Unlimited staff members</li>
-                  <li className="flex items-center gap-2"><Check className="size-4 text-primary" /> Advanced reports</li>
-                  <li className="flex items-center gap-2"><Check className="size-4 text-primary" /> MTN MoMo &amp; Airtel Money</li>
-                  <li className="flex items-center gap-2"><Check className="size-4 text-primary" /> Priority support</li>
+                  <li className="flex items-center gap-2"><Check className="size-4 text-muted-foreground" /> Unlimited customers</li>
+                  <li className="flex items-center gap-2"><Check className="size-4 text-muted-foreground" /> Unlimited staff members</li>
+                  <li className="flex items-center gap-2"><Check className="size-4 text-muted-foreground" /> Advanced reports</li>
+                  <li className="flex items-center gap-2"><Check className="size-4 text-muted-foreground" /> MTN MoMo &amp; Airtel Money</li>
+                  <li className="flex items-center gap-2"><Check className="size-4 text-muted-foreground" /> Priority support</li>
                 </ul>
                 <Link href="/signup" className="block">
                   <Button className="w-full">Start free trial</Button>
