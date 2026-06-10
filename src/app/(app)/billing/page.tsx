@@ -45,7 +45,7 @@ export default function BillingPage() {
   return (
     <div className="max-w-2xl mx-auto">
       <div className="text-center mb-8">
-        <h1 className="font-display text-2xl font-semibold mb-2">{salon?.name} Billing</h1>
+        <h1 className="text-2xl font-semibold mb-2">{salon?.name} Billing</h1>
         <p className="text-muted-foreground">Manage your subscription</p>
       </div>
 
@@ -70,7 +70,7 @@ export default function BillingPage() {
             {isPro && <span className="text-xs bg-primary text-primary-foreground px-2 py-1 rounded">Active</span>}
           </CardTitle>
           <CardDescription>For growing salons that need more</CardDescription>
-          <p className="font-display text-2xl font-bold tabular-nums">15,000 RWF<span className="text-sm font-normal text-muted-foreground">/month</span></p>
+          <p className="text-2xl font-bold tabular-nums">15,000 RWF<span className="text-sm font-normal text-muted-foreground">/month</span></p>
         </CardHeader>
         <CardContent>
           <ul className="space-y-2 mb-4">

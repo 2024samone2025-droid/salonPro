@@ -193,7 +193,7 @@ export default function StaffView() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 justify-between">
         <div>
-          <h2 className="font-display text-2xl font-bold tracking-tight">Staff</h2>
+          <h2 className="text-2xl font-bold tracking-tight">Staff</h2>
           <p className="text-muted-foreground text-sm">
             {staff.length} member{staff.length !== 1 ? 's' : ''} &middot; {activeStaff.length} active
             {isViewOnly && ' · View only'}

@@ -43,7 +43,8 @@ import {
 import { toast } from 'sonner'
 import { format } from 'date-fns'
 import { useAuth, useMoney } from '@/lib/auth-context'
-import { STATUS_CONFIG, type AppointmentStatus } from '@/lib/constants'
+import StatusBadge from '@/components/salon/StatusBadge'
+import EmptyState from '@/components/salon/EmptyState'
 
 interface CustomerAppointment {
   id: string
@@ -211,7 +212,7 @@ export default function CustomersView() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 justify-between">
         <div>
-          <h2 className="font-display text-2xl font-bold tracking-tight">Customers</h2>
+          <h2 className="text-[22px] font-medium tracking-tight">Customers</h2>
           <p className="text-muted-foreground text-sm">
             {customers.length} customer{customers.length !== 1 ? 's' : ''} on record
           </p>
@@ -246,7 +247,7 @@ export default function CustomersView() {
               onClick={() => setShowAddDialog(true)}
             >
               <Plus className="size-4" />
-              Add Customer
+              Add customer
             </Button>
           )}
         </div>
@@ -295,26 +296,14 @@ export default function CustomersView() {
           )}
         </div>
       ) : customers.length === 0 ? (
-        /* Empty State */
-        <Card>
-          <CardContent className="p-12 text-center">
-            <div className="mx-auto size-16 rounded-full bg-muted flex items-center justify-center mb-4">
-              <User className="size-8 text-muted-foreground" />
-            </div>
-            <h3 className="text-lg font-semibold mb-1">No customers found</h3>
-            <p className="text-muted-foreground text-sm mb-4">
-              {searchQuery ? 'Try adjusting your search terms' : 'Get started by adding your first customer'}
-            </p>
-            {canEdit && !searchQuery && (
-              <Button
-                className=""
-                onClick={() => setShowAddDialog(true)}
-              >
-                <Plus className="size-4 mr-1.5" /> Add Customer
-              </Button>
-            )}
-          </CardContent>
-        </Card>
+        /* Empty state */
+        <EmptyState
+          icon={User}
+          message={searchQuery ? 'No customers match your search' : 'No customers yet'}
+          actionLabel={canEdit && !searchQuery ? '+ Add your first customer' : undefined}
+          onAction={canEdit && !searchQuery ? () => setShowAddDialog(true) : undefined}
+          className="py-10"
+        />
       ) : viewMode === 'grid' ? (
         /* Grid View */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -379,9 +368,9 @@ export default function CustomersView() {
               <TableRow>
                 <TableHead>Customer</TableHead>
                 <TableHead className="hidden sm:table-cell">Phone</TableHead>
-                <TableHead className="hidden md:table-cell">Last Visit</TableHead>
+                <TableHead className="hidden md:table-cell">Last visit</TableHead>
                 <TableHead>Visits</TableHead>
-                <TableHead className="text-right">Total Spent</TableHead>
+                <TableHead className="text-right">Total spent</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -430,7 +419,7 @@ export default function CustomersView() {
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add New Customer</DialogTitle>
+            <DialogTitle>Add new customer</DialogTitle>
             <DialogDescription>
               Enter the customer details below to add them to your records.
             </DialogDescription>
@@ -475,7 +464,7 @@ export default function CustomersView() {
               disabled={saving}
             >
               {saving && <Loader2 className="size-4 mr-1.5 animate-spin" />}
-              Add Customer
+              Add customer
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -485,7 +474,7 @@ export default function CustomersView() {
       <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
         <DialogContent className="sm:max-w-lg max-sm:max-w-[calc(100vw-2rem)]">
           <DialogHeader>
-            <DialogTitle>Customer Details</DialogTitle>
+            <DialogTitle>Customer details</DialogTitle>
             <DialogDescription>
               {isViewOnly ? 'View customer information and visit history.' : 'View and edit customer information below.'}
             </DialogDescription>
@@ -536,7 +525,7 @@ export default function CustomersView() {
 
               {/* Visit History */}
               <div>
-                <h4 className="text-sm font-semibold mb-3">Visit History</h4>
+                <h4 className="text-sm font-semibold mb-3">Visit history</h4>
                 {selectedCustomer.appointments?.length === 0 ? (
                   <p className="text-sm text-muted-foreground py-2">No visits yet.</p>
                 ) : (
@@ -566,11 +555,7 @@ export default function CustomersView() {
                             )}
                           </div>
                           <div className="flex flex-col items-end gap-1.5 ml-3 shrink-0">
-                            <Badge
-                              className={cn(STATUS_CONFIG[apt.status as AppointmentStatus]?.badgeClass, "border text-[11px] px-2 py-0.5 shadow-sm")}
-                            >
-                              {STATUS_CONFIG[apt.status as AppointmentStatus]?.label || apt.status}
-                            </Badge>
+                            <StatusBadge status={apt.status} />
                             {apt.service?.price > 0 && (
                               <span className="text-xs font-semibold text-foreground tabular-nums">
                                 {formatRWF(apt.service.price)}
@@ -596,7 +581,7 @@ export default function CustomersView() {
                 disabled={saving}
               >
                 {saving && <Loader2 className="size-4 mr-1.5 animate-spin" />}
-                Save Changes
+                Save changes
               </Button>
             </DialogFooter>
           )}

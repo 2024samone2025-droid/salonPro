@@ -28,6 +28,7 @@ import {
 } from '@dnd-kit/core'
 import QuickBookingForm from './QuickBookingForm'
 import AppointmentDialog from './AppointmentDialog'
+import EmptyState from '@/components/salon/EmptyState'
 import { useAuth, useMoney } from '@/lib/auth-context'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -292,14 +293,14 @@ function WeekView({ weekDays, selectedDate, appointments, onDaySelect, onAppoint
             return (
               <Button
                 key={day.toISOString()}
-                variant="ghost"
+                variant="plain"
                 className={cn(
-                  'h-auto min-h-[44px] flex-col gap-0 rounded-xl px-0 py-2.5 text-center font-normal transition-all',
+                  'h-auto min-h-[44px] flex-col gap-0 rounded-md px-0 py-2.5 text-center font-normal transition-all',
                   isSelected
                     ? 'bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground'
                     : isTodayDate
-                    ? 'ring-1 ring-foreground/25 font-medium hover:bg-accent'
-                    : 'border border-transparent hover:border-border hover:bg-accent'
+                    ? 'ring-1 ring-foreground/25 font-medium hover:bg-muted'
+                    : 'border border-transparent hover:border-border hover:bg-muted'
                 )}
                 onClick={() => onDaySelect(dayStr)}
               >
@@ -329,7 +330,7 @@ function WeekView({ weekDays, selectedDate, appointments, onDaySelect, onAppoint
             return (
               <div key={dayStr} className="min-h-48 space-y-1 p-1.5 border rounded-lg bg-card/50">
                 {dayApts.length === 0 ? (
-                  <p className="text-xs text-muted-foreground text-center pt-8">No appointments</p>
+                  <p className="text-xs text-ink-faint text-center pt-8">No appointments</p>
                 ) : (
                   dayApts.map((apt) => {
                     const config = STATUS_CONFIG[apt.status as AppointmentStatus]
@@ -597,7 +598,7 @@ export default function AppointmentsView() {
             <Separator orientation="vertical" className="h-4" />
             <div className="flex items-center gap-1.5">
               <div className="size-2.5 rounded-full bg-primary" aria-hidden="true" />
-              <span className="text-xs text-muted-foreground">Current Time</span>
+              <span className="text-xs text-muted-foreground">Current time</span>
             </div>
           </>
         )}
@@ -621,10 +622,13 @@ export default function AppointmentsView() {
               ))}
             </div>
           ) : appointments.length === 0 && viewMode === 'day' ? (
-            <div className="text-center py-16">
-              <CalendarDays className="size-10 mx-auto text-muted-foreground/30 mb-3" />
-              <p className="text-muted-foreground text-sm">No appointments for this day.</p>
-            </div>
+            <EmptyState
+              icon={CalendarDays}
+              message="No appointments for this day"
+              actionLabel="+ Book one now"
+              onAction={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              className="border-0 bg-transparent py-12"
+            />
           ) : viewMode === 'day' ? (
             <>
               {dayClosed && (

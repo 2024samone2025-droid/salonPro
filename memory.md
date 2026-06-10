@@ -1,57 +1,53 @@
-# Memory — Shadcn Conversion + Theme Audit + Pink Dial-back
+# Memory — Settings Feature (committed) + Landing Redesign (uncommitted)
 
-Last updated: 2026-06-10, end of session
+Last updated: 2026-06-10, end of session (third save today)
 
 ## What was built
 
-All on `feature/saas-multi-tenancy`, uncommitted:
+On `feature/saas-multi-tenancy`.
 
-**1. Full shadcn conversion** — audited the app: 48 shadcn components installed (`components.json`, new-york style); only 12 raw `<button>` elements remained across 8 files. All converted to `Button` with variant + className overrides preserving exact visuals:
-- `BookingFlow.tsx` (service/staff cards, time slots), `QuickBookingForm.tsx` (clear-X, dropdown rows, "New customer" link), `AppointmentsView.tsx` (week-day picker, migrated to `cn()`), `LoginPage.tsx` (demo-account rows), `Sidebar.tsx` (⌘K trigger), `MobileTabBar.tsx` (More tab), `(app)/layout.tsx` (mobile search icon, added Button import), `global-error.tsx`. Zero raw button/input/select/table left outside `components/ui/`.
+**COMMITTED** (see `6d3d7d0` + `8927f69`, plus mid-session `59e6fa7`/`a50134c`):
+- Theme-token migration (semantic STATUS_CONFIG, hsl(var()) charts, font-display/mono, local favicon `src/app/icon.svg`), pink dial-back, shadcn conversion, Tailwind v4-in-v3 fixes, sidebar de-pink + dead-strip fix.
+- Full admin `/settings` feature: Salon tab (name, subdomain, per-day business hours, public-booking toggle, slot interval, currency) + Users & Roles tab (CRUD accounts, fixed 3 roles, PIN reset, staff link, last-admin protection, read-only permission matrix). Key libs: `src/lib/salon-settings.ts` (always read via `parseSalonSettings`), `src/lib/permissions.ts` (client-safe ROLE_PERMISSIONS). Settings drive: public booking APIs (hours/interval/404-when-disabled, POST validates opening hours), AppointmentsView grid hours, `useMoney()` currency hook everywhere. `Salon.settings Json` pushed to Postgres. Plan pricing standardized: Pro 15,000 RWF/mo.
 
-**2. Pink accent dial-back** (user: "you used it too many times and it really looks messy") — neutralized ~70 decorative `primary` usages across 11 files, keeping pink only for: primary buttons, active nav, links, selection states, brand marks (sidebar logo, booking-page header chip, landing hero word + CTAs):
-- Icon chips `bg-primary/10`+`text-primary` → `bg-muted`+`text-muted-foreground` everywhere (Dashboard quick actions/stat cards, Reports, QuickBookingForm Zap, BookingFlow cards, all empty states)
-- Avatar fallbacks (CustomersView, AppointmentDialog) → neutral; money/price text → `text-foreground` (CustomersView, ServicesView)
-- Week picker: removed pink glow on selected day; today = neutral `ring-foreground/25`; day badges → muted (white-tint inside selected day)
-- QuickBookingForm card pink tint removed; billing + landing checkmarks and feature icons → muted
-- ReportsView trend: `text-primary`/hardcoded red → `text-success`/`text-destructive` semantic tokens
-
-tsc + eslint clean after both passes. NOT runtime-verified (user verifies in own browser).
+**UNCOMMITTED — landing page redesign** (this session's last work, tsc+lint clean):
+- `src/components/marketing/LandingPage.tsx` fully rewritten as the plum/gold "imigongo" design from `/home/m25/projects/salon-app-ui/salonpro-landing.html`: hero w/ dashboard mockup, 6 feature cards, WhatsApp-reminder phone showcase, dark pricing (0/15,000 RWF), testimonials, FAQ (`<details>`), final CTA, footer, WhatsApp float, IntersectionObserver scroll-reveal.
+- `src/components/marketing/landing.css` NEW — entire design scoped under `.lp` prefix so plum/gold never leaks into the app's raspberry/stone theme (deliberate two-theme split, recorded in routes.md note 2).
+- Fonts: Fraunces + Plus Jakarta Sans via `next/font` with CSS vars `--font-fraunces`/`--font-jakarta` (NOT the app's Bricolage/Geist).
+- `MarketingHeader.tsx` DELETED — signed-in logic folded into `NavCta` inside LandingPage (own AuthProvider wrap; signed-in users get gold "Open dashboard" button).
 
 ## Decisions made
 
-- **Raspberry stays** — user asked "is pink enough?"; answer: keep hue, fix overuse. Comparable apps cited: Dribbble, T-Mobile, GlossGenius (direct competitor), Claude.ai for warm-stone neutrals.
-- Pink's four jobs only: one primary button per view, active nav, links, selection/focus states. Saved as durable rule in auto-memory (`accent-overuse-feedback.md`).
-- Stat-card emerald/amber/red chips and status colors left as-is — separate hardcoded-colors issue, user hasn't approved that migration yet.
+- Landing page intentionally has its own design system (plum #2B1230 / gold #E9B44C / Fraunces), separate from the in-app raspberry/stone — scoped via `.lp` class, not Tailwind.
+- All landing styles in plain CSS file, not Tailwind classes — kept 1:1 with the HTML source for fidelity.
 
 ## Problems solved
 
-- (none new this session — pure UI refactor; see theme-audit findings below as known issues)
+(Carried from earlier saves:) v4-class trap in components/ui (see auto-memory), Prisma Json cast `as unknown as Prisma.InputJsonValue`, recharts needs `hsl(var(--token))` not `var(--token)`.
 
 ## Current state
 
-Working, uncommitted UI refactor. Theme audit findings still OPEN (reported to user, fix offered but not requested):
-1. Chart colors hardcoded hex in `ReportsView.tsx:65-83` (`#3b82f6` etc. + recharts default `#8884d8`) — ignore dark mode, should use `--chart-1..5`
-2. ~60 hardcoded emerald/amber/blue/red/zinc classes (DashboardView 18, ReportsView ~16 left, StaffView, billing, signup, AppointmentsView red "now" line) — should be `success/warning/info/destructive` tokens
-3. Bricolage Grotesque (`font-display`) loaded everywhere but only used on marketing + booking header — spec says in-app page titles + stat numbers too
-4. `font-mono`/`tabular-nums` missing on all `formatRWF` amounts (spec requires)
-5. Button default variant has leftover white-glow `shadow-[0_0_10px_rgba(255,255,255,0.1)]` (invisible in light mode, off-spec)
-6. Favicon points to third-party CDN `z-cdn.chatglm.cn` in `layout.tsx:28`
+tsc + eslint clean. Landing redesign NOT committed and NOT browser-verified. Known gaps in the landing copy (ported as designed, flagged to user):
+- WhatsApp number is placeholder `wa.me/250780000000` (constant `WHATSAPP_URL` at top of LandingPage.tsx).
+- Page promises unbuilt features: WhatsApp/SMS reminders, offline mode, birthday reminders, data export, 30-day Pro trial.
+- Links to `/privacy` and `/terms` — routes don't exist.
+- Landing is light-mode only by design (own palette, ignores app dark mode).
 
 ## Next session starts with
 
-Ask user to review the dial-back in their browser (Dashboard, Appointments week view, Customers list, booking flow). If approved → commit. Then offer the semantic-token migration (items 1–2 above) as the next chunk.
+User verifies `/` in browser (plum/gold landing, nav CTA when signed in, scroll reveal, mobile layout). If approved → commit landing redesign ("feat: redesign landing page with plum/gold imigongo theme"). Then the carried verification list: sidebar collapse, /settings flows (Sunday closed → no slots, booking toggle, stylist role gating, currency switch).
 
 ## Open questions
 
-- (Carried, unverified) Desktop sidebar-close dead ~256px strip — last session's fix needed a dev-server restart to verify; status unknown, not revisited this session.
-- Currency: $29 USD vs RWF (spec leans 15,000 RWF/mo) — billing page, LandingPage, Stripe config.
-- (Carried) `npx prisma db push` for stripeCustomerId/stripeSubscriptionId; billing e2e; icon rail 768–1024; Appointments mobile FAB; plan-downgrade grace period; subdomain conflict handling.
+- Real WhatsApp number for `WHATSAPP_URL`.
+- Create `/privacy` + `/terms` pages or drop the footer links?
+- Marketing-vs-product gap (reminders/offline/trial) — build, or soften copy?
+- (Carried) Real Stripe (15,000 RWF price, webhook, downgrade grace); icon-rail sidebar 768–1024; mobile FAB; subdomain conflict on signup.
 - Seed users: Admin/1234, Alice/5678, Marie/9012; demo salon `?salon=demo`.
 
 ## Working-style notes (important)
 
-- Do NOT install Playwright or browser automation — user explicitly refused. Verify via code + user's own browser.
-- Never `npm run build` while dev server runs (shared `.next`); agent cannot restart the dev server (outside sandbox).
-- User/another tool edits files in parallel (sometimes double-writes content) — re-read before editing.
-- Accent rule (user feedback): never use `primary` as decoration — no pink icon chips, avatars, or data text.
+- No Playwright/browser automation — user verifies visually.
+- Never `npm run build` while dev server runs; agent can't restart the dev server.
+- User/other tools edit & commit in parallel — always `git status` before assuming state.
+- Accent rule: pink only for primary action/active nav/links/selection/brand — never decoration. (App theme only; landing page exempt, it has its own system.)
