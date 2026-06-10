@@ -14,8 +14,8 @@ import StaffView from '@/components/salon/StaffView'
 import ServicesView from '@/components/salon/ServicesView'
 import ReportsView from '@/components/salon/ReportsView'
 import CommandPalette from '@/components/salon/CommandPalette'
-import LoginPage from '@/components/salon/LoginPage'
-import { Loader2, Triangle } from 'lucide-react'
+import LandingPage from '@/components/marketing/LandingPage'
+import { Triangle } from 'lucide-react'
 import { ThemeToggle } from '@/components/theme-toggle'
 
 function MainContent() {
@@ -43,7 +43,6 @@ function AuthenticatedApp() {
   const { salon } = useAuth()
   const { setSalon: setStoreSalon } = useSalonStore()
 
-  // Sync salon to store
   React.useEffect(() => {
     if (salon) {
       setStoreSalon(salon)
@@ -101,7 +100,7 @@ function AppShell() {
   }
 
   if (!user) {
-    return <LoginPage />
+    return <LandingPage />
   }
 
   return <AuthenticatedApp />
