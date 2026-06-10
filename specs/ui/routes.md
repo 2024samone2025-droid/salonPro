@@ -4,32 +4,42 @@ Tenancy: salon resolved from subdomain (dev: `?salon=` query param) via `src/mid
 
 | Route | Shell | Purpose (one line) | Spec |
 |---|---|---|---|
-| `/` (unauthed) | MarketingShell | landing: pitch, features, pricing, trial CTA | — |
-| `/` (authed) | AppShell | dashboard: today's stats + upcoming appointments | — |
-| `/` → Appointments view | AppShell | day/week calendar; book, reschedule, cancel | — |
-| `/` → Customers view | AppShell | client list + history | — |
-| `/` → Staff view | AppShell | staff roster + availability | — |
-| `/` → Services view | AppShell | service catalog + prices | — |
-| `/` → Reports view | AppShell | revenue and activity reports | — |
+| `/` | MarketingShell | landing: pitch, features, pricing, trial CTA — always marketing, even signed in (header shows avatar instead of auth buttons) | — |
 | `/signup` | AuthShell | create salon + admin account (onboarding) | — |
-| `/login` | AuthShell | staff sign-in (name + PIN); redirects to `/` when authed | — |
+| `/login` | AuthShell | staff sign-in (name + PIN); redirects to `/dashboard` on success, preserving `?salon=` | — |
+| `/dashboard` | AppShell | today's stats + upcoming appointments | — |
+| `/appointments` | AppShell | day/week calendar; book, reschedule, cancel | — |
+| `/customers` | AppShell | client list + history | — |
+| `/staff` | AppShell | staff roster + availability (admin, receptionist) | — |
+| `/services` | AppShell | service catalog + prices | — |
+| `/reports` | AppShell | revenue and activity reports (admin, receptionist) | — |
 | `/billing` | AppShell | plan status, upgrade to Pro (admin-only) | — |
-| `/marketing` | MarketingShell | renders shared `LandingPage` — kept as alias of unauthed `/`, candidate for deletion | — |
 
 Hierarchy:
 ```
-/                       (marketing when unauthed, app when authed)
-├── [views]             Dashboard · Appointments · Customers · Staff · Services · Reports
-│                       — currently client-side state in page.tsx, not URLs
-├── signup
-├── login
-├── billing
-└── marketing           alias of unauthed / (shared LandingPage component)
+/                       marketing (always — signed-in users get an avatar menu → Dashboard)
+├── signup              AuthShell
+├── login               AuthShell
+└── (app)/              shared authed layout: src/app/(app)/layout.tsx
+    │                   auth gate (client-side) → sidebar + topbar + ⌘K palette
+    │                   nav config: src/components/salon/nav-items.ts (role-filtered)
+    ├── dashboard
+    ├── appointments
+    ├── customers
+    ├── staff
+    ├── services
+    ├── reports
+    └── billing
 ```
+
+Notes:
+- Auth gating is client-side in `(app)/layout.tsx` (localStorage token + `/api/auth/me`); unauthenticated visits to any `(app)` route redirect to `/login` with `?salon=` preserved. No middleware auth.
+- Role visibility (`nav-items.ts`) hides nav entries only — it does not guard the routes themselves.
+- Mobile (<768px): bottom tab bar replaces the sidebar; see `app-shell.md`.
 
 ## Architecture notes
 
-1. **Views are state, not URLs** (open). All six app views render from `/` via a client-side switcher in `page.tsx`. Cost: no deep links ("send me the reports page"), back button doesn't work between views, no per-view code splitting. Recommended migration when convenient: promote to real routes (`/appointments`, `/customers`, `/staff`, `/services`, `/reports`) under a shared AppShell layout. Sidebar already maps 1:1.
-2. **Marketing duplication** (resolved 2026-06-10). Both unauthed `/` and `/marketing` now render the single `src/components/marketing/LandingPage.tsx`. `/marketing` is a thin alias kept so nothing links into a 404 — delete the folder once confirmed nothing references it.
-3. **Login reachability** (resolved 2026-06-10). `LoginPage.tsx` was rendered nowhere; the old marketing header linked to a dead `#login` anchor. Now `/login` (AuthShell) renders it and redirects to `/` on success, preserving `?salon=`.
+1. **Views are state, not URLs** (resolved 2026-06-10). All six app views were rendered from `/` via a client-side switcher. Migrated to real routes under the `(app)` route group with a shared layout; sidebar, ⌘K palette, and dashboard quick-links all navigate via URL. Zustand no longer holds nav state.
+2. **Marketing duplication** (resolved 2026-06-10). `/marketing` deleted; `/` always renders the single `src/components/marketing/LandingPage.tsx` (server component) with `MarketingHeader` handling signed-in state.
+3. **Login reachability** (resolved 2026-06-10). `LoginPage.tsx` was rendered nowhere; now `/login` (AuthShell) renders it and redirects to `/dashboard` on success, preserving `?salon=`.
 4. **Currency inconsistency** (open). Billing + marketing pricing show **$29/month**; product copy and service prices use **RWF**. Pick one — likely RWF for a Rwanda-market product — and update `billing/page.tsx`, `LandingPage.tsx`, and Stripe price config together.

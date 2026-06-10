@@ -54,8 +54,8 @@ function AppFrame({ children }: { children: React.ReactNode }) {
   return (
     <>
       <Sidebar />
-      <SidebarInset className="min-h-svh flex flex-col max-md:pb-[calc(3.5rem+env(safe-area-inset-bottom))]">
-        <header className="flex h-11 items-center gap-2 border-b border-sidebar-border bg-sidebar px-2 sm:px-4 fixed top-0 left-0 right-0 z-10 md:left-[var(--sidebar-width)]">
+      <SidebarInset className="h-svh overflow-hidden flex flex-col max-md:pb-[calc(3.5rem+env(safe-area-inset-bottom))]">
+        <header className="sticky top-0 z-10 flex h-11 shrink-0 items-center gap-2 border-b border-sidebar-border bg-sidebar px-2 sm:px-4">
           <SidebarTrigger className="-ml-1 size-7 hidden md:flex" />
           <Separator orientation="vertical" className="h-4 hidden md:block" />
           <div className="flex items-center gap-1">
@@ -75,8 +75,8 @@ function AppFrame({ children }: { children: React.ReactNode }) {
             <ThemeToggle />
           </div>
         </header>
-        <div className="flex-1 p-4 sm:p-6 md:p-8 overflow-auto min-w-0 pt-15">
-          {children}
+        <div className="flex-1 p-4 sm:p-6 md:p-8 overflow-auto min-w-0">
+          <div className="mx-auto w-full max-w-7xl">{children}</div>
         </div>
         <footer className="border-t py-2 px-4 text-center mt-auto">
           <p className="text-[11px] text-muted-foreground font-mono">
