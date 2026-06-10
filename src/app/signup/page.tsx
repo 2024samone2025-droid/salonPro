@@ -7,7 +7,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Triangle, AlertCircle, Loader2 } from 'lucide-react'
 import { useState } from 'react'
-import { ThemeToggle } from '@/components/theme-toggle'
 
 export default function SalonSignupPage() {
   const [salonName, setSalonName] = useState('')
@@ -53,16 +52,12 @@ export default function SalonSignupPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <div className="absolute top-4 right-4">
-        <ThemeToggle />
-      </div>
-
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center size-12 rounded-md bg-foreground mb-4">
             <Triangle className="size-6 text-background fill-background" />
           </div>
-          <h1 className="font-display text-2xl font-semibold tracking-tight">SalonPro</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">SalonPro</h1>
           <p className="text-sm text-muted-foreground mt-1">Create your salon account</p>
         </div>
 

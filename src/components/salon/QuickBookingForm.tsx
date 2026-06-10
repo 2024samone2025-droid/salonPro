@@ -211,7 +211,7 @@ export default function QuickBookingForm({ selectedDate, onBookingCreated }: Qui
             <Zap className="size-4 text-muted-foreground" />
           </div>
           <div>
-            <CardTitle className="text-sm">Quick Booking</CardTitle>
+            <CardTitle className="text-sm">Quick booking</CardTitle>
             <CardDescription className="text-xs">Create a new appointment in seconds</CardDescription>
           </div>
         </div>
@@ -242,7 +242,7 @@ export default function QuickBookingForm({ selectedDate, onBookingCreated }: Qui
               />
               {customerId && (
                 <Button
-                  variant="ghost"
+                  variant="plain"
                   size="icon"
                   className="absolute right-2 top-2 size-3.5 text-muted-foreground hover:bg-transparent hover:text-foreground"
                   aria-label="Clear selected customer"
@@ -262,7 +262,7 @@ export default function QuickBookingForm({ selectedDate, onBookingCreated }: Qui
                 {filteredCustomers.map((c) => (
                   <Button
                     key={c.id}
-                    variant="ghost"
+                    variant="plain"
                     className="h-auto w-full justify-between rounded-none px-3 py-2 text-left text-sm font-normal"
                     onClick={() => {
                       setCustomerId(c.id)
@@ -394,7 +394,7 @@ export default function QuickBookingForm({ selectedDate, onBookingCreated }: Qui
               ) : (
                 <>
                   <Plus className="size-3.5" />
-                  Book Now
+                  Book now
                 </>
               )}
             </Button>

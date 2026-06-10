@@ -8,23 +8,24 @@ import {
   CardTitle,
   CardDescription,
 } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
-import { Separator } from '@/components/ui/separator'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Skeleton } from '@/components/ui/skeleton'
+import StatCard from '@/components/salon/StatCard'
+import StatusBadge from '@/components/salon/StatusBadge'
+import EmptyState from '@/components/salon/EmptyState'
 import {
   CalendarDays,
   Banknote,
   AlertCircle,
   Clock,
   Plus,
-  Users,
+  UserPlus,
   BarChart3,
   ArrowRight,
-  UserCheck,
-  TrendingUp,
+  ChartPie,
+  Users,
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { useRouter } from 'next/navigation'
@@ -81,9 +82,9 @@ export default function DashboardView() {
     if (showLoading && !isInitialMount.current) setLoading(true)
     isInitialMount.current = false
     setError(null)
-    
+
     const controller = new AbortController()
-    
+
     authFetch('/api/dashboard', { signal: controller.signal })
       .then((r) => {
         if (!r.ok) throw new Error(`Failed to fetch (${r.status})`)
@@ -114,37 +115,32 @@ export default function DashboardView() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-5">
         <div className="flex items-center justify-between">
           <div className="space-y-2">
-            <Skeleton className="h-8 w-48" />
-            <Skeleton className="h-4 w-64" />
+            <Skeleton className="h-7 w-44" />
+            <Skeleton className="h-4 w-60" />
           </div>
+          <Skeleton className="h-9 w-72 hidden sm:block" />
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
           {[...Array(3)].map((_, i) => (
-            <Skeleton key={i} className="h-20 rounded-xl" />
+            <Skeleton key={i} className="h-28 rounded-lg" />
           ))}
         </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          {[...Array(4)].map((_, i) => (
-            <Skeleton key={i} className="h-28 rounded-xl" />
-          ))}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+          <Skeleton className="h-64 rounded-lg" />
+          <Skeleton className="h-64 rounded-lg" />
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Skeleton className="h-48 rounded-xl" />
-          <Skeleton className="h-48 rounded-xl" />
-        </div>
-        <Skeleton className="h-64 rounded-xl" />
       </div>
     )
   }
 
   if (!data) return (
     <div className="flex flex-col items-center justify-center py-16">
-      <AlertCircle className="size-10 text-muted-foreground/30 mb-3" />
+      <AlertCircle className="size-10 text-ink-faint mb-3" />
       <p className="text-muted-foreground text-sm mb-3">{error || 'Failed to load dashboard data.'}</p>
-      <Button variant="outline" size="sm" onClick={() => fetchDashboard()}>
+      <Button variant="ghost" size="sm" onClick={() => fetchDashboard()}>
         Retry
       </Button>
     </div>
@@ -152,334 +148,267 @@ export default function DashboardView() {
 
   const today = format(new Date(), 'EEEE, MMMM d, yyyy')
 
-  return (
-    <div className="space-y-6">
-      {/* Date header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="font-display text-xl sm:text-2xl font-bold tracking-tight">
-            {isStylist ? 'My Dashboard' : 'Dashboard'}
-          </h2>
-          <CardDescription className="flex items-center gap-2 mt-1">
-            <CalendarDays className="size-4" />
-            {today}
-          </CardDescription>
-        </div>
-      </div>
+  const breakdownSummary = Object.entries(data.statusBreakdown)
+    .filter(([, count]) => count > 0)
+    .slice(0, 3)
+    .map(([status, count]) => {
+      const label = STATUS_CONFIG[status as AppointmentStatus]?.label || status
+      return `${count} ${label.toLowerCase()}`
+    })
+    .join(' · ')
 
-      {/* Quick Actions - only for admin and receptionist */}
-      {!isStylist && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          <Button
-            variant="outline"
-            className="h-auto py-3 px-4 justify-start gap-3 hover:bg-accent/60 transition-colors"
-            onClick={() => router.push('/appointments')}
-          >
-            <div className="flex items-center justify-center size-8 sm:size-9 rounded-lg bg-muted shrink-0">
-              <Plus className="size-4 text-muted-foreground" />
-            </div>
-            <div className="text-left">
-              <p className="text-xs sm:text-sm font-semibold">New Appointment</p>
-              <p className="text-xs text-muted-foreground">Quick booking</p>
-            </div>
-          </Button>
-          <Button
-            variant="outline"
-            className="h-auto py-3 px-4 justify-start gap-3 hover:bg-accent/60 transition-colors"
-            onClick={() => router.push('/customers')}
-          >
-            <div className="flex items-center justify-center size-8 sm:size-9 rounded-lg bg-muted shrink-0">
-              <Users className="size-4 text-muted-foreground" />
-            </div>
-            <div className="text-left">
-              <p className="text-xs sm:text-sm font-semibold">Add Customer</p>
-              <p className="text-xs text-muted-foreground">New client</p>
-            </div>
-          </Button>
-          {permissions && permissions.reports !== 'none' && (
-            <Button
-              variant="outline"
-              className="h-auto py-3 px-4 justify-start gap-3 hover:bg-accent/60 transition-colors col-span-2 sm:col-span-1"
-              onClick={() => router.push('/reports')}
-            >
-              <div className="flex items-center justify-center size-8 sm:size-9 rounded-lg bg-muted shrink-0">
-                <BarChart3 className="size-4 text-muted-foreground" />
-              </div>
-              <div className="text-left">
-                <p className="text-xs sm:text-sm font-semibold">View Reports</p>
-                <p className="text-xs text-muted-foreground">Analytics</p>
-              </div>
-            </Button>
-          )}
+  const workload = data.staffWorkload.filter((s) =>
+    isStylist ? s.id === user?.staffId : s.role === 'stylist'
+  )
+  const hasBreakdown = Object.values(data.statusBreakdown).some((c) => c > 0)
+
+  return (
+    <div className="space-y-5">
+      {/* Header: title + date left, actions right */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+        <div>
+          <h2 className="text-[22px] font-medium tracking-tight">
+            {isStylist ? 'My dashboard' : 'Dashboard'}
+          </h2>
+          <p className="mt-1 flex items-center gap-1.5 text-[13px] text-muted-foreground">
+            <CalendarDays className="size-3.5" aria-hidden="true" />
+            {today}
+          </p>
         </div>
-      )}
+        {!isStylist && (
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" onClick={() => router.push('/appointments')}>
+              <Plus className="size-3.5" />
+              New appointment
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => router.push('/customers')}>
+              <UserPlus className="size-3.5" />
+              Add customer
+            </Button>
+            {permissions && permissions.reports !== 'none' && (
+              <Button variant="ghost" size="sm" onClick={() => router.push('/reports')}>
+                <BarChart3 className="size-3.5" />
+                Reports
+              </Button>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <Card
-          className="cursor-pointer hover:shadow-md transition-all group border"
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <StatCard
+          icon={CalendarDays}
+          label={isStylist ? 'My appointments' : 'Appointments'}
+          value={data.totalAppointmentsToday}
+          context={breakdownSummary || 'Nothing scheduled yet'}
+          tone="accent"
           onClick={() => router.push('/appointments')}
-        >
-          <CardContent className="pt-4 pb-3 px-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="flex items-center justify-center size-8 rounded-lg bg-muted shrink-0 group-hover:bg-accent transition-colors">
-                <CalendarDays className="size-4 text-muted-foreground" />
-              </div>
-              <CardDescription className="text-[11px] sm:text-xs leading-tight">{isStylist ? 'My Appointments' : "Today's Appointments"}</CardDescription>
-            </div>
-            <span className="font-display text-2xl sm:text-3xl font-bold tracking-tight tabular-nums">{data.totalAppointmentsToday}</span>
-          </CardContent>
-        </Card>
-
+        />
         {!isStylist && (
-          <Card
-            className="cursor-pointer hover:shadow-md transition-all group border"
+          <StatCard
+            icon={Banknote}
+            label="Revenue today"
+            value={formatRWF(data.todayRevenue)}
+            tone="success"
             onClick={() => router.push('/reports')}
-          >
-            <CardContent className="pt-4 pb-3 px-4">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="flex items-center justify-center size-8 rounded-lg bg-muted shrink-0 group-hover:bg-accent transition-colors">
-                  <TrendingUp className="size-4 text-muted-foreground" />
-                </div>
-                <CardDescription className="text-[11px] sm:text-xs leading-tight">Today&apos;s Revenue</CardDescription>
-              </div>
-              <span className="font-display text-base sm:text-xl font-bold tracking-tight tabular-nums">{formatRWF(data.todayRevenue)}</span>
-            </CardContent>
-          </Card>
+          />
         )}
-
         {canManagePayments && (
-          <>
-            <Card
-              className="cursor-pointer hover:shadow-md transition-all group border"
-              onClick={() => router.push('/appointments')}
-            >
-              <CardContent className="pt-4 pb-3 px-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="flex items-center justify-center size-8 rounded-lg bg-muted shrink-0 group-hover:bg-accent transition-colors">
-                    <AlertCircle className="size-4 text-muted-foreground" />
-                  </div>
-                  <CardDescription className="text-[11px] sm:text-xs leading-tight">Pending Payments</CardDescription>
-                </div>
-                <span className="font-display text-2xl sm:text-3xl font-bold tracking-tight tabular-nums">{data.pendingPayments}</span>
-              </CardContent>
-            </Card>
-
-            <Card
-              className="cursor-pointer hover:shadow-md transition-all group border"
-              onClick={() => router.push('/appointments')}
-            >
-              <CardContent className="pt-4 pb-3 px-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="flex items-center justify-center size-8 rounded-lg bg-muted shrink-0 group-hover:bg-accent transition-colors">
-                    <Clock className="size-4 text-muted-foreground" />
-                  </div>
-                  <CardDescription className="text-[11px] sm:text-xs leading-tight">Outstanding</CardDescription>
-                </div>
-                <span className="font-display text-base sm:text-xl font-bold tracking-tight tabular-nums">{formatRWF(data.pendingAmount)}</span>
-              </CardContent>
-            </Card>
-          </>
+          <StatCard
+            icon={Clock}
+            label="Outstanding"
+            value={formatRWF(data.pendingAmount)}
+            context={`${data.pendingPayments} pending payment${data.pendingPayments !== 1 ? 's' : ''}`}
+            tone="warning"
+            onClick={() => router.push('/appointments')}
+          />
         )}
       </div>
 
-      <Separator />
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Status Breakdown */}
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] gap-3">
+        {/* Today's schedule */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base font-semibold">Status Breakdown</CardTitle>
-            <CardDescription>Appointment status distribution for today</CardDescription>
+            <CardTitle className="text-[15px] font-medium">
+              {isStylist ? 'My schedule today' : "Today's schedule"}
+            </CardTitle>
+            <CardDescription className="text-xs">
+              {data.todayAppointments.length} appointment{data.todayAppointments.length !== 1 ? 's' : ''} scheduled
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-wrap gap-1.5 sm:gap-2">
-              {Object.entries(data.statusBreakdown).map(([status, count]) => {
-                const config = STATUS_CONFIG[status as AppointmentStatus]
-                return (
-                  <Badge
-                    key={status}
-                    variant="secondary"
-                    className={cn(
-                      config?.bgClass || 'bg-muted',
-                      config?.textClass || 'text-muted-foreground',
-                      "border-0 text-xs sm:text-sm px-2.5 sm:px-3 py-1 sm:py-1.5 gap-1.5 font-medium hover:opacity-80 transition-opacity"
-                    )}
-                  >
-                    <span className={cn("size-1.5 sm:size-2 rounded-full", config?.dotClass || 'bg-muted-foreground')} />
-                    {config?.label || status}: {count}
-                  </Badge>
-                )
-              })}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Staff Workload */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base font-semibold">{isStylist ? 'My Workload' : 'Staff Workload Today'}</CardTitle>
-            <CardDescription>Percentage of 8-hour workday allocated</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {data.staffWorkload
-                .filter((s) => isStylist ? s.id === user?.staffId : s.role === 'stylist')
-                .map((s) => {
-                  const totalMinutes = s.totalMinutes || s.appointmentCount * 45
-                  const totalHours = Math.floor(totalMinutes / 60)
-                  const totalMins = totalMinutes % 60
-                  const maxMinutes = 480 // 8 hours
-                  const percentage = Math.min((totalMinutes / maxMinutes) * 100, 100)
-                  return (
-                    <div key={s.id} className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <div className="flex items-center justify-center size-7 rounded-full bg-muted">
-                            <UserCheck className="size-3.5 text-muted-foreground" />
-                          </div>
-                          <span className="text-sm font-medium">{s.name}</span>
-                        </div>
-                        <span className="text-xs text-muted-foreground">
-                          {totalHours}h {totalMins}m &middot; {s.appointmentCount} appt{s.appointmentCount !== 1 ? 's' : ''}
-                        </span>
+            {data.todayAppointments.length === 0 ? (
+              <EmptyState
+                icon={CalendarDays}
+                message="No appointments today"
+                actionLabel="+ Book one now"
+                onAction={() => router.push('/appointments')}
+                className="border-0 bg-transparent p-4"
+              />
+            ) : (
+              <ScrollArea className="max-h-96">
+                <div>
+                  {data.todayAppointments.map((apt, i) => (
+                    <div
+                      key={apt.id}
+                      className={cn(
+                        'flex items-center gap-2.5 py-2.5',
+                        i < data.todayAppointments.length - 1 &&
+                          'border-b-hairline border-border/80'
+                      )}
+                    >
+                      <span className="min-w-[88px] text-xs text-muted-foreground tabular-nums">
+                        {apt.startTime} – {apt.endTime}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-[13px] text-foreground">{apt.customer.name}</p>
+                        <p className="truncate text-xs text-ink-faint">
+                          {apt.service.name} · {apt.staff.name}
+                        </p>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <Progress
-                          value={percentage}
-                          className={`h-2 flex-1 ${
-                            percentage > 75
-                              ? '[&>[data-slot=progress-indicator]]:bg-warning'
-                              : percentage > 50
-                              ? '[&>[data-slot=progress-indicator]]:bg-primary'
-                              : '[&>[data-slot=progress-indicator]]:bg-muted-foreground/30'
-                          }`}
-                        />
-                        <span className="text-xs font-medium text-muted-foreground w-10 text-right">
-                          {Math.round(percentage)}%
-                        </span>
-                      </div>
+                      <StatusBadge status={apt.status} className="shrink-0" />
                     </div>
-                  )
-                })}
-              {data.staffWorkload.filter((s) => isStylist ? s.id === user?.staffId : s.role === 'stylist').length === 0 && (
-                <p className="text-sm text-muted-foreground">No staff data available.</p>
-              )}
-            </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            )}
           </CardContent>
         </Card>
-      </div>
 
-      {/* Pending Payments List - only for admin/receptionist */}
-      {canManagePayments && data.pendingPaymentsList && data.pendingPaymentsList.length > 0 && (
-        <>
-          <Separator />
+        {/* Right column: workload + status breakdown */}
+        <div className="flex flex-col gap-3">
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-base font-semibold">Pending Payments</CardTitle>
-                  <CardDescription>Outstanding balances requiring attention</CardDescription>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-primary hover:text-primary/80"
-                  onClick={() => router.push('/appointments')}
-                >
-                  View All <ArrowRight className="size-3 ml-1" />
-                </Button>
-              </div>
+              <CardTitle className="text-[15px] font-medium">
+                {isStylist ? 'My workload' : 'Staff workload'}
+              </CardTitle>
+              <CardDescription className="text-xs">Share of an 8-hour day booked</CardDescription>
             </CardHeader>
             <CardContent>
-              <ScrollArea className="max-h-72">
-                <div className="space-y-2">
-                  {data.pendingPaymentsList.slice(0, 10).map((p) => {
-                    const remaining = p.appointment.service.price - p.amount
-                    const paidPercent = p.appointment.service.price > 0
-                      ? (p.amount / p.appointment.service.price) * 100
-                      : 0
+              {workload.length === 0 ? (
+                <EmptyState
+                  icon={Users}
+                  message="No staff data yet"
+                  className="border-0 bg-transparent p-4"
+                />
+              ) : (
+                <div className="space-y-3">
+                  {workload.map((s) => {
+                    const totalMinutes = s.totalMinutes || s.appointmentCount * 45
+                    const totalHours = Math.floor(totalMinutes / 60)
+                    const totalMins = totalMinutes % 60
+                    const percentage = Math.min((totalMinutes / 480) * 100, 100)
                     return (
-                      <div
-                        key={p.id}
-                        className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
-                      >
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{p.appointment.customer.name}</p>
-                          <p className="text-xs text-muted-foreground truncate">{p.appointment.service.name}</p>
-                          {p.amount > 0 && (
-                            <div className="mt-1.5">
-                              <Progress value={paidPercent} className="h-1.5 [&>[data-slot=progress-indicator]]:bg-warning" />
-                            </div>
-                          )}
+                      <div key={s.id}>
+                        <div className="mb-1.5 flex items-center justify-between">
+                          <span className="text-[13px] text-foreground">{s.name}</span>
+                          <span className="text-xs text-muted-foreground tabular-nums">
+                            {totalHours > 0 ? `${totalHours}h` : ''}{totalMins > 0 ? ` ${totalMins}m` : totalHours === 0 ? '0m' : ''} · {Math.round(percentage)}%
+                          </span>
                         </div>
-                        <div className="text-right ml-2 sm:ml-4 shrink-0">
-                          <p className="text-sm font-semibold text-foreground">{formatRWF(remaining)}</p>
-                          <p className="text-xs text-muted-foreground">of {formatRWF(p.appointment.service.price)}</p>
-                        </div>
+                        <Progress value={percentage} className="h-1.5" />
                       </div>
                     )
                   })}
                 </div>
-              </ScrollArea>
+              )}
             </CardContent>
           </Card>
-        </>
-      )}
 
-      {/* Today's Appointments */}
-      <Separator />
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base font-semibold">{isStylist ? 'My Appointments Today' : "Today's Appointments"}</CardTitle>
-          <CardDescription>{data.todayAppointments.length} appointment{data.todayAppointments.length !== 1 ? 's' : ''} scheduled</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {data.todayAppointments.length === 0 ? (
-            <div className="text-center py-8">
-              <CalendarDays className="size-10 mx-auto text-muted-foreground/30 mb-3" />
-              <p className="text-muted-foreground text-sm">No appointments today.</p>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-[15px] font-medium">Status breakdown</CardTitle>
+              <CardDescription className="text-xs">Today&apos;s appointments by status</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {!hasBreakdown ? (
+                <EmptyState
+                  icon={ChartPie}
+                  message="No status data yet"
+                  actionLabel="+ Book first appointment"
+                  onAction={() => router.push('/appointments')}
+                  className="border-0 bg-transparent p-4"
+                />
+              ) : (
+                <div className="flex flex-wrap gap-1.5">
+                  {Object.entries(data.statusBreakdown)
+                    .filter(([, count]) => count > 0)
+                    .map(([status, count]) => {
+                      const config = STATUS_CONFIG[status as AppointmentStatus]
+                      return (
+                        <span
+                          key={status}
+                          className={cn(
+                            'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs',
+                            config?.badgeClass ?? 'bg-muted text-muted-foreground'
+                          )}
+                        >
+                          {config?.label || status}
+                          <span className="font-medium tabular-nums">{count}</span>
+                        </span>
+                      )
+                    })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* Pending payments — admin/receptionist only */}
+      {canManagePayments && data.pendingPaymentsList && data.pendingPaymentsList.length > 0 && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-[15px] font-medium">Pending payments</CardTitle>
+                <CardDescription className="text-xs">Outstanding balances</CardDescription>
+              </div>
+              <Button
+                variant="plain"
+                size="sm"
+                className="text-accent hover:text-accent/80"
+                onClick={() => router.push('/appointments')}
+              >
+                View all <ArrowRight className="size-3" />
+              </Button>
             </div>
-          ) : (
-            <ScrollArea className="max-h-96">
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="max-h-72">
               <div className="space-y-2">
-                {data.todayAppointments.map((apt) => {
-                  const config = STATUS_CONFIG[apt.status as AppointmentStatus]
+                {data.pendingPaymentsList.slice(0, 10).map((p) => {
+                  const remaining = p.appointment.service.price - p.amount
+                  const paidPercent = p.appointment.service.price > 0
+                    ? (p.amount / p.appointment.service.price) * 100
+                    : 0
                   return (
                     <div
-                      key={apt.id}
-                      className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
+                      key={p.id}
+                      className="flex items-center justify-between rounded-sm border-hairline border-border bg-surface p-3"
                     >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="text-[11px] sm:text-sm font-mono text-muted-foreground w-20 sm:w-24 shrink-0">
-                          {apt.startTime} - {apt.endTime}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium truncate">{apt.customer.name}</p>
-                          <p className="text-xs text-muted-foreground truncate">
-                            {apt.service.name} &middot; {apt.staff.name}
-                          </p>
-                        </div>
-                      </div>
-                      <Badge
-                        variant="secondary"
-                        className={cn(
-                          config?.bgClass || '',
-                          config?.textClass || '',
-                          "border-0 shrink-0 ml-2 text-xs"
+                      <div className="flex-1 min-w-0">
+                        <p className="truncate text-[13px] text-foreground">{p.appointment.customer.name}</p>
+                        <p className="truncate text-xs text-ink-faint">{p.appointment.service.name}</p>
+                        {p.amount > 0 && (
+                          <div className="mt-1.5 max-w-44">
+                            <Progress value={paidPercent} className="h-1" />
+                          </div>
                         )}
-                      >
-                        <span className={cn("size-1.5 rounded-full", config?.dotClass || 'bg-muted-foreground')} />
-                        {config?.label || apt.status}
-                      </Badge>
+                      </div>
+                      <div className="ml-3 shrink-0 text-right">
+                        <p className="text-[13px] font-medium text-foreground tabular-nums">{formatRWF(remaining)}</p>
+                        <p className="text-xs text-ink-faint tabular-nums">of {formatRWF(p.appointment.service.price)}</p>
+                      </div>
                     </div>
                   )
                 })}
               </div>
             </ScrollArea>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }

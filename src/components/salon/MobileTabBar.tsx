@@ -66,7 +66,7 @@ export default function MobileTabBar() {
             )
           })}
           <Button
-            variant="ghost"
+            variant="plain"
             onClick={() => setMoreOpen(true)}
             aria-expanded={moreOpen}
             className={cn(
@@ -102,8 +102,8 @@ export default function MobileTabBar() {
                   className={cn(
                     'flex items-center gap-3 px-3 h-11 rounded-md text-sm transition-colors',
                     isActive
-                      ? 'bg-accent text-accent-foreground font-medium'
-                      : 'text-foreground/70 hover:bg-accent/60'
+                      ? 'bg-muted text-foreground font-medium'
+                      : 'text-foreground/70 hover:bg-muted/60'
                   )}
                 >
                   <Icon className="size-4.5 text-foreground/50" aria-hidden="true" />
@@ -115,7 +115,7 @@ export default function MobileTabBar() {
           <Separator />
           <div className="px-4 flex items-center gap-3">
             <Avatar className="size-8 border border-border">
-              <AvatarFallback className="bg-accent text-foreground/70 text-[11px] font-medium">
+              <AvatarFallback className="bg-muted text-foreground/70 text-[11px] font-medium">
                 {user.name ? getInitials(user.name) : '??'}
               </AvatarFallback>
             </Avatar>
@@ -126,14 +126,14 @@ export default function MobileTabBar() {
               </p>
             </div>
             <Button
-              variant="ghost"
+              variant="plain"
               size="sm"
               className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
               onClick={() => logout()}
               aria-label="Sign out"
             >
               <LogOut className="size-4 mr-1.5" aria-hidden="true" />
-              Sign Out
+              Sign out
             </Button>
           </div>
         </SheetContent>

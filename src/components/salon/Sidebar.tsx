@@ -149,7 +149,7 @@ export default function SalonSidebar() {
       </SidebarContent>
 
       {/* Footer: User info & Logout */}
-      <SidebarFooter className="px-3 pb-3 pt-2">
+      <SidebarFooter className="px-3 pb-10 pt-2">
         <div className="border-t border-sidebar-border pt-3">
           <div className="flex items-center gap-2.5 px-1 mb-2">
             <Avatar className="size-7 border border-sidebar-border">
@@ -167,20 +167,20 @@ export default function SalonSidebar() {
             </div>
           </div>
           <Button
-            variant="ghost"
+            variant="plain"
             size="sm"
             className="w-full justify-start text-sidebar-foreground/40 hover:text-destructive hover:bg-destructive/10 transition-colors text-[13px] h-8"
             onClick={handleLogout}
             aria-label="Sign out"
           >
             <LogOut className="size-3.5 mr-2" aria-hidden="true" />
-            Sign Out
+            Sign out
           </Button>
           {user?.role === 'admin' && (
             <>
               <Button
                 asChild
-                variant="ghost"
+                variant="plain"
                 size="sm"
                 className="w-full justify-start text-sidebar-foreground/40 hover:text-sidebar-foreground hover:bg-sidebar-accent/60 transition-colors text-[13px] h-8"
               >
@@ -191,7 +191,7 @@ export default function SalonSidebar() {
               </Button>
               <Button
                 asChild
-                variant="ghost"
+                variant="plain"
                 size="sm"
                 className="w-full justify-start text-sidebar-foreground/40 hover:text-sidebar-foreground hover:bg-sidebar-accent/60 transition-colors text-[13px] h-8"
               >
