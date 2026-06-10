@@ -161,7 +161,7 @@ export default function ServicesView() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Services</h2>
+          <h2 className="font-display text-2xl font-bold tracking-tight">Services</h2>
           <p className="text-muted-foreground text-sm">
             {services.length} service{services.length !== 1 ? 's' : ''} &middot; {activeServices.length} active
             {!canManage && ' · View only'}
@@ -197,8 +197,8 @@ export default function ServicesView() {
         /* Empty State */
         <Card>
           <CardContent className="p-12 text-center">
-            <div className="mx-auto size-16 rounded-full bg-primary/5 flex items-center justify-center mb-4">
-              <Scissors className="size-8 text-primary" />
+            <div className="mx-auto size-16 rounded-full bg-muted flex items-center justify-center mb-4">
+              <Scissors className="size-8 text-muted-foreground" />
             </div>
             <h3 className="text-lg font-semibold mb-1">No services yet</h3>
             <p className="text-muted-foreground text-sm mb-4">
@@ -231,8 +231,8 @@ export default function ServicesView() {
                     <CardHeader className="pb-2 pt-4 px-4">
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-2">
-                          <div className="size-9 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
-                            <Scissors className="size-4 text-primary" />
+                          <div className="size-9 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                            <Scissors className="size-4 text-muted-foreground" />
                           </div>
                           <CardTitle className="text-base">{s.name}</CardTitle>
                         </div>
@@ -251,7 +251,7 @@ export default function ServicesView() {
                             />
                           </div>
                         ) : (
-                          <Badge variant="outline" className="text-xs text-primary border-primary/20 shrink-0">
+                          <Badge variant="outline" className="text-xs shrink-0">
                             Active
                           </Badge>
                         )}
@@ -260,7 +260,7 @@ export default function ServicesView() {
                     <CardContent className="pb-4 px-4 pt-2">
                       <div className="flex items-end justify-between">
                         <div className="space-y-1">
-                          <p className="text-xl font-bold text-primary">
+                          <p className="text-xl font-bold">
                             {formatRWF(s.price)}
                           </p>
                           <p className="text-sm text-muted-foreground flex items-center gap-1">

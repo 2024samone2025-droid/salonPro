@@ -24,9 +24,6 @@ export const metadata: Metadata = {
   title: "SalonPro Rwanda - Salon Management System",
   description: "Professional salon management system for Rwanda. Manage appointments, customers, staff, and services.",
   keywords: ["salon", "management", "Rwanda", "appointments", "booking"],
-  icons: {
-    icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
-  },
 };
 
 export default function RootLayout({

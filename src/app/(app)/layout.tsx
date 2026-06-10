@@ -7,6 +7,7 @@ import { useSalonStore } from '@/lib/salon-store'
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { Toaster } from '@/components/ui/sonner'
 import { Separator } from '@/components/ui/separator'
+import { Button } from '@/components/ui/button'
 import Sidebar from '@/components/salon/Sidebar'
 import CommandPalette from '@/components/salon/CommandPalette'
 import MobileTabBar from '@/components/salon/MobileTabBar'
@@ -65,13 +66,15 @@ function AppFrame({ children }: { children: React.ReactNode }) {
             </span>
           </div>
           <div className="ml-auto flex items-center gap-1">
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => setCommandOpen(true)}
-              className="md:hidden flex items-center justify-center size-7 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors"
+              className="md:hidden size-7 text-muted-foreground hover:text-foreground hover:bg-accent/60"
               aria-label="Open search"
             >
               <Search className="size-4" aria-hidden="true" />
-            </button>
+            </Button>
             <ThemeToggle />
           </div>
         </header>
