@@ -82,7 +82,7 @@ fixed bottom-right FAB above the tab bar; filters in a top sheet.
 ### Marketing landing (`/` unauthed)
 ```
 ┌────────────────────────────────────────────────┐
-│ ▲ SalonPro              [Sign up]  [*Login*]   │
+│ ▲ SalonPro      [Log in]  [*Start free trial*] │
 ├────────────────────────────────────────────────┤
 │         Run your salon smarter                 │
 │   Appointments, customers, staff & payments    │
@@ -96,4 +96,4 @@ fixed bottom-right FAB above the tab bar; filters in a top sheet.
 │  FOOTER: links · contact                       │
 └────────────────────────────────────────────────┘
 ```
-One primary CTA repeated (hero + pricing): **Start free trial**. Login stays secondary in the header — note: the current `page.tsx` header has it inverted (Login filled, Sign up ghost), which makes the conversion action the weakest element.
+One primary CTA repeated (hero + pricing): **Start free trial**. Login stays secondary (ghost) in the header — the conversion action is the filled button. Implemented in `src/components/marketing/LandingPage.tsx`.
