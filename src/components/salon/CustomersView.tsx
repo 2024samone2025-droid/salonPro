@@ -218,7 +218,7 @@ export default function CustomersView() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Customers</h2>
+          <h2 className="font-display text-2xl font-bold tracking-tight">Customers</h2>
           <p className="text-muted-foreground text-sm">
             {customers.length} customer{customers.length !== 1 ? 's' : ''} on record
           </p>
@@ -305,8 +305,8 @@ export default function CustomersView() {
         /* Empty State */
         <Card>
           <CardContent className="p-12 text-center">
-            <div className="mx-auto size-16 rounded-full bg-primary/5 flex items-center justify-center mb-4">
-              <User className="size-8 text-primary" />
+            <div className="mx-auto size-16 rounded-full bg-muted flex items-center justify-center mb-4">
+              <User className="size-8 text-muted-foreground" />
             </div>
             <h3 className="text-lg font-semibold mb-1">No customers found</h3>
             <p className="text-muted-foreground text-sm mb-4">
@@ -337,8 +337,8 @@ export default function CustomersView() {
                 <CardHeader className="pb-3 pt-4 px-4">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
-                      <Avatar className="size-10 border border-primary/10">
-                        <AvatarFallback className="bg-primary/5 text-primary text-sm font-semibold">
+                      <Avatar className="size-10 border border-border">
+                        <AvatarFallback className="bg-muted text-muted-foreground text-sm font-semibold">
                           {getInitials(customer.name)}
                         </AvatarFallback>
                       </Avatar>
@@ -367,7 +367,7 @@ export default function CustomersView() {
                         <p className="text-xs text-muted-foreground">No visits yet</p>
                       )}
                       {totalSpent > 0 && (
-                        <p className="text-xs font-semibold text-primary">
+                        <p className="text-xs font-semibold text-foreground tabular-nums">
                           {formatRWF(totalSpent)}
                         </p>
                       )}
@@ -403,8 +403,8 @@ export default function CustomersView() {
                   >
                     <TableCell>
                       <div className="flex items-center gap-3">
-                        <Avatar className="size-8 border border-primary/10">
-                          <AvatarFallback className="bg-primary/5 text-primary text-xs font-semibold">
+                        <Avatar className="size-8 border border-border">
+                          <AvatarFallback className="bg-muted text-muted-foreground text-xs font-semibold">
                             {getInitials(customer.name)}
                           </AvatarFallback>
                         </Avatar>
@@ -422,7 +422,7 @@ export default function CustomersView() {
                         {customer.appointments?.length || 0}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right font-medium text-primary">
+                    <TableCell className="text-right font-medium tabular-nums">
                       {totalSpent > 0 ? formatRWF(totalSpent) : '—'}
                     </TableCell>
                   </TableRow>
@@ -579,7 +579,7 @@ export default function CustomersView() {
                               {STATUS_CONFIG[apt.status as AppointmentStatus]?.label || apt.status}
                             </Badge>
                             {apt.service?.price > 0 && (
-                              <span className="text-xs font-semibold text-primary">
+                              <span className="text-xs font-semibold text-foreground tabular-nums">
                                 {formatRWF(apt.service.price)}
                               </span>
                             )}

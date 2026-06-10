@@ -188,6 +188,11 @@ export default function QuickBookingForm({ selectedDate, onBookingCreated }: Qui
         setNewCustomerName('')
         setNewCustomerPhone('')
         onBookingCreated?.()
+      } else if (res.status === 409) {
+        const data = await res.json().catch(() => null)
+        toast.error('Double booking', {
+          description: data?.message || 'This stylist is already booked for that time.',
+        })
       } else {
         toast.error('Failed to book appointment')
       }
@@ -202,11 +207,11 @@ export default function QuickBookingForm({ selectedDate, onBookingCreated }: Qui
   if (!canCreate) return null
 
   return (
-    <Card className="border-primary/20 bg-primary/[0.03] shadow-sm">
+    <Card className="shadow-sm">
       <CardHeader className="pb-3">
         <div className="flex items-center gap-2">
-          <div className="flex items-center justify-center size-8 rounded-lg bg-primary/10">
-            <Zap className="size-4 text-primary" />
+          <div className="flex items-center justify-center size-8 rounded-lg bg-muted">
+            <Zap className="size-4 text-muted-foreground" />
           </div>
           <div>
             <CardTitle className="text-sm">Quick Booking</CardTitle>
@@ -239,25 +244,29 @@ export default function QuickBookingForm({ selectedDate, onBookingCreated }: Qui
                 className="pl-8 h-9 text-sm pr-8"
               />
               {customerId && (
-                <button
-                  className="absolute right-2 top-2"
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-2 top-2 size-3.5 text-muted-foreground hover:bg-transparent hover:text-foreground"
+                  aria-label="Clear selected customer"
                   onClick={() => {
                     setCustomerId('')
                     setSearchQuery('')
                     searchInputRef.current?.focus()
                   }}
                 >
-                  <X className="size-3.5 text-muted-foreground hover:text-foreground transition-colors" />
-                </button>
+                  <X className="size-3.5" />
+                </Button>
               )}
             </div>
             {/* Autocomplete dropdown */}
             {showDropdown && filteredCustomers.length > 0 && !customerId && (
               <div className="absolute z-30 mt-1 w-full bg-popover border rounded-lg shadow-lg max-h-48 overflow-y-auto">
                 {filteredCustomers.map((c) => (
-                  <button
+                  <Button
                     key={c.id}
-                    className="w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors flex items-center justify-between"
+                    variant="ghost"
+                    className="h-auto w-full justify-between rounded-none px-3 py-2 text-left text-sm font-normal"
                     onClick={() => {
                       setCustomerId(c.id)
                       setSearchQuery('')
@@ -266,7 +275,7 @@ export default function QuickBookingForm({ selectedDate, onBookingCreated }: Qui
                   >
                     <span className="font-medium">{c.name}</span>
                     <span className="text-xs text-muted-foreground">{c.phone}</span>
-                  </button>
+                  </Button>
                 ))}
               </div>
             )}
@@ -277,8 +286,9 @@ export default function QuickBookingForm({ selectedDate, onBookingCreated }: Qui
               </div>
             )}
             {!customerId && (
-              <button
-                className="text-xs text-primary hover:text-primary/80 mt-1.5 flex items-center gap-1 font-medium"
+              <Button
+                variant="link"
+                className="mt-1.5 h-auto gap-1 p-0 text-xs font-medium hover:text-primary/80 hover:no-underline"
                 onClick={() => {
                   setShowNewCustomer(!showNewCustomer)
                   setShowDropdown(false)
@@ -295,7 +305,7 @@ export default function QuickBookingForm({ selectedDate, onBookingCreated }: Qui
                     New customer
                   </>
                 )}
-              </button>
+              </Button>
             )}
             {showNewCustomer && (
               <div className="mt-2 space-y-2 p-3 border rounded-lg bg-background">
