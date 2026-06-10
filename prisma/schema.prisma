@@ -15,6 +15,7 @@ model Salon {
   plan              String   @default("free") // free, pro
   stripeCustomerId  String?
   stripeSubscriptionId String?
+  settings          Json?    // SalonSettings: businessHours, slotIntervalMinutes, publicBookingEnabled, currency
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 

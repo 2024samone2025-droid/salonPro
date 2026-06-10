@@ -1,5 +1,6 @@
 import { db } from '@/lib/db'
 import { verifyPin, createSessionToken, ROLE_PERMISSIONS, type UserRole } from '@/lib/auth'
+import { parseSalonSettings } from '@/lib/salon-settings'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(req: NextRequest) {
@@ -47,7 +48,13 @@ export async function POST(req: NextRequest) {
       user: sessionUser,
       permissions,
       token,
-      salon: { id: salon.id, name: salon.name, subdomain: salon.subdomain, plan: salon.plan },
+      salon: {
+        id: salon.id,
+        name: salon.name,
+        subdomain: salon.subdomain,
+        plan: salon.plan,
+        settings: parseSalonSettings(salon.settings),
+      },
       message: 'Login successful',
     })
 

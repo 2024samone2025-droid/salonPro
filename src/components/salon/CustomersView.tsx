@@ -42,7 +42,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
-import { useAuth } from '@/lib/auth-context'
+import { useAuth, useMoney } from '@/lib/auth-context'
 import { STATUS_CONFIG, type AppointmentStatus } from '@/lib/constants'
 
 interface CustomerAppointment {
@@ -63,14 +63,6 @@ interface Customer {
   appointments: CustomerAppointment[]
 }
 
-function formatRWF(amount: number) {
-  return new Intl.NumberFormat('en-RW', {
-    style: 'currency',
-    currency: 'RWF',
-    maximumFractionDigits: 0,
-  }).format(amount)
-}
-
 function getInitials(name: string) {
   return name
     .split(' ')
@@ -81,6 +73,7 @@ function getInitials(name: string) {
 }
 
 export default function CustomersView() {
+  const formatRWF = useMoney()
   const [customers, setCustomers] = useState<Customer[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')

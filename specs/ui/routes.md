@@ -14,6 +14,7 @@ Tenancy: salon resolved from subdomain (dev: `?salon=` query param) via `src/mid
 | `/services` | AppShell | service catalog + prices | — |
 | `/reports` | AppShell | revenue and activity reports (admin, receptionist) | — |
 | `/billing` | AppShell | plan status, upgrade to Pro (admin-only) | — |
+| `/settings` | AppShell | salon config (profile, business hours, booking prefs, currency) + user accounts & role matrix (admin-only) | — |
 
 Hierarchy:
 ```
@@ -42,4 +43,4 @@ Notes:
 1. **Views are state, not URLs** (resolved 2026-06-10). All six app views were rendered from `/` via a client-side switcher. Migrated to real routes under the `(app)` route group with a shared layout; sidebar, ⌘K palette, and dashboard quick-links all navigate via URL. Zustand no longer holds nav state.
 2. **Marketing duplication** (resolved 2026-06-10). `/marketing` deleted; `/` always renders the single `src/components/marketing/LandingPage.tsx` (server component) with `MarketingHeader` handling signed-in state.
 3. **Login reachability** (resolved 2026-06-10). `LoginPage.tsx` was rendered nowhere; now `/login` (AuthShell) renders it and redirects to `/dashboard` on success, preserving `?salon=`.
-4. **Currency inconsistency** (open). Billing + marketing pricing show **$29/month**; product copy and service prices use **RWF**. Pick one — likely RWF for a Rwanda-market product — and update `billing/page.tsx`, `LandingPage.tsx`, and Stripe price config together.
+4. **Currency inconsistency** (resolved 2026-06-10). Plan pricing standardized on **RWF**: Pro = 15,000 RWF/month in `billing/page.tsx` and `LandingPage.tsx` (Free = 0 RWF). Stripe checkout is still a mock — when real Stripe is wired, create the price as 15,000 RWF (zero-decimal currency in Stripe).
