@@ -39,9 +39,12 @@ Current location: accent text + accent left-bar in sidebar; filled accent icon+l
 
 ## Responsive strategy
 - Breakpoints: 360 / 768 / 1024 / 1280.
-- < 1024: sidebar collapses to icon rail; topbar search becomes icon.
+- < 1024: sidebar collapses to icon rail; topbar search becomes icon. *(icon rail not yet implemented — sidebar stays offcanvas 768–1024)*
 - < 768: rail disappears → bottom tab bar + "More" sheet; tables → stacked cards (one card per row, key fields only); Sheets open from bottom; page gutters 16px.
 - ≥ 1280: content capped at 1280px, centered.
+
+## Amendments
+- 2026-06-10 — Mobile bottom tab bar implemented (`src/components/salon/MobileTabBar.tsx`, rendered by `src/app/(app)/layout.tsx`): Dashboard / Appts / Customers / More at <768px; "More" is a bottom sheet with the remaining role-filtered destinations (incl. Billing for admins) plus user identity + Sign Out. No hamburger on mobile — SidebarTrigger hidden <768, search is a topbar icon opening the ⌘K palette. Nav config shared via `src/components/salon/nav-items.ts`. Icon rail (768–1024) still pending. No today-count badge on mobile tabs in v1.
 
 ## Key screens (wireframes)
 

@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
-import { useSalonStore, ViewTab } from '@/lib/salon-store'
+import { useRouter } from 'next/navigation'
+import { useSalonStore } from '@/lib/salon-store'
 import {
   CommandDialog,
   CommandEmpty,
@@ -24,13 +25,13 @@ import {
 import { useAuth } from '@/lib/auth-context'
 import { cn } from '@/lib/utils'
 
-const navItems: { tab: ViewTab; label: string; icon: React.ElementType }[] = [
-  { tab: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { tab: 'appointments', label: 'Appointments', icon: CalendarDays },
-  { tab: 'customers', label: 'Customers', icon: Users },
-  { tab: 'staff', label: 'Staff', icon: UserCog },
-  { tab: 'services', label: 'Services', icon: Scissors },
-  { tab: 'reports', label: 'Reports', icon: BarChart3 },
+const navItems: { href: string; label: string; icon: React.ElementType }[] = [
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/appointments', label: 'Appointments', icon: CalendarDays },
+  { href: '/customers', label: 'Customers', icon: Users },
+  { href: '/staff', label: 'Staff', icon: UserCog },
+  { href: '/services', label: 'Services', icon: Scissors },
+  { href: '/reports', label: 'Reports', icon: BarChart3 },
 ]
 
 interface CustomerResult {
@@ -48,8 +49,9 @@ interface AppointmentResult {
 }
 
 export default function CommandPalette() {
-  const { commandOpen, setCommandOpen, setActiveTab } = useSalonStore()
+  const { commandOpen, setCommandOpen } = useSalonStore()
   const { authFetch } = useAuth()
+  const router = useRouter()
   const [customers, setCustomers] = useState<CustomerResult[]>([])
   const [appointments, setAppointments] = useState<AppointmentResult[]>([])
   const [loading, setLoading] = useState(false)
@@ -85,8 +87,8 @@ export default function CommandPalette() {
     return () => document.removeEventListener('keydown', down)
   }, [commandOpen, setCommandOpen])
 
-  const handleSelect = (tab: ViewTab) => {
-    setActiveTab(tab)
+  const handleSelect = (href: string) => {
+    router.push(href)
     setCommandOpen(false)
   }
 
@@ -109,8 +111,8 @@ export default function CommandPalette() {
               const Icon = item.icon
               return (
                 <CommandItem
-                  key={item.tab}
-                  onSelect={() => handleSelect(item.tab)}
+                  key={item.href}
+                  onSelect={() => handleSelect(item.href)}
                 >
                   <Icon className="size-4 mr-2" />
                   {item.label}
@@ -127,10 +129,7 @@ export default function CommandPalette() {
               {customers.slice(0, 10).map((c) => (
                 <CommandItem
                   key={c.id}
-                  onSelect={() => {
-                    setActiveTab('customers')
-                    setCommandOpen(false)
-                  }}
+                  onSelect={() => handleSelect('/customers')}
                 >
                   <Search className="size-4 mr-2" />
                   <span>{c.name}</span>
@@ -148,10 +147,7 @@ export default function CommandPalette() {
               {appointments.slice(0, 10).map((a) => (
                 <CommandItem
                   key={a.id}
-                  onSelect={() => {
-                    setActiveTab('appointments')
-                    setCommandOpen(false)
-                  }}
+                  onSelect={() => handleSelect('/appointments')}
                 >
                   <CalendarDays className="size-4 mr-2" />
                   <span>{a.customer.name}</span>

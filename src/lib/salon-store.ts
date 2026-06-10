@@ -1,7 +1,5 @@
 import { create } from 'zustand'
 
-export type ViewTab = 'dashboard' | 'appointments' | 'customers' | 'staff' | 'services' | 'reports'
-
 interface SalonInfo {
   id: string
   name: string
@@ -10,8 +8,6 @@ interface SalonInfo {
 }
 
 interface SalonStore {
-  activeTab: ViewTab
-  setActiveTab: (tab: ViewTab) => void
   selectedDate: string
   setSelectedDate: (date: string) => void
   sidebarOpen: boolean
@@ -23,8 +19,6 @@ interface SalonStore {
 }
 
 export const useSalonStore = create<SalonStore>((set) => ({
-  activeTab: 'dashboard',
-  setActiveTab: (tab) => set({ activeTab: tab }),
   selectedDate: new Date().toISOString().split('T')[0],
   setSelectedDate: (date) => set({ selectedDate: date }),
   sidebarOpen: false,

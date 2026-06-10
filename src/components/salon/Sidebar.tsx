@@ -1,7 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useSalonStore, type ViewTab } from '@/lib/salon-store'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { useSalonStore } from '@/lib/salon-store'
 import { useAuth, type UserRole } from '@/lib/auth-context'
 import { cn } from '@/lib/utils'
 import {
@@ -22,27 +24,8 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
-import {
-  LayoutDashboard,
-  CalendarDays,
-  Users,
-  UserCog,
-  Scissors,
-  BarChart3,
-  Triangle,
-  Search,
-  LogOut,
-  CreditCard,
-} from 'lucide-react'
-
-const allNavItems: { tab: ViewTab; label: string; icon: React.ElementType; roles: UserRole[] }[] = [
-  { tab: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['admin', 'receptionist', 'stylist'] },
-  { tab: 'appointments', label: 'Appointments', icon: CalendarDays, roles: ['admin', 'receptionist', 'stylist'] },
-  { tab: 'customers', label: 'Customers', icon: Users, roles: ['admin', 'receptionist', 'stylist'] },
-  { tab: 'staff', label: 'Staff', icon: UserCog, roles: ['admin', 'receptionist'] },
-  { tab: 'services', label: 'Services', icon: Scissors, roles: ['admin', 'receptionist', 'stylist'] },
-  { tab: 'reports', label: 'Reports', icon: BarChart3, roles: ['admin', 'receptionist'] },
-]
+import { Triangle, Search, LogOut, CreditCard } from 'lucide-react'
+import { allNavItems, navItemsForRole } from '@/components/salon/nav-items'
 
 const roleLabels: Record<UserRole, string> = {
   admin: 'Admin',
@@ -51,8 +34,9 @@ const roleLabels: Record<UserRole, string> = {
 }
 
 export default function SalonSidebar() {
-  const { activeTab, setActiveTab, setCommandOpen } = useSalonStore()
+  const { setCommandOpen } = useSalonStore()
   const { user, logout, authFetch } = useAuth()
+  const pathname = usePathname()
   const [todayCount, setTodayCount] = useState<number | null>(null)
 
   useEffect(() => {
@@ -66,12 +50,9 @@ export default function SalonSidebar() {
         if (Array.isArray(data)) setTodayCount(data.length)
       })
       .catch(() => {})
-  }, [activeTab, authFetch])
+  }, [pathname, authFetch])
 
-  const navItems = allNavItems.filter((item) => {
-    if (!user) return false
-    return item.roles.includes(user.role as UserRole)
-  })
+  const navItems = navItemsForRole(allNavItems, user?.role as UserRole | undefined)
 
   const handleLogout = async () => {
     await logout()
@@ -129,12 +110,12 @@ export default function SalonSidebar() {
             <SidebarMenu>
               {navItems.map((item) => {
                 const Icon = item.icon
-                const isActive = activeTab === item.tab
+                const isActive = pathname === item.href
                 return (
-                  <SidebarMenuItem key={item.tab}>
+                  <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton
+                      asChild
                       isActive={isActive}
-                      onClick={() => setActiveTab(item.tab)}
                       className={cn(
                         "group relative flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-[13px] transition-colors duration-150",
                         isActive
@@ -142,19 +123,21 @@ export default function SalonSidebar() {
                           : 'text-sidebar-foreground/60 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground/90'
                       )}
                     >
-                      <Icon
-                        className={cn(
-                          "size-4 transition-colors",
-                          isActive ? 'text-sidebar-accent-foreground' : 'text-sidebar-foreground/40 group-hover:text-sidebar-foreground/70'
+                      <Link href={item.href}>
+                        <Icon
+                          className={cn(
+                            "size-4 transition-colors",
+                            isActive ? 'text-sidebar-accent-foreground' : 'text-sidebar-foreground/40 group-hover:text-sidebar-foreground/70'
+                          )}
+                          aria-hidden="true"
+                        />
+                        <span>{item.label}</span>
+                        {item.href === '/appointments' && todayCount !== null && (
+                          <SidebarMenuBadge className="bg-sidebar-primary text-sidebar-primary-foreground border-0 text-[10px] min-w-[18px] h-[18px] justify-center font-medium">
+                            {todayCount}
+                          </SidebarMenuBadge>
                         )}
-                        aria-hidden="true"
-                      />
-                      <span>{item.label}</span>
-                      {item.tab === 'appointments' && todayCount !== null && (
-                        <SidebarMenuBadge className="bg-sidebar-primary text-sidebar-primary-foreground border-0 text-[10px] min-w-[18px] h-[18px] justify-center font-medium">
-                          {todayCount}
-                        </SidebarMenuBadge>
-                      )}
+                      </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 )
@@ -194,14 +177,15 @@ export default function SalonSidebar() {
           </Button>
           {user?.role === 'admin' && (
             <Button
+              asChild
               variant="ghost"
               size="sm"
               className="w-full justify-start text-sidebar-foreground/40 hover:text-sidebar-foreground hover:bg-sidebar-accent/60 transition-colors text-[13px] h-8"
-              onClick={() => window.location.href = '/billing'}
-              aria-label="Billing"
             >
-              <CreditCard className="size-3.5 mr-2" aria-hidden="true" />
-              Billing
+              <Link href="/billing" aria-label="Billing">
+                <CreditCard className="size-3.5 mr-2" aria-hidden="true" />
+                Billing
+              </Link>
             </Button>
           )}
           <p className="text-[10px] text-sidebar-foreground/20 text-center mt-1.5 font-mono">
