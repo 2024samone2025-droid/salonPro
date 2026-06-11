@@ -1,5 +1,6 @@
+// driver.css is imported in the root layout BEFORE globals.css so the
+// theme overrides there win the cascade — do not import it here.
 import { driver, type Driver, type DriveStep } from 'driver.js'
-import 'driver.js/dist/driver.css'
 import type { UserRole } from '@/lib/auth-context'
 
 let activeTour: Driver | null = null
@@ -39,7 +40,9 @@ function buildSteps(role: UserRole, opts: StartTourOptions): DriveStep[] {
         description: 'A one-minute tour of the things you’ll use every day.',
         onNextClick: () => {
           opts.navigate('/appointments')
-          waitFor('[data-tour="quick-booking"]').then((found) => {
+          // The grid card renders for every role (even while loading) — the
+          // quick-booking bar does not (stylists can't create appointments).
+          waitFor('[data-tour="appointments-grid"]').then((found) => {
             if (!activeTour) return
             if (!found) {
               // Page never arrived — bail without marking the tour complete
@@ -52,14 +55,19 @@ function buildSteps(role: UserRole, opts: StartTourOptions): DriveStep[] {
         },
       },
     },
-    {
-      element: '[data-tour="quick-booking"]',
-      popover: {
-        title: 'Book in seconds',
-        description: 'Pick a customer, service and time — the quick booking bar handles a walk-in without leaving this page.',
-        side: 'bottom',
-      },
-    },
+    // Stylists can't create appointments — the quick-booking bar doesn't render for them
+    ...(role !== 'stylist'
+      ? [
+          {
+            element: '[data-tour="quick-booking"]',
+            popover: {
+              title: 'Book in seconds',
+              description: 'Pick a customer, service and time — the quick booking bar handles a walk-in without leaving this page.',
+              side: 'bottom',
+            },
+          } satisfies DriveStep,
+        ]
+      : []),
     {
       element: '[data-tour="appointments-grid"]',
       popover: {
@@ -120,6 +128,10 @@ export function startTour(opts: StartTourOptions) {
     showProgress: true,
     overlayOpacity: 0.6,
     stagePadding: 6,
+    smoothScroll: true,
+    // Highlighted elements include nav links — a stray tap mid-tour would
+    // navigate away and strand the overlay
+    disableActiveInteraction: true,
     nextBtnText: 'Next',
     prevBtnText: 'Back',
     doneBtnText: 'Done',

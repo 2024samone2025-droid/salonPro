@@ -14,9 +14,11 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Loader2, TriangleAlert } from 'lucide-react'
+import { Loader2, TriangleAlert, Route } from 'lucide-react'
 import { toast } from 'sonner'
+import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
+import { startTour } from '@/lib/tour'
 import {
   DAY_LABELS,
   SUPPORTED_CURRENCIES,
@@ -31,7 +33,8 @@ interface SalonData {
 }
 
 export default function SalonSettingsTab() {
-  const { authFetch, refreshSession } = useAuth()
+  const { authFetch, refreshSession, user } = useAuth()
+  const router = useRouter()
   const [data, setData] = useState<SalonData | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -256,6 +259,33 @@ export default function SalonSettingsTab() {
               ))}
             </SelectContent>
           </Select>
+        </CardContent>
+      </Card>
+
+      {/* Product tour */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Product tour</CardTitle>
+          <CardDescription>
+            Replay the guided walkthrough of the main features.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button
+            variant="outline"
+            onClick={() =>
+              startTour({
+                role: user?.role ?? 'admin',
+                navigate: (path) => router.push(path),
+                onComplete: () => {
+                  authFetch('/api/users/me/tour-complete', { method: 'POST' }).catch(() => {})
+                },
+              })
+            }
+          >
+            <Route className="size-4 mr-1.5" />
+            Replay tour
+          </Button>
         </CardContent>
       </Card>
 
