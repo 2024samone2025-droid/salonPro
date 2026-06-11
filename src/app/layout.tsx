@@ -5,7 +5,8 @@ import { Toaster } from "@/components/ui/toaster";
 
 const sans = Poppins({
   variable: "--font-sans",
-  weight: ["400", "500", "600", "700"],
+  weight: ["300", "400", "500", "600", "700"],
+  display: "swap",
   subsets: ["latin"],
 });
 
@@ -26,13 +27,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${sans.variable} ${mono.variable}`}>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" key="viewport" />
       </head>
-      <body
-        className={`${sans.variable} ${mono.variable} antialiased bg-background text-foreground`}
-      >
+      <body className="font-sans antialiased bg-background text-foreground">
         <noscript key="noscript">
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', fontFamily: 'system-ui, sans-serif' }}>
             <div style={{ textAlign: 'center' }}>
