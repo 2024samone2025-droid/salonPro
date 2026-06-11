@@ -84,6 +84,7 @@ export async function POST(req: NextRequest) {
       role,
       staffId,
       active: body.active !== undefined ? Boolean(body.active) : true,
+      tourCompleted: false,
       salonId: auth.salonId,
     },
     include: { staff: { select: { id: true, name: true } } },
