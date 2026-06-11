@@ -462,7 +462,7 @@ export default function LandingPage() {
 
       <footer>
         <div className="wrap">
-          <span>© 2026 SalonPro Rwanda · Kigali</span>
+          <span>© {new Date().getFullYear()} SalonPro Rwanda · Kigali</span>
           <nav>
             <a href={WHATSAPP_URL}>WhatsApp us</a>
             <a href="mailto:hello@salonpro.rw">hello@salonpro.rw</a>
