@@ -37,7 +37,9 @@ const config: Config = {
         accent: {
           DEFAULT: "hsl(var(--accent))",
           deep: "hsl(var(--accent-deep))",
-          foreground: "hsl(var(--accent-deep))",
+          foreground: "hsl(var(--accent-contrast))",
+          tint: "hsl(var(--accent-tint))",
+          "tint-fg": "hsl(var(--accent-tint-fg))",
         },
         status: {
           "booked-bg": "hsl(var(--status-booked-bg))",

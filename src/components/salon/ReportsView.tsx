@@ -429,7 +429,9 @@ export default function ReportsView() {
                         }}
                         contentStyle={{
                           borderRadius: '8px',
-                          border: '1px solid var(--border)',
+                          border: '1px solid hsl(var(--border))',
+                          backgroundColor: 'hsl(var(--popover))',
+                          color: 'hsl(var(--foreground))',
                           boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
                         }}
                       />
@@ -478,7 +480,9 @@ export default function ReportsView() {
                             formatter={(value: number) => formatRWF(value)}
                             contentStyle={{
                               borderRadius: '8px',
-                              border: '1px solid var(--border)',
+                              border: '1px solid hsl(var(--border))',
+                              backgroundColor: 'hsl(var(--popover))',
+                              color: 'hsl(var(--foreground))',
                             }}
                           />
                           <Legend
@@ -545,7 +549,9 @@ export default function ReportsView() {
                           <Tooltip
                             contentStyle={{
                               borderRadius: '8px',
-                              border: '1px solid var(--border)',
+                              border: '1px solid hsl(var(--border))',
+                              backgroundColor: 'hsl(var(--popover))',
+                              color: 'hsl(var(--foreground))',
                             }}
                           />
                           <Legend

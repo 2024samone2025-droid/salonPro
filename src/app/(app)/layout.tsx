@@ -12,6 +12,7 @@ import Sidebar from '@/components/salon/Sidebar'
 import CommandPalette from '@/components/salon/CommandPalette'
 import MobileTabBar from '@/components/salon/MobileTabBar'
 import { Triangle, Search } from 'lucide-react'
+import ThemeToggle from '@/components/theme-toggle'
 
 function Splash() {
   return (
@@ -74,6 +75,7 @@ function AppFrame({ children }: { children: React.ReactNode }) {
             >
               <Search className="size-4" aria-hidden="true" />
             </Button>
+            <ThemeToggle />
           </div>
         </header>
         <div className="flex-1 p-4 sm:p-6 md:p-8 overflow-auto min-w-0">
