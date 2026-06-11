@@ -4,53 +4,61 @@
 
 @layer base {
   /*
-   * Design tokens — dark charcoal + pink accent (specs/ui/design-system.md).
+   * Design tokens (specs/ui/design-system.md).
    * The semantic variables below are the single source of truth; the shadcn
    * variables alias them so every ui/ component inherits the theme.
    * Values are HSL triplets so Tailwind alpha modifiers (bg-x/10) keep working.
-   * A future light theme is a second set of values for the same names.
+   *
+   * :root            = light theme (default) — warm off-white + deep pink
+   * [data-theme=dark] = dark theme (opt-in)  — charcoal + pale pink
+   *
+   * Status pairs swap roles between themes: light = pale tint bg + deep text,
+   * dark = deep fill bg + pastel text. Components never need to know.
    */
   :root {
     --radius: 0.75rem; /* lg 12px cards · sm 8px buttons/inputs */
 
     /* Surfaces */
-    --surface: 240 7% 8%; /* #141417 page background */
-    --surface-raised: 240 6% 12%; /* #1d1d21 cards, panels */
-    --surface-hover: 240 5% 16%; /* hover wash, muted fills */
+    --surface: 40 23% 97%; /* #faf9f7 page background */
+    --surface-raised: 0 0% 100%; /* #ffffff cards, panels */
+    --surface-hover: 36 15% 94%; /* hover wash, muted fills */
 
     /* Text */
-    --ink: 240 5% 96%; /* #f4f4f5 primary text */
-    --ink-muted: 240 5% 65%; /* #a1a1aa secondary text */
-    --ink-faint: 240 4% 46%; /* #71717a hints — the contrast floor */
+    --ink: 240 3% 11%; /* #1c1c1e primary text */
+    --ink-muted: 220 9% 46%; /* #6b7280 secondary text */
+    --ink-faint: 218 11% 65%; /* #9ca3af hints — the contrast floor */
 
     /* Accent (the ONE brand color — primary actions, active nav, links) */
-    --accent: 340 71% 75%; /* #ED93B1 */
-    --accent-deep: 339 56% 19%; /* #4B1528 text on accent, tinted chips */
+    --accent: 340 60% 58%; /* #D4537E */
+    --accent-deep: 340 49% 40%; /* #993556 deep pink text (ghost CTAs, links on tint) */
+    --accent-contrast: 0 0% 100%; /* text on solid accent */
+    --accent-tint: 339 68% 95%; /* #FBEAF0 icon-chip / pill fill */
+    --accent-tint-fg: 340 49% 40%; /* #993556 icon/text on tint */
 
-    /* Borders: 0.5px hairlines (solid equivalents of white @ 7% / 14%) */
-    --line: 240 4% 18%;
-    --line-strong: 240 4% 23%;
+    /* Borders: 0.5px hairlines (solid equivalents of black @ 10% / 15%) */
+    --line: 0 0% 90%;
+    --line-strong: 0 0% 85%;
 
-    /* Appointment status pairs (bg = deep fill, fg = pastel text/dot) */
-    --status-booked-bg: 210 82% 27%; /* #0C447C */
-    --status-booked-fg: 210 74% 83%; /* #B5D4F4 */
-    --status-confirmed-bg: 168 82% 17%; /* #085041 */
-    --status-confirmed-fg: 160 52% 75%; /* #9FE1CB */
-    --status-progress-bg: 32 89% 21%; /* #633806 */
-    --status-progress-fg: 37 93% 72%; /* #FAC775 */
-    --status-completed-bg: 168 82% 17%; /* #085041 */
-    --status-completed-fg: 160 51% 58%; /* #5DCAA5 */
-    --status-noshow-bg: 0 59% 30%; /* #791F1F */
-    --status-noshow-fg: 0 77% 86%; /* #F7C1C1 */
+    /* Appointment status pairs (bg = pale tint, fg = deep text) */
+    --status-booked-bg: 209 72% 94%; /* #E6F1FB */
+    --status-booked-fg: 210 82% 27%; /* #0C447C */
+    --status-confirmed-bg: 86 47% 91%; /* #EAF3DE green — distinct from completed teal */
+    --status-confirmed-fg: 93 73% 25%; /* #3B6D11 */
+    --status-progress-bg: 38 76% 92%; /* #FAEEDA */
+    --status-progress-fg: 33 85% 28%; /* #854F0B */
+    --status-completed-bg: 159 50% 92%; /* #E1F5EE teal */
+    --status-completed-fg: 165 76% 25%; /* #0F6E56 */
+    --status-noshow-bg: 0 69% 95%; /* #FBE9E9 */
+    --status-noshow-fg: 0 59% 30%; /* #791F1F */
 
-    /* Semantic colors (text/icon tones on dark surfaces) */
+    /* Semantic colors (text/icon tones — resolve per-theme via the status vars) */
     --success: var(--status-completed-fg);
     --success-foreground: var(--status-completed-bg);
     --warning: var(--status-progress-fg);
     --warning-foreground: var(--status-progress-bg);
     --info: var(--status-booked-fg);
     --info-foreground: var(--status-booked-bg);
-    --destructive: 0 72% 63%;
+    --destructive: 0 72% 45%;
     --destructive-foreground: 0 0% 100%;
 
     /* Charts */
@@ -68,7 +76,7 @@
     --popover: var(--surface-raised);
     --popover-foreground: var(--ink);
     --primary: var(--accent);
-    --primary-foreground: var(--accent-deep);
+    --primary-foreground: var(--accent-contrast);
     --secondary: var(--surface-hover);
     --secondary-foreground: var(--ink);
     --muted: var(--surface-hover);
@@ -81,11 +89,49 @@
     --sidebar: var(--surface);
     --sidebar-foreground: var(--ink-muted);
     --sidebar-primary: var(--accent);
-    --sidebar-primary-foreground: var(--accent-deep);
+    --sidebar-primary-foreground: var(--accent-contrast);
     --sidebar-accent: var(--surface-hover);
     --sidebar-accent-foreground: var(--ink);
     --sidebar-border: var(--line);
     --sidebar-ring: var(--accent);
+  }
+
+  [data-theme="dark"] {
+    /* Surfaces */
+    --surface: 240 7% 8%; /* #141417 page background */
+    --surface-raised: 240 6% 12%; /* #1d1d21 cards, panels */
+    --surface-hover: 240 5% 16%; /* hover wash, muted fills */
+
+    /* Text */
+    --ink: 240 5% 96%; /* #f4f4f5 primary text */
+    --ink-muted: 240 5% 65%; /* #a1a1aa secondary text */
+    --ink-faint: 240 4% 46%; /* #71717a hints — the contrast floor */
+
+    /* Accent */
+    --accent: 340 71% 75%; /* #ED93B1 */
+    --accent-deep: 339 56% 19%; /* #4B1528 */
+    --accent-contrast: 339 56% 19%; /* text on solid accent = deep wine */
+    --accent-tint: 339 56% 19%; /* #4B1528 icon-chip fill */
+    --accent-tint-fg: 340 71% 75%; /* #ED93B1 icon on tint */
+
+    /* Borders (solid equivalents of white @ 7% / 14%) */
+    --line: 240 4% 18%;
+    --line-strong: 240 4% 23%;
+
+    /* Appointment status pairs (bg = deep fill, fg = pastel text/dot) */
+    --status-booked-bg: 210 82% 27%; /* #0C447C */
+    --status-booked-fg: 210 74% 83%; /* #B5D4F4 */
+    --status-confirmed-bg: 168 82% 17%; /* #085041 */
+    --status-confirmed-fg: 160 52% 75%; /* #9FE1CB */
+    --status-progress-bg: 32 89% 21%; /* #633806 */
+    --status-progress-fg: 37 93% 72%; /* #FAC775 */
+    --status-completed-bg: 168 82% 17%; /* #085041 */
+    --status-completed-fg: 160 51% 58%; /* #5DCAA5 */
+    --status-noshow-bg: 0 59% 30%; /* #791F1F */
+    --status-noshow-fg: 0 77% 86%; /* #F7C1C1 */
+
+    --destructive: 0 72% 63%;
+    --destructive-foreground: 0 0% 100%;
   }
 
   * {

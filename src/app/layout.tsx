@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans, Geist_Mono } from "next/font/google";
+import { Poppins, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 
-const sans = Plus_Jakarta_Sans({
+const sans = Poppins({
   variable: "--font-sans",
+  weight: ["300", "400", "500", "600", "700"],
+  display: "swap",
   subsets: ["latin"],
 });
 
@@ -25,13 +27,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${sans.variable} ${mono.variable}`}>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" key="viewport" />
+        <script
+          // Apply the stored (or OS-preferred) theme before first paint to avoid a flash
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem("theme");if(t!=="dark"&&t!=="light"){t=window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}if(t==="dark"){document.documentElement.setAttribute("data-theme","dark")}}catch(e){}})()`,
+          }}
+        />
       </head>
-      <body
-        className={`${sans.variable} ${mono.variable} antialiased bg-background text-foreground`}
-      >
+      <body className="font-sans antialiased bg-background text-foreground">
         <noscript key="noscript">
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', fontFamily: 'system-ui, sans-serif' }}>
             <div style={{ textAlign: 'center' }}>

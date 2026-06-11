@@ -205,7 +205,7 @@ export default function ReportsView() {
     return (
       <div className="space-y-6">
         <Skeleton className="h-8 w-40" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {[...Array(4)].map((_, i) => (
             <Skeleton key={i} className="h-28 rounded-xl" />
           ))}
@@ -286,7 +286,7 @@ export default function ReportsView() {
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <Card className="sm:col-span-1">
           <CardHeader className="pb-2">
             <CardDescription>Total Revenue</CardDescription>
@@ -429,7 +429,9 @@ export default function ReportsView() {
                         }}
                         contentStyle={{
                           borderRadius: '8px',
-                          border: '1px solid var(--border)',
+                          border: '1px solid hsl(var(--border))',
+                          backgroundColor: 'hsl(var(--popover))',
+                          color: 'hsl(var(--foreground))',
                           boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
                         }}
                       />
@@ -444,7 +446,7 @@ export default function ReportsView() {
 
         {/* Breakdown Tab */}
         <TabsContent value="breakdown" className="mt-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
             {/* Payment Method Breakdown */}
             <Card>
               <CardHeader>
@@ -478,7 +480,9 @@ export default function ReportsView() {
                             formatter={(value: number) => formatRWF(value)}
                             contentStyle={{
                               borderRadius: '8px',
-                              border: '1px solid var(--border)',
+                              border: '1px solid hsl(var(--border))',
+                              backgroundColor: 'hsl(var(--popover))',
+                              color: 'hsl(var(--foreground))',
                             }}
                           />
                           <Legend
@@ -489,13 +493,13 @@ export default function ReportsView() {
                         </PieChart>
                       </ResponsiveContainer>
                     </div>
-                    <Separator className="my-3" />
-                    <div className="space-y-2">
+                    <Separator className="my-2.5" />
+                    <div className="space-y-1.5">
                       {paymentPieData.map((entry) => {
                         const total = paymentPieData.reduce((s, e) => s + e.value, 0)
                         const percent = total > 0 ? ((entry.value / total) * 100).toFixed(1) : '0'
                         return (
-                          <div key={entry.name} className="flex items-center justify-between text-sm">
+                          <div key={entry.name} className="flex items-center justify-between text-xs">
                             <div className="flex items-center gap-2">
                               <div className="size-3 rounded-sm" style={{ backgroundColor: entry.color }} />
                               <span className="font-medium">{entry.name}</span>
@@ -545,7 +549,9 @@ export default function ReportsView() {
                           <Tooltip
                             contentStyle={{
                               borderRadius: '8px',
-                              border: '1px solid var(--border)',
+                              border: '1px solid hsl(var(--border))',
+                              backgroundColor: 'hsl(var(--popover))',
+                              color: 'hsl(var(--foreground))',
                             }}
                           />
                           <Legend
@@ -556,10 +562,10 @@ export default function ReportsView() {
                         </PieChart>
                       </ResponsiveContainer>
                     </div>
-                    <Separator className="my-3" />
-                    <div className="space-y-2">
+                    <Separator className="my-2.5" />
+                    <div className="space-y-1.5">
                       {statusPieData.map((entry) => (
-                        <div key={entry.name} className="flex items-center justify-between text-sm">
+                        <div key={entry.name} className="flex items-center justify-between text-xs">
                           <div className="flex items-center gap-2">
                             <div className="size-3 rounded-sm" style={{ backgroundColor: entry.color }} />
                             <span className="font-medium">{entry.name}</span>
@@ -585,7 +591,7 @@ export default function ReportsView() {
 
         {/* Rankings Tab */}
         <TabsContent value="rankings" className="mt-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
             {/* Top Services */}
             <Card>
               <CardHeader>
@@ -606,14 +612,14 @@ export default function ReportsView() {
                     <p className="text-muted-foreground text-sm">No service data.</p>
                   </div>
                 ) : (
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     {data.topServices.slice(0, 8).map((s, i) => {
                       const maxRevenue = data.topServices[0]?.revenue || 1
                       const barPercent = (s.revenue / maxRevenue) * 100
                       return (
                         <div
                           key={i}
-                          className="p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
+                          className="p-2.5 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
                         >
                           <div className="flex items-center justify-between mb-1.5">
                             <div className="flex items-center gap-2.5">
@@ -663,14 +669,14 @@ export default function ReportsView() {
                     <p className="text-muted-foreground text-sm">No customer data.</p>
                   </div>
                 ) : (
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     {data.topCustomers.slice(0, 8).map((c, i) => {
                       const maxSpent = data.topCustomers[0]?.spent || 1
                       const barPercent = (c.spent / maxSpent) * 100
                       return (
                         <div
                           key={i}
-                          className="p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
+                          className="p-2.5 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
                         >
                           <div className="flex items-center justify-between mb-1.5">
                             <div className="flex items-center gap-2.5">

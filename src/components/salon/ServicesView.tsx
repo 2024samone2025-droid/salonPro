@@ -27,6 +27,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuth, useMoney } from '@/lib/auth-context'
+import EmptyState from '@/components/salon/EmptyState'
 
 interface Service {
   id: string
@@ -177,10 +178,10 @@ export default function ServicesView() {
 
       {/* Loading State */}
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {[...Array(6)].map((_, i) => (
             <Card key={i}>
-              <CardContent className="p-6">
+              <CardContent className="p-4">
                 <div className="space-y-3">
                   <Skeleton className="h-5 w-32" />
                   <Skeleton className="h-7 w-28" />
@@ -191,34 +192,21 @@ export default function ServicesView() {
           ))}
         </div>
       ) : services.length === 0 ? (
-        /* Empty State */
-        <Card>
-          <CardContent className="p-12 text-center">
-            <div className="mx-auto size-16 rounded-full bg-muted flex items-center justify-center mb-4">
-              <Scissors className="size-8 text-muted-foreground" />
-            </div>
-            <h3 className="text-lg font-semibold mb-1">No services yet</h3>
-            <p className="text-muted-foreground text-sm mb-4">
-              Get started by adding your first service
-            </p>
-            {canManage && (
-              <Button
-                onClick={openAdd}
-              >
-                <Plus className="size-4 mr-1.5" /> Add Service
-              </Button>
-            )}
-          </CardContent>
-        </Card>
+        <EmptyState
+          icon={Scissors}
+          message="No services yet"
+          actionLabel={canManage ? 'Add service' : undefined}
+          onAction={canManage ? openAdd : undefined}
+        />
       ) : (
         <>
           {/* Active Services */}
           {activeServices.length > 0 && (
             <div>
-              <h3 className="text-sm font-medium text-muted-foreground mb-3 uppercase tracking-wider">
+              <h3 className="text-sm font-medium text-muted-foreground mb-3">
                 Active ({activeServices.length})
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {activeServices.map((s) => (
                   <Card
                     key={s.id}
@@ -276,10 +264,10 @@ export default function ServicesView() {
           {/* Inactive Services */}
           {inactiveServices.length > 0 && (
             <div>
-              <h3 className="text-sm font-medium text-muted-foreground mb-3 uppercase tracking-wider">
+              <h3 className="text-sm font-medium text-muted-foreground mb-3">
                 Inactive ({inactiveServices.length})
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {inactiveServices.map((s) => (
                   <Card
                     key={s.id}
