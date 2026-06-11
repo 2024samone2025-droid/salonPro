@@ -36,6 +36,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuth } from '@/lib/auth-context'
+import EmptyState from '@/components/salon/EmptyState'
 
 interface StaffMember {
   id: string
@@ -193,7 +194,7 @@ export default function StaffView() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 justify-between">
         <div>
-          <h2 className="font-display text-2xl font-bold tracking-tight">Staff</h2>
+          <h2 className="text-[22px] font-medium tracking-tight">Staff</h2>
           <p className="text-muted-foreground text-sm">
             {staff.length} member{staff.length !== 1 ? 's' : ''} &middot; {activeStaff.length} active
             {isViewOnly && ' · View only'}
@@ -205,7 +206,7 @@ export default function StaffView() {
             className="h-10 gap-2 shadow-sm w-full sm:w-auto shrink-0"
           >
             <Plus className="size-4" />
-            Add Staff
+            Add staff
           </Button>
         )}
       </div>
@@ -229,25 +230,14 @@ export default function StaffView() {
           ))}
         </div>
       ) : staff.length === 0 ? (
-        /* Empty State */
-        <Card>
-          <CardContent className="p-12 text-center">
-            <div className="mx-auto size-16 rounded-full bg-muted flex items-center justify-center mb-4">
-              <UserCog className="size-8 text-muted-foreground" />
-            </div>
-            <h3 className="text-lg font-semibold mb-1">No staff members</h3>
-            <p className="text-muted-foreground text-sm mb-4">
-              Get started by adding your first staff member
-            </p>
-            {canManage && (
-              <Button
-                onClick={openAdd}
-              >
-                <Plus className="size-4 mr-1.5" /> Add Staff Member
-              </Button>
-            )}
-          </CardContent>
-        </Card>
+        /* Empty state */
+        <EmptyState
+          icon={UserCog}
+          message="No staff members yet"
+          actionLabel={canManage ? '+ Add your first staff member' : undefined}
+          onAction={canManage ? openAdd : undefined}
+          className="py-10"
+        />
       ) : (
         <>
           {/* Active Staff */}
@@ -380,7 +370,7 @@ export default function StaffView() {
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editing ? 'Edit Staff Member' : 'Add Staff Member'}</DialogTitle>
+            <DialogTitle>{editing ? 'Edit staff member' : 'Add staff member'}</DialogTitle>
             <DialogDescription>
               {editing
                 ? 'Update the staff member details below.'
@@ -438,7 +428,7 @@ export default function StaffView() {
               disabled={saving}
             >
               {saving && <Loader2 className="size-4 mr-1.5 animate-spin" />}
-              {editing ? 'Save Changes' : 'Add Staff Member'}
+              {editing ? 'Save changes' : 'Add staff member'}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -48,12 +48,8 @@ import {
   ArrowUpRight,
   ArrowDownRight,
 } from 'lucide-react'
-import { useAuth } from '@/lib/auth-context'
+import { useAuth, useMoney } from '@/lib/auth-context'
 import { STATUS_CONFIG, type AppointmentStatus } from '@/lib/constants'
-
-function formatRWF(amount: number) {
-  return new Intl.NumberFormat('en-RW').format(amount) + ' RWF'
-}
 
 const methodLabels: Record<string, string> = {
   cash: 'Cash',
@@ -115,6 +111,7 @@ function Sparkline({ data }: { data: number[] }) {
 }
 
 export default function ReportsView() {
+  const formatRWF = useMoney()
   const isInitialMount = useRef(true)
   const { permissions, authFetch } = useAuth()
   const canView = permissions?.reports !== 'none'
@@ -248,7 +245,7 @@ export default function ReportsView() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 justify-between">
         <div>
-          <h2 className="font-display text-2xl font-bold tracking-tight">Reports</h2>
+          <h2 className="text-2xl font-bold tracking-tight">Reports</h2>
           <CardDescription className="flex items-center gap-2 mt-1">
             <CalendarDays className="size-3.5" />
             {format(new Date(from + 'T00:00:00'), 'MMM d, yyyy')} — {format(new Date(to + 'T00:00:00'), 'MMM d, yyyy')}
@@ -301,7 +298,7 @@ export default function ReportsView() {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center">
-                  <p className="font-display text-base sm:text-lg font-bold tabular-nums truncate">{formatRWF(data.totalRevenue)}</p>
+                  <p className="text-base sm:text-lg font-bold tabular-nums truncate">{formatRWF(data.totalRevenue)}</p>
                   <Sparkline data={sparklineData} />
                 </div>
                 {trendPercent !== null && (
@@ -329,7 +326,7 @@ export default function ReportsView() {
                 <CheckCircle2 className="size-5 text-muted-foreground" />
               </div>
               <div className="min-w-0">
-                <p className="font-display text-base sm:text-lg font-bold text-success tabular-nums truncate">{formatRWF(data.totalCollected)}</p>
+                <p className="text-base sm:text-lg font-bold text-success tabular-nums truncate">{formatRWF(data.totalCollected)}</p>
                 <p className="text-xs text-muted-foreground">{collectionRate}% collection rate</p>
               </div>
             </div>
@@ -346,7 +343,7 @@ export default function ReportsView() {
                 <AlertCircle className="size-5 text-muted-foreground" />
               </div>
               <div className="min-w-0">
-                <p className="font-display text-base sm:text-lg font-bold text-warning tabular-nums truncate">{formatRWF(data.totalOutstanding)}</p>
+                <p className="text-base sm:text-lg font-bold text-warning tabular-nums truncate">{formatRWF(data.totalOutstanding)}</p>
                 <p className="text-xs text-muted-foreground">Pending payments</p>
               </div>
             </div>
@@ -363,7 +360,7 @@ export default function ReportsView() {
                 <TrendingUp className="size-5 text-muted-foreground" />
               </div>
               <div className="min-w-0">
-                <p className="font-display text-base sm:text-lg font-bold tabular-nums truncate">{data.totalAppointments}</p>
+                <p className="text-base sm:text-lg font-bold tabular-nums truncate">{data.totalAppointments}</p>
                 <p className="text-xs text-muted-foreground">{data.topServices.length} services</p>
               </div>
             </div>
@@ -616,7 +613,7 @@ export default function ReportsView() {
                       return (
                         <div
                           key={i}
-                          className="p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                          className="p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
                         >
                           <div className="flex items-center justify-between mb-1.5">
                             <div className="flex items-center gap-2.5">
@@ -673,7 +670,7 @@ export default function ReportsView() {
                       return (
                         <div
                           key={i}
-                          className="p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                          className="p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
                         >
                           <div className="flex items-center justify-between mb-1.5">
                             <div className="flex items-center gap-2.5">

@@ -12,7 +12,6 @@ import Sidebar from '@/components/salon/Sidebar'
 import CommandPalette from '@/components/salon/CommandPalette'
 import MobileTabBar from '@/components/salon/MobileTabBar'
 import { Triangle, Search } from 'lucide-react'
-import { ThemeToggle } from '@/components/theme-toggle'
 
 function Splash() {
   return (
@@ -67,15 +66,14 @@ function AppFrame({ children }: { children: React.ReactNode }) {
           </div>
           <div className="ml-auto flex items-center gap-1">
             <Button
-              variant="ghost"
+              variant="plain"
               size="icon"
               onClick={() => setCommandOpen(true)}
-              className="md:hidden size-7 text-muted-foreground hover:text-foreground hover:bg-accent/60"
+              className="md:hidden size-7 text-muted-foreground hover:text-foreground hover:bg-muted/60"
               aria-label="Open search"
             >
               <Search className="size-4" aria-hidden="true" />
             </Button>
-            <ThemeToggle />
           </div>
         </header>
         <div className="flex-1 p-4 sm:p-6 md:p-8 overflow-auto min-w-0">
@@ -83,7 +81,7 @@ function AppFrame({ children }: { children: React.ReactNode }) {
         </div>
         <footer className="border-t py-2 px-4 text-center mt-auto">
           <p className="text-[11px] text-muted-foreground font-mono">
-            © 2025 {salon?.name || 'SalonPro'}
+            © {new Date().getFullYear()} {salon?.name || 'SalonPro'}
           </p>
         </footer>
       </SidebarInset>

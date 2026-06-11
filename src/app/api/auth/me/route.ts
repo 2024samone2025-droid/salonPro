@@ -1,6 +1,7 @@
 import { verifySessionToken, getSession, ROLE_PERMISSIONS, type UserRole } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
+import { parseSalonSettings } from '@/lib/salon-settings'
 
 export async function GET(req: NextRequest) {
   try {
@@ -27,7 +28,15 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       user,
       permissions,
-      salon: salon ? { id: salon.id, name: salon.name, subdomain: salon.subdomain, plan: salon.plan } : null,
+      salon: salon
+        ? {
+            id: salon.id,
+            name: salon.name,
+            subdomain: salon.subdomain,
+            plan: salon.plan,
+            settings: parseSalonSettings(salon.settings),
+          }
+        : null,
     })
   } catch (error) {
     console.error('Session check error:', error)

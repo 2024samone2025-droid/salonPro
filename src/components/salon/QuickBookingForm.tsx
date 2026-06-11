@@ -21,7 +21,7 @@ import {
 import { Separator } from '@/components/ui/separator'
 import { Plus, Search, Zap, Loader2, X, UserPlus } from 'lucide-react'
 import { toast } from 'sonner'
-import { useAuth } from '@/lib/auth-context'
+import { useAuth, useMoney } from '@/lib/auth-context'
 
 interface Customer {
   id: string
@@ -48,11 +48,8 @@ interface QuickBookingFormProps {
   onBookingCreated?: () => void
 }
 
-function formatRWF(amount: number) {
-  return new Intl.NumberFormat('en-RW').format(amount) + ' RWF'
-}
-
 export default function QuickBookingForm({ selectedDate, onBookingCreated }: QuickBookingFormProps) {
+  const formatRWF = useMoney()
   const { permissions, user, authFetch } = useAuth()
   const canCreate = permissions?.canCreateAppointment ?? false
 
@@ -214,7 +211,7 @@ export default function QuickBookingForm({ selectedDate, onBookingCreated }: Qui
             <Zap className="size-4 text-muted-foreground" />
           </div>
           <div>
-            <CardTitle className="text-sm">Quick Booking</CardTitle>
+            <CardTitle className="text-sm">Quick booking</CardTitle>
             <CardDescription className="text-xs">Create a new appointment in seconds</CardDescription>
           </div>
         </div>
@@ -245,7 +242,7 @@ export default function QuickBookingForm({ selectedDate, onBookingCreated }: Qui
               />
               {customerId && (
                 <Button
-                  variant="ghost"
+                  variant="plain"
                   size="icon"
                   className="absolute right-2 top-2 size-3.5 text-muted-foreground hover:bg-transparent hover:text-foreground"
                   aria-label="Clear selected customer"
@@ -265,7 +262,7 @@ export default function QuickBookingForm({ selectedDate, onBookingCreated }: Qui
                 {filteredCustomers.map((c) => (
                   <Button
                     key={c.id}
-                    variant="ghost"
+                    variant="plain"
                     className="h-auto w-full justify-between rounded-none px-3 py-2 text-left text-sm font-normal"
                     onClick={() => {
                       setCustomerId(c.id)
@@ -397,7 +394,7 @@ export default function QuickBookingForm({ selectedDate, onBookingCreated }: Qui
               ) : (
                 <>
                   <Plus className="size-3.5" />
-                  Book Now
+                  Book now
                 </>
               )}
             </Button>

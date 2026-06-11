@@ -28,9 +28,10 @@ import {
 } from '@dnd-kit/core'
 import QuickBookingForm from './QuickBookingForm'
 import AppointmentDialog from './AppointmentDialog'
-import { useAuth } from '@/lib/auth-context'
+import EmptyState from '@/components/salon/EmptyState'
+import { useAuth, useMoney } from '@/lib/auth-context'
 import { toast } from 'sonner'
-import { formatRWF, cn } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 import { STATUS_CONFIG, type AppointmentStatus } from '@/lib/constants'
 
 interface Appointment {
@@ -47,12 +48,9 @@ interface Appointment {
 }
 
 const SLOT_HEIGHT = 56 // h-14 = 56px
-const START_HOUR = 8
-const END_HOUR = 18
-const timeSlots = Array.from({ length: END_HOUR - START_HOUR }, (_, i) => {
-  const hour = i + START_HOUR
-  return `${hour.toString().padStart(2, '0')}:00`
-})
+// Fallback grid hours when the salon has no business-hours settings
+const DEFAULT_START_HOUR = 8
+const DEFAULT_END_HOUR = 18
 
 function timeToMinutes(time: string): number {
   const [h, m] = time.split(':').map(Number)
@@ -77,6 +75,8 @@ interface DayViewProps {
   onAppointmentClick: (apt: Appointment) => void
   canReschedule: boolean
   onReschedule: (apt: Appointment, newStartTime: string, newEndTime: string) => void
+  startHour: number
+  endHour: number
 }
 
 interface DraggableCardProps {
@@ -98,6 +98,7 @@ function DraggableAppointmentCard({
   draggable,
   onAppointmentClick,
 }: DraggableCardProps) {
+  const formatRWF = useMoney()
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: apt.id,
     disabled: !draggable,
@@ -157,15 +158,26 @@ function DayView({
   onAppointmentClick,
   canReschedule,
   onReschedule,
+  startHour,
+  endHour,
 }: DayViewProps) {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
   )
 
+  const timeSlots = useMemo(
+    () =>
+      Array.from({ length: Math.max(endHour - startHour, 1) }, (_, i) => {
+        const hour = i + startHour
+        return `${hour.toString().padStart(2, '0')}:00`
+      }),
+    [startHour, endHour]
+  )
+
   const getAppointmentPosition = (apt: Appointment) => {
     const startMinutes = timeToMinutes(apt.startTime)
     const endMinutes = timeToMinutes(apt.endTime)
-    const dayStartMinutes = START_HOUR * 60
+    const dayStartMinutes = startHour * 60
 
     const top = ((startMinutes - dayStartMinutes) / 60) * SLOT_HEIGHT
     const height = Math.max(((endMinutes - startMinutes) / 60) * SLOT_HEIGHT, 28)
@@ -184,8 +196,8 @@ function DayView({
     if (deltaMinutes === 0) return
 
     let newStart = timeToMinutes(apt.startTime) + deltaMinutes
-    const dayStart = START_HOUR * 60
-    const dayEnd = END_HOUR * 60
+    const dayStart = startHour * 60
+    const dayEnd = endHour * 60
     newStart = Math.max(dayStart, Math.min(dayEnd - duration, newStart))
     const newStartTime = minutesToTime(newStart)
     const newEndTime = minutesToTime(newStart + duration)
@@ -281,14 +293,14 @@ function WeekView({ weekDays, selectedDate, appointments, onDaySelect, onAppoint
             return (
               <Button
                 key={day.toISOString()}
-                variant="ghost"
+                variant="plain"
                 className={cn(
-                  'h-auto min-h-[44px] flex-col gap-0 rounded-xl px-0 py-2.5 text-center font-normal transition-all',
+                  'h-auto min-h-[44px] flex-col gap-0 rounded-md px-0 py-2.5 text-center font-normal transition-all',
                   isSelected
                     ? 'bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground'
                     : isTodayDate
-                    ? 'ring-1 ring-foreground/25 font-medium hover:bg-accent'
-                    : 'border border-transparent hover:border-border hover:bg-accent'
+                    ? 'ring-1 ring-foreground/25 font-medium hover:bg-muted'
+                    : 'border border-transparent hover:border-border hover:bg-muted'
                 )}
                 onClick={() => onDaySelect(dayStr)}
               >
@@ -318,7 +330,7 @@ function WeekView({ weekDays, selectedDate, appointments, onDaySelect, onAppoint
             return (
               <div key={dayStr} className="min-h-48 space-y-1 p-1.5 border rounded-lg bg-card/50">
                 {dayApts.length === 0 ? (
-                  <p className="text-xs text-muted-foreground text-center pt-8">No appointments</p>
+                  <p className="text-xs text-ink-faint text-center pt-8">No appointments</p>
                 ) : (
                   dayApts.map((apt) => {
                     const config = STATUS_CONFIG[apt.status as AppointmentStatus]
@@ -496,15 +508,28 @@ export default function AppointmentsView() {
     [appointments, authFetch, fetchAppointments]
   )
 
+  // Grid hours for the selected day, from the salon's business hours settings
+  const { startHour, endHour, dayClosed } = useMemo(() => {
+    const weekday = new Date(selectedDate + 'T00:00:00').getDay()
+    const day = salon?.settings?.businessHours?.[String(weekday)]
+    if (!day) return { startHour: DEFAULT_START_HOUR, endHour: DEFAULT_END_HOUR, dayClosed: false }
+    if (day.closed) return { startHour: DEFAULT_START_HOUR, endHour: DEFAULT_END_HOUR, dayClosed: true }
+    const start = Math.floor(timeToMinutes(day.open) / 60)
+    const end = Math.ceil(timeToMinutes(day.close) / 60)
+    return end > start
+      ? { startHour: start, endHour: end, dayClosed: false }
+      : { startHour: DEFAULT_START_HOUR, endHour: DEFAULT_END_HOUR, dayClosed: false }
+  }, [salon, selectedDate])
+
   const currentTimeTop = useMemo(() => {
     const now = currentTime
     const isTodaySelected = selectedDate === format(now, 'yyyy-MM-dd')
     if (!isTodaySelected) return null
     const currentMinutes = now.getHours() * 60 + now.getMinutes()
-    const dayStartMinutes = START_HOUR * 60
-    if (currentMinutes < dayStartMinutes || currentMinutes > END_HOUR * 60) return null
+    const dayStartMinutes = startHour * 60
+    if (currentMinutes < dayStartMinutes || currentMinutes > endHour * 60) return null
     return ((currentMinutes - dayStartMinutes) / 60) * SLOT_HEIGHT
-  }, [currentTime, selectedDate])
+  }, [currentTime, selectedDate, startHour, endHour])
 
   const formattedSelectedDate = useMemo(() => {
     try {
@@ -573,7 +598,7 @@ export default function AppointmentsView() {
             <Separator orientation="vertical" className="h-4" />
             <div className="flex items-center gap-1.5">
               <div className="size-2.5 rounded-full bg-primary" aria-hidden="true" />
-              <span className="text-xs text-muted-foreground">Current Time</span>
+              <span className="text-xs text-muted-foreground">Current time</span>
             </div>
           </>
         )}
@@ -597,19 +622,31 @@ export default function AppointmentsView() {
               ))}
             </div>
           ) : appointments.length === 0 && viewMode === 'day' ? (
-            <div className="text-center py-16">
-              <CalendarDays className="size-10 mx-auto text-muted-foreground/30 mb-3" />
-              <p className="text-muted-foreground text-sm">No appointments for this day.</p>
-            </div>
-          ) : viewMode === 'day' ? (
-            <DayView 
-              appointments={appointments} 
-              currentTimeTop={currentTimeTop} 
-              overlapGroups={overlapGroups} 
-              onAppointmentClick={handleAppointmentClick} 
-              canReschedule={!!permissions?.canCreateAppointment}
-              onReschedule={handleReschedule}
+            <EmptyState
+              icon={CalendarDays}
+              message="No appointments for this day"
+              actionLabel="+ Book one now"
+              onAction={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              className="border-0 bg-transparent py-12"
             />
+          ) : viewMode === 'day' ? (
+            <>
+              {dayClosed && (
+                <p className="text-xs text-muted-foreground mb-2 px-1">
+                  The salon is marked closed on this day — these appointments fall outside business hours.
+                </p>
+              )}
+              <DayView
+                appointments={appointments}
+                currentTimeTop={currentTimeTop}
+                overlapGroups={overlapGroups}
+                onAppointmentClick={handleAppointmentClick}
+                canReschedule={!!permissions?.canCreateAppointment}
+                onReschedule={handleReschedule}
+                startHour={startHour}
+                endHour={endHour}
+              />
+            </>
           ) : (
             <WeekView 
               weekDays={weekDays} 

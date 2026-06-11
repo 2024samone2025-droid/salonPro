@@ -8,6 +8,7 @@ import {
   Scissors,
   BarChart3,
   CreditCard,
+  Settings,
 } from 'lucide-react'
 
 export type NavItem = {
@@ -33,6 +34,13 @@ export const billingNavItem: NavItem = {
   href: '/billing',
   label: 'Billing',
   icon: CreditCard,
+  roles: ['admin'],
+}
+
+export const settingsNavItem: NavItem = {
+  href: '/settings',
+  label: 'Settings',
+  icon: Settings,
   roles: ['admin'],
 }
 
