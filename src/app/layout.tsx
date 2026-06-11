@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans, Geist_Mono } from "next/font/google";
+import { Inter, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 
-const sans = Plus_Jakarta_Sans({
+const sans = Inter({
   variable: "--font-sans",
   subsets: ["latin"],
 });
