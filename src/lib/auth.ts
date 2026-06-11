@@ -7,74 +7,11 @@ const SESSION_COOKIE = 'salonpro_session'
 const SESSION_MAX_AGE = 60 * 60 * 24 * 7 // 7 days
 const AUTH_SECRET = process.env.AUTH_SECRET || 'salonpro-rwanda-secret-key-2025'
 
-// Role-based permissions definition
-export type UserRole = 'admin' | 'receptionist' | 'stylist'
+// Role-based permissions live in ./permissions (client-safe); re-export for server callers
+import { ROLE_PERMISSIONS, type Permissions, type UserRole } from './permissions'
 
-export interface Permissions {
-  // Module access
-  dashboard: 'full' | 'view' | 'own' | 'none'
-  appointments: 'full' | 'view' | 'own' | 'none'
-  customers: 'full' | 'view' | 'none'
-  staff: 'full' | 'view' | 'none'
-  services: 'full' | 'view' | 'none'
-  reports: 'full' | 'view' | 'none'
-  // Special permissions
-  canCreateAppointment: boolean
-  canUpdateAppointmentStatus: boolean
-  canManagePayments: boolean
-  canManageStaff: boolean
-  canManageServices: boolean
-  canDeleteRecords: boolean
-  canViewAllAppointments: boolean
-}
-
-export const ROLE_PERMISSIONS: Record<UserRole, Permissions> = {
-  admin: {
-    dashboard: 'full',
-    appointments: 'full',
-    customers: 'full',
-    staff: 'full',
-    services: 'full',
-    reports: 'full',
-    canCreateAppointment: true,
-    canUpdateAppointmentStatus: true,
-    canManagePayments: true,
-    canManageStaff: true,
-    canManageServices: true,
-    canDeleteRecords: true,
-    canViewAllAppointments: true,
-  },
-  receptionist: {
-    dashboard: 'full',
-    appointments: 'full',
-    customers: 'full',
-    staff: 'view',
-    services: 'view',
-    reports: 'view',
-    canCreateAppointment: true,
-    canUpdateAppointmentStatus: true,
-    canManagePayments: true,
-    canManageStaff: false,
-    canManageServices: false,
-    canDeleteRecords: false,
-    canViewAllAppointments: true,
-  },
-  stylist: {
-    dashboard: 'view',
-    appointments: 'own',
-    customers: 'view',
-    staff: 'none',
-    services: 'view',
-    reports: 'none',
-    canCreateAppointment: false,
-    canUpdateAppointmentStatus: true,
-    canManagePayments: false,
-    canManageStaff: false,
-    canManageServices: false,
-    canDeleteRecords: false,
-    canViewAllAppointments: false,
-  },
-}
+export { ROLE_PERMISSIONS }
+export type { Permissions, UserRole }
 
 export interface SessionUser {
   id: string

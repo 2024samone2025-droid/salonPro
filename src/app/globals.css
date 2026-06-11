@@ -3,88 +3,89 @@
 @tailwind utilities;
 
 @layer base {
-  /* Tokens per specs/ui/design-system.md — raspberry accent over warm stone neutrals */
+  /*
+   * Design tokens — dark charcoal + pink accent (specs/ui/design-system.md).
+   * The semantic variables below are the single source of truth; the shadcn
+   * variables alias them so every ui/ component inherits the theme.
+   * Values are HSL triplets so Tailwind alpha modifiers (bg-x/10) keep working.
+   * A future light theme is a second set of values for the same names.
+   */
   :root {
-    --radius: 0.625rem;
-    --background: 60 9% 98%;
-    --foreground: 24 10% 10%;
-    --card: 0 0% 100%;
-    --card-foreground: 24 10% 10%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 24 10% 10%;
-    --primary: 336 78% 42%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 60 5% 96%;
-    --secondary-foreground: 24 10% 10%;
-    --muted: 60 5% 96%;
-    --muted-foreground: 33 5% 32%;
-    --accent: 60 5% 94%;
-    --accent-foreground: 24 10% 10%;
-    --destructive: 0 74% 42%;
-    --destructive-foreground: 0 0% 100%;
-    --success: 142 69% 29%;
-    --success-foreground: 0 0% 100%;
-    --warning: 26 90% 37%;
-    --warning-foreground: 0 0% 100%;
-    --info: 201 96% 32%;
-    --info-foreground: 0 0% 100%;
-    --border: 20 6% 90%;
-    --input: 20 6% 90%;
-    --ring: 336 78% 42%;
-    --chart-1: 336 78% 42%;
-    --chart-2: 26 90% 37%;
-    --chart-3: 201 96% 32%;
-    --chart-4: 142 69% 29%;
-    --chart-5: 33 5% 32%;
-    --sidebar: 60 5% 96%;
-    --sidebar-foreground: 33 5% 32%;
-    --sidebar-primary: 336 78% 42%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 60 5% 92%;
-    --sidebar-accent-foreground: 24 10% 10%;
-    --sidebar-border: 20 6% 88%;
-    --sidebar-ring: 336 78% 42%;
-  }
+    --radius: 0.75rem; /* lg 12px cards · sm 8px buttons/inputs */
 
-  .dark {
-    --background: 24 10% 10%;
-    --foreground: 20 6% 90%;
-    --card: 12 6% 15%;
-    --card-foreground: 20 6% 90%;
-    --popover: 12 6% 15%;
-    --popover-foreground: 20 6% 90%;
-    --primary: 327 87% 70%;
-    --primary-foreground: 336 70% 12%;
-    --secondary: 30 6% 19%;
-    --secondary-foreground: 20 6% 90%;
-    --muted: 30 6% 19%;
-    --muted-foreground: 24 5% 64%;
-    --accent: 30 6% 19%;
-    --accent-foreground: 20 6% 90%;
-    --destructive: 0 91% 71%;
-    --destructive-foreground: 0 75% 15%;
-    --success: 142 69% 58%;
-    --success-foreground: 144 61% 12%;
-    --warning: 43 96% 56%;
-    --warning-foreground: 28 73% 14%;
-    --info: 199 89% 60%;
-    --info-foreground: 202 80% 14%;
-    --border: 30 6% 25%;
-    --input: 30 6% 25%;
-    --ring: 327 87% 70%;
-    --chart-1: 327 87% 70%;
-    --chart-2: 43 96% 56%;
-    --chart-3: 199 89% 60%;
-    --chart-4: 142 69% 58%;
-    --chart-5: 24 5% 64%;
-    --sidebar: 24 12% 8%;
-    --sidebar-foreground: 24 5% 64%;
-    --sidebar-primary: 327 87% 70%;
-    --sidebar-primary-foreground: 336 70% 12%;
-    --sidebar-accent: 30 6% 17%;
-    --sidebar-accent-foreground: 20 6% 90%;
-    --sidebar-border: 30 6% 18%;
-    --sidebar-ring: 327 87% 70%;
+    /* Surfaces */
+    --surface: 240 7% 8%; /* #141417 page background */
+    --surface-raised: 240 6% 12%; /* #1d1d21 cards, panels */
+    --surface-hover: 240 5% 16%; /* hover wash, muted fills */
+
+    /* Text */
+    --ink: 240 5% 96%; /* #f4f4f5 primary text */
+    --ink-muted: 240 5% 65%; /* #a1a1aa secondary text */
+    --ink-faint: 240 4% 46%; /* #71717a hints — the contrast floor */
+
+    /* Accent (the ONE brand color — primary actions, active nav, links) */
+    --accent: 340 71% 75%; /* #ED93B1 */
+    --accent-deep: 339 56% 19%; /* #4B1528 text on accent, tinted chips */
+
+    /* Borders: 0.5px hairlines (solid equivalents of white @ 7% / 14%) */
+    --line: 240 4% 18%;
+    --line-strong: 240 4% 23%;
+
+    /* Appointment status pairs (bg = deep fill, fg = pastel text/dot) */
+    --status-booked-bg: 210 82% 27%; /* #0C447C */
+    --status-booked-fg: 210 74% 83%; /* #B5D4F4 */
+    --status-confirmed-bg: 168 82% 17%; /* #085041 */
+    --status-confirmed-fg: 160 52% 75%; /* #9FE1CB */
+    --status-progress-bg: 32 89% 21%; /* #633806 */
+    --status-progress-fg: 37 93% 72%; /* #FAC775 */
+    --status-completed-bg: 168 82% 17%; /* #085041 */
+    --status-completed-fg: 160 51% 58%; /* #5DCAA5 */
+    --status-noshow-bg: 0 59% 30%; /* #791F1F */
+    --status-noshow-fg: 0 77% 86%; /* #F7C1C1 */
+
+    /* Semantic colors (text/icon tones on dark surfaces) */
+    --success: var(--status-completed-fg);
+    --success-foreground: var(--status-completed-bg);
+    --warning: var(--status-progress-fg);
+    --warning-foreground: var(--status-progress-bg);
+    --info: var(--status-booked-fg);
+    --info-foreground: var(--status-booked-bg);
+    --destructive: 0 72% 63%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Charts */
+    --chart-1: var(--accent);
+    --chart-2: var(--status-progress-fg);
+    --chart-3: var(--status-booked-fg);
+    --chart-4: var(--status-completed-fg);
+    --chart-5: var(--ink-faint);
+
+    /* shadcn aliases — components consume these; do not put raw values here */
+    --background: var(--surface);
+    --foreground: var(--ink);
+    --card: var(--surface-raised);
+    --card-foreground: var(--ink);
+    --popover: var(--surface-raised);
+    --popover-foreground: var(--ink);
+    --primary: var(--accent);
+    --primary-foreground: var(--accent-deep);
+    --secondary: var(--surface-hover);
+    --secondary-foreground: var(--ink);
+    --muted: var(--surface-hover);
+    --muted-foreground: var(--ink-muted);
+    --border: var(--line);
+    --input: var(--line);
+    --ring: var(--accent);
+
+    /* Sidebar */
+    --sidebar: var(--surface);
+    --sidebar-foreground: var(--ink-muted);
+    --sidebar-primary: var(--accent);
+    --sidebar-primary-foreground: var(--accent-deep);
+    --sidebar-accent: var(--surface-hover);
+    --sidebar-accent-foreground: var(--ink);
+    --sidebar-border: var(--line);
+    --sidebar-ring: var(--accent);
   }
 
   * {
@@ -93,17 +94,5 @@
   body {
     @apply bg-background text-foreground;
     -webkit-font-smoothing: antialiased;
-  }
-
-  [data-slot="sidebar-wrapper"] {
-    width: var(--sidebar-width);
-  }
-
-  [data-slot="sidebar"] {
-    width: var(--sidebar-width);
-  }
-
-  [data-slot="sidebar-inner"] {
-    width: 100%;
   }
 }

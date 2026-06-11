@@ -1,7 +1,13 @@
 import { db } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
+import { parseSalonSettings } from '@/lib/salon-settings'
 
 const NON_BLOCKING_STATUSES = ['cancelled', 'no_show']
+
+function toMin(time: string) {
+  const [h, m] = time.split(':').map(Number)
+  return h * 60 + m
+}
 
 function badSubdomain(subdomain: string) {
   return !subdomain || !/^[a-z0-9-]+$/.test(subdomain)
@@ -22,6 +28,10 @@ export async function GET(
   if (!salon) {
     return NextResponse.json({ error: 'Salon not found' }, { status: 404 })
   }
+  const settings = parseSalonSettings(salon.settings)
+  if (!settings.publicBookingEnabled) {
+    return NextResponse.json({ error: 'Salon not found' }, { status: 404 })
+  }
 
   const [services, staff] = await Promise.all([
     db.service.findMany({
@@ -38,6 +48,7 @@ export async function GET(
 
   return NextResponse.json({
     salon: { name: salon.name, subdomain: salon.subdomain },
+    currency: settings.currency,
     services,
     staff,
   })
@@ -51,6 +62,10 @@ export async function POST(
   const { subdomain } = await params
   const salon = await resolveSalon(subdomain)
   if (!salon) {
+    return NextResponse.json({ error: 'Salon not found' }, { status: 404 })
+  }
+  const settings = parseSalonSettings(salon.settings)
+  if (!settings.publicBookingEnabled) {
     return NextResponse.json({ error: 'Salon not found' }, { status: 404 })
   }
 
@@ -91,6 +106,15 @@ export async function POST(
     const slotStart = new Date(`${date}T${startTime}:00`)
     if (slotStart.getTime() < Date.now()) {
       return NextResponse.json({ error: 'That time has already passed' }, { status: 400 })
+    }
+
+    // Respect the salon's business hours for the requested weekday
+    const dayHours = settings.businessHours[String(slotStart.getDay())]
+    if (!dayHours || dayHours.closed) {
+      return NextResponse.json({ error: 'The salon is closed on that day' }, { status: 400 })
+    }
+    if (toMin(startTime) < toMin(dayHours.open) || endMinutes > toMin(dayHours.close)) {
+      return NextResponse.json({ error: 'That time is outside opening hours' }, { status: 400 })
     }
 
     const conflict = await db.appointment.findFirst({

@@ -16,7 +16,6 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Separator } from '@/components/ui/separator'
 import { Eye, EyeOff, AlertCircle, Shield, CalendarDays, Scissors, Triangle } from 'lucide-react'
-import { ThemeToggle } from '@/components/theme-toggle'
 
 export default function LoginPage() {
   const { login, salon } = useAuth()
@@ -40,16 +39,12 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-3 sm:p-4 md:p-6 relative">
-      <div className="absolute top-3 right-3 sm:top-4 sm:right-4">
-        <ThemeToggle />
-      </div>
-
       <div className="w-full sm:w-[400px] lg:w-[480px]">
         <div className="text-center mb-6 sm:mb-8">
           <div className="inline-flex items-center justify-center size-10 sm:size-12 rounded-md bg-foreground mb-3 sm:mb-4">
             <Triangle className="size-5 sm:size-6 text-background fill-background" />
           </div>
-          <h1 className="font-display text-xl sm:text-2xl font-semibold tracking-tight">{salon?.name || 'SalonPro'}</h1>
+          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">{salon?.name || 'SalonPro'}</h1>
           <p className="text-[13px] sm:text-sm text-muted-foreground mt-0.5">Salon Management System</p>
         </div>
 
@@ -164,7 +159,7 @@ export default function LoginPage() {
           </CardFooter>
         </Card>
 
-        <p className="text-center text-[11px] text-muted-foreground/30 mt-4 sm:mt-6 font-mono">© 2025 SalonPro</p>
+        <p className="text-center text-[11px] text-muted-foreground/30 mt-4 sm:mt-6 font-mono">© {new Date().getFullYear()} SalonPro</p>
       </div>
     </div>
   )

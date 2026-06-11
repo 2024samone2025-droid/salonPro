@@ -1,6 +1,8 @@
 'use client'
 
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode, useRef } from 'react'
+import type { SalonSettings } from '@/lib/salon-settings'
+import { formatMoney } from '@/lib/utils'
 
 export type UserRole = 'admin' | 'receptionist' | 'stylist'
 
@@ -28,11 +30,19 @@ export interface SessionUser {
   salonId: string
 }
 
+export interface SalonInfo {
+  id: string
+  name: string
+  subdomain: string
+  plan: string
+  settings?: SalonSettings
+}
+
 interface AuthContextType {
   user: SessionUser | null
   permissions: Permissions | null
   loading: boolean
-  salon: { id: string; name: string; subdomain: string; plan: string } | null
+  salon: SalonInfo | null
   login: (name: string, pin: string) => Promise<{ success: boolean; error?: string }>
   logout: () => Promise<void>
   refreshSession: () => Promise<void>
@@ -46,7 +56,7 @@ const TOKEN_KEY = 'salonpro_token'
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<SessionUser | null>(null)
   const [permissions, setPermissions] = useState<Permissions | null>(null)
-  const [salon, setSalon] = useState<{ id: string; name: string; subdomain: string; plan: string } | null>(null)
+  const [salon, setSalon] = useState<SalonInfo | null>(null)
   const [loading, setLoading] = useState(true)
   const isInitialMount = useRef(true)
 
@@ -156,6 +166,13 @@ export function useAuth() {
     }
   }
   return context
+}
+
+// Money formatter bound to the salon's configured display currency
+export function useMoney(): (amount: number) => string {
+  const { salon } = useAuth()
+  const currency = salon?.settings?.currency || 'RWF'
+  return useCallback((amount: number) => formatMoney(amount, currency), [currency])
 }
 
 // Helper hook for permission checks

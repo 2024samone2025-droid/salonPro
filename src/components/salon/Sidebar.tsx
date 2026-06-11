@@ -24,7 +24,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
-import { Triangle, Search, LogOut, CreditCard } from 'lucide-react'
+import { Triangle, Search, LogOut, CreditCard, Settings } from 'lucide-react'
 import { allNavItems, navItemsForRole } from '@/components/salon/nav-items'
 
 const roleLabels: Record<UserRole, string> = {
@@ -149,7 +149,7 @@ export default function SalonSidebar() {
       </SidebarContent>
 
       {/* Footer: User info & Logout */}
-      <SidebarFooter className="px-3 pb-3 pt-2">
+      <SidebarFooter className="px-3 pb-10 pt-2">
         <div className="border-t border-sidebar-border pt-3">
           <div className="flex items-center gap-2.5 px-1 mb-2">
             <Avatar className="size-7 border border-sidebar-border">
@@ -167,27 +167,40 @@ export default function SalonSidebar() {
             </div>
           </div>
           <Button
-            variant="ghost"
+            variant="plain"
             size="sm"
             className="w-full justify-start text-sidebar-foreground/40 hover:text-destructive hover:bg-destructive/10 transition-colors text-[13px] h-8"
             onClick={handleLogout}
             aria-label="Sign out"
           >
             <LogOut className="size-3.5 mr-2" aria-hidden="true" />
-            Sign Out
+            Sign out
           </Button>
           {user?.role === 'admin' && (
-            <Button
-              asChild
-              variant="ghost"
-              size="sm"
-              className="w-full justify-start text-sidebar-foreground/40 hover:text-sidebar-foreground hover:bg-sidebar-accent/60 transition-colors text-[13px] h-8"
-            >
-              <Link href="/billing" aria-label="Billing">
-                <CreditCard className="size-3.5 mr-2" aria-hidden="true" />
-                Billing
-              </Link>
-            </Button>
+            <>
+              <Button
+                asChild
+                variant="plain"
+                size="sm"
+                className="w-full justify-start text-sidebar-foreground/40 hover:text-sidebar-foreground hover:bg-sidebar-accent/60 transition-colors text-[13px] h-8"
+              >
+                <Link href="/settings" aria-label="Settings">
+                  <Settings className="size-3.5 mr-2" aria-hidden="true" />
+                  Settings
+                </Link>
+              </Button>
+              <Button
+                asChild
+                variant="plain"
+                size="sm"
+                className="w-full justify-start text-sidebar-foreground/40 hover:text-sidebar-foreground hover:bg-sidebar-accent/60 transition-colors text-[13px] h-8"
+              >
+                <Link href="/billing" aria-label="Billing">
+                  <CreditCard className="size-3.5 mr-2" aria-hidden="true" />
+                  Billing
+                </Link>
+              </Button>
+            </>
           )}
           <p className="text-[10px] text-sidebar-foreground/20 text-center mt-1.5 font-mono">
             v1.3.0

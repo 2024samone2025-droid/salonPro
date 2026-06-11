@@ -10,7 +10,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -38,9 +37,9 @@ import {
   Smartphone,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { useAuth } from '@/lib/auth-context'
-import { formatRWF, cn } from '@/lib/utils'
-import { STATUS_CONFIG, PAYMENT_STATUS_CONFIG, type AppointmentStatus, type PaymentStatus } from '@/lib/constants'
+import { useAuth, useMoney } from '@/lib/auth-context'
+import StatusBadge, { PaymentBadge } from '@/components/salon/StatusBadge'
+import { STATUS_CONFIG, type AppointmentStatus } from '@/lib/constants'
 
 interface Appointment {
   id: string
@@ -95,6 +94,7 @@ const methodIcons: Record<string, React.ReactNode> = {
 }
 
 export default function AppointmentDialog({ appointment, open, onClose, onUpdate }: AppointmentDialogProps) {
+  const formatRWF = useMoney()
   const [paymentStatus, setPaymentStatus] = useState(appointment?.payment?.status || 'unpaid')
   const [paymentMethod, setPaymentMethod] = useState(appointment?.payment?.method || 'cash')
   const [paymentAmount, setPaymentAmount] = useState(
@@ -237,12 +237,10 @@ export default function AppointmentDialog({ appointment, open, onClose, onUpdate
       <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            Appointment Details
+            Appointment details
           </DialogTitle>
           <DialogDescription className="flex items-center gap-2 pt-1">
-            <Badge className={cn(STATUS_CONFIG[appointment.status as AppointmentStatus]?.badgeClass, "border text-[11px] px-2 py-0.5 shadow-sm")}>
-              {STATUS_CONFIG[appointment.status as AppointmentStatus]?.label || appointment.status}
-            </Badge>
+            <StatusBadge status={appointment.status} />
             <span>{appointment.service.name}</span>
           </DialogDescription>
         </DialogHeader>
@@ -296,7 +294,7 @@ export default function AppointmentDialog({ appointment, open, onClose, onUpdate
             </div>
             <div>
               <p className="text-xs text-muted-foreground flex items-center gap-1 mb-1">
-                <CalendarDays className="size-3" /> Date & Time
+                <CalendarDays className="size-3" /> Date & time
               </p>
               <p className="font-medium text-sm">{appointment.date}</p>
               <p className="text-xs text-muted-foreground mt-0.5">
@@ -306,7 +304,7 @@ export default function AppointmentDialog({ appointment, open, onClose, onUpdate
           </div>
 
           <div className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2 sm:px-4 sm:py-3">
-            <span className="text-sm text-foreground font-medium">Service Price</span>
+            <span className="text-sm text-foreground font-medium">Service price</span>
             <span className="text-lg font-bold">{formatRWF(appointment.service.price)}</span>
           </div>
 
@@ -315,14 +313,14 @@ export default function AppointmentDialog({ appointment, open, onClose, onUpdate
             <>
               <Separator />
               <div>
-                <Label className="text-sm font-medium mb-2 block">Update Status</Label>
+                <Label className="text-sm font-medium mb-2 block">Update status</Label>
                 <div className="flex gap-2">
                   {nextStatuses.map((s) => (
                     <Button
                       key={s}
                       size="sm"
-                      variant={s === 'no_show' ? 'destructive' : 'default'}
-                      className=""
+                      variant="ghost"
+                      className={s === 'no_show' ? 'text-destructive hover:text-destructive hover:bg-destructive/10' : ''}
                       onClick={() => handleStatusChange(s)}
                       disabled={updating}
                     >
@@ -404,7 +402,7 @@ export default function AppointmentDialog({ appointment, open, onClose, onUpdate
                   disabled={updating}
                 >
                   {updating && <Loader2 className="size-4 mr-1.5 animate-spin" />}
-                  Save Payment
+                  Save payment
                 </Button>
               </div>
             </>
@@ -416,12 +414,10 @@ export default function AppointmentDialog({ appointment, open, onClose, onUpdate
               <Separator />
               <div>
                 <Label className="text-sm font-medium mb-2 flex items-center gap-1.5">
-                  <CreditCard className="size-4" /> Payment Info
+                  <CreditCard className="size-4" /> Payment info
                 </Label>
                 <div className="flex items-center gap-3 mt-2 p-3 rounded-lg bg-muted/50 border border-border/50">
-                  <Badge className={cn(PAYMENT_STATUS_CONFIG[appointment.payment.status as PaymentStatus]?.badgeClass, "border text-[11px] px-2 py-0.5")}>
-                    {PAYMENT_STATUS_CONFIG[appointment.payment.status as PaymentStatus]?.label || appointment.payment.status}
-                  </Badge>
+                  <PaymentBadge status={appointment.payment.status} />
                   {appointment.payment.status !== 'unpaid' && (
                     <div className="flex items-center gap-1.5 text-sm">
                       <span className="font-medium">{formatRWF(appointment.payment.amount)}</span>
@@ -443,7 +439,7 @@ export default function AppointmentDialog({ appointment, open, onClose, onUpdate
               <Separator />
               <div>
                 <Label className="text-sm font-medium mb-2 flex items-center gap-1.5">
-                  <CreditCard className="size-4" /> Payment Info
+                  <CreditCard className="size-4" /> Payment info
                 </Label>
                 <div className="mt-2 p-3 rounded-lg bg-muted/50">
                   <p className="text-sm text-muted-foreground">No payment recorded yet</p>
@@ -475,7 +471,7 @@ export default function AppointmentDialog({ appointment, open, onClose, onUpdate
               {savingNotes ? (
                 <Loader2 className="size-4 mr-1.5 animate-spin" />
               ) : null}
-              Save Notes
+              Save notes
             </Button>
           </div>
 
@@ -495,7 +491,7 @@ export default function AppointmentDialog({ appointment, open, onClose, onUpdate
                   ) : (
                     <Trash2 className="size-4 mr-1.5" />
                   )}
-                  Cancel Appointment
+                  Cancel appointment
                 </Button>
               </DialogFooter>
             </>

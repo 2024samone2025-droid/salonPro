@@ -14,7 +14,6 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Toaster } from '@/components/ui/sonner'
-import { ThemeToggle } from '@/components/theme-toggle'
 import { toast } from 'sonner'
 import {
   Scissors,
@@ -28,7 +27,7 @@ import {
   PartyPopper,
   ArrowRight,
 } from 'lucide-react'
-import { cn, formatRWF } from '@/lib/utils'
+import { cn, formatMoney } from '@/lib/utils'
 
 interface Service {
   id: string
@@ -42,6 +41,7 @@ interface Staff {
 }
 interface SalonInfo {
   salon: { name: string; subdomain: string }
+  currency?: string
   services: Service[]
   staff: Staff[]
 }
@@ -132,6 +132,8 @@ export default function BookingFlow({ subdomain }: { subdomain: string }) {
     () => info?.staff.find((s) => s.id === staffId) || null,
     [info, staffId]
   )
+
+  const formatRWF = (amount: number) => formatMoney(amount, info?.currency || 'RWF')
 
   const loadSlots = useCallback(async () => {
     if (!serviceId || !staffId || !date) return
@@ -493,15 +495,12 @@ function Shell({ children, salonName }: { children: React.ReactNode; salonName?:
   return (
     <div className="min-h-screen bg-background p-4 sm:p-6">
       <Toaster />
-      <div className="absolute right-4 top-4">
-        <ThemeToggle />
-      </div>
       <div className="mx-auto w-full max-w-md">
         <div className="mb-6 text-center">
           <div className="mb-3 inline-flex size-11 items-center justify-center rounded-xl bg-primary/10">
             <Scissors className="size-5 text-primary" />
           </div>
-          <h1 className="text-xl font-semibold tracking-tight font-display">
+          <h1 className="text-xl font-semibold tracking-tight">
             {salonName || 'Book an appointment'}
           </h1>
           <p className="mt-0.5 text-sm text-muted-foreground">Book online in a few taps</p>

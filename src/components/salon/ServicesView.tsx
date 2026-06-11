@@ -26,7 +26,7 @@ import {
   Timer,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { useAuth } from '@/lib/auth-context'
+import { useAuth, useMoney } from '@/lib/auth-context'
 
 interface Service {
   id: string
@@ -37,11 +37,8 @@ interface Service {
   createdAt: string
 }
 
-function formatRWF(amount: number) {
-  return new Intl.NumberFormat('en-RW').format(amount) + ' RWF'
-}
-
 export default function ServicesView() {
+  const formatRWF = useMoney()
   const [services, setServices] = useState<Service[]>([])
   const [loading, setLoading] = useState(true)
   const [showDialog, setShowDialog] = useState(false)
@@ -161,7 +158,7 @@ export default function ServicesView() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 justify-between">
         <div>
-          <h2 className="font-display text-2xl font-bold tracking-tight">Services</h2>
+          <h2 className="text-2xl font-bold tracking-tight">Services</h2>
           <p className="text-muted-foreground text-sm">
             {services.length} service{services.length !== 1 ? 's' : ''} &middot; {activeServices.length} active
             {!canManage && ' · View only'}
