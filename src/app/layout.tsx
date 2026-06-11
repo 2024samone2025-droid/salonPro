@@ -30,6 +30,12 @@ export default function RootLayout({
     <html lang="en" className={`${sans.variable} ${mono.variable}`}>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" key="viewport" />
+        <script
+          // Apply the stored (or OS-preferred) theme before first paint to avoid a flash
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem("theme");if(t!=="dark"&&t!=="light"){t=window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}if(t==="dark"){document.documentElement.setAttribute("data-theme","dark")}}catch(e){}})()`,
+          }}
+        />
       </head>
       <body className="font-sans antialiased bg-background text-foreground">
         <noscript key="noscript">

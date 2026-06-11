@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils'
 export type StatCardTone = 'accent' | 'success' | 'warning' | 'info' | 'neutral'
 
 const chipTones: Record<StatCardTone, string> = {
-  accent: 'bg-accent-deep text-accent',
+  accent: 'bg-accent-tint text-accent-tint-fg',
   success: 'bg-status-completed-bg text-status-completed-fg',
   warning: 'bg-status-progress-bg text-status-progress-fg',
   info: 'bg-status-booked-bg text-status-booked-fg',
