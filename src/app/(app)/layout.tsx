@@ -13,6 +13,7 @@ import CommandPalette from '@/components/salon/CommandPalette'
 import MobileTabBar from '@/components/salon/MobileTabBar'
 import { Triangle, Search } from 'lucide-react'
 import ThemeToggle from '@/components/theme-toggle'
+import TourController from '@/components/salon/TourController'
 
 function Splash() {
   return (
@@ -89,6 +90,7 @@ function AppFrame({ children }: { children: React.ReactNode }) {
       </SidebarInset>
       <CommandPalette />
       <MobileTabBar />
+      <TourController />
     </>
   )
 }
