@@ -136,7 +136,8 @@ model Payment {
 model User {
   id        String   @id @default(cuid())
   name      String
-  pin       String   // SHA-256 hashed PIN
+  email        String // stored lowercased; unique per salon (see @@unique below)
+  passwordHash String // scrypt (salt$hash) via lib/password — same scheme as Owner
   role      String   @default("receptionist") // admin, receptionist, stylist
   active    Boolean  @default(true)
   // default(true) so existing rows skip the tour; user-creation routes set false explicitly
@@ -149,8 +150,10 @@ model User {
   salonId String
   salon   Salon @relation(fields: [salonId], references: [id], onDelete: Cascade)
 
+  // Staff log in scoped to their salon (the Host), so email is unique per-salon —
+  // the same email may be staff at more than one salon.
+  @@unique([salonId, email])
   @@index([role])
-  @@index([pin])
   @@index([salonId])
 }
 
