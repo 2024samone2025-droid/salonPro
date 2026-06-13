@@ -27,7 +27,39 @@ export async function GET() {
     const subject = await getSession()
     if (!subject) return loggedOut()
 
-    // Membership against the resolved salon; fresh role + tour flag from the row.
+    const salonInfo = {
+      id: salon.id,
+      name: salon.name,
+      subdomain: salon.subdomain,
+      plan: salon.plan,
+      settings: parseSalonSettings(salon.settings),
+    }
+
+    // Owner: admin via the OwnerSalon link; no User row, so no tour.
+    if (subject.kind === 'owner') {
+      const link = await db.ownerSalon.findUnique({
+        where: { ownerId_salonId: { ownerId: subject.id, salonId: salon.id } },
+        select: { owner: { select: { name: true, email: true } } },
+      })
+      if (!link) return loggedOut()
+
+      return NextResponse.json({
+        user: {
+          kind: 'owner',
+          id: subject.id,
+          name: link.owner.name,
+          email: link.owner.email,
+          role: 'admin',
+          staffId: null,
+          salonId: salon.id,
+          tourCompleted: true,
+        },
+        permissions: ROLE_PERMISSIONS.admin,
+        salon: salonInfo,
+      })
+    }
+
+    // Staff: membership against the resolved salon; fresh role + tour flag.
     const member = await db.user.findFirst({
       where: { id: subject.id, salonId: salon.id, active: true },
       select: { id: true, name: true, role: true, staffId: true, tourCompleted: true },
@@ -47,13 +79,7 @@ export async function GET() {
         tourCompleted: member.tourCompleted,
       },
       permissions,
-      salon: {
-        id: salon.id,
-        name: salon.name,
-        subdomain: salon.subdomain,
-        plan: salon.plan,
-        settings: parseSalonSettings(salon.settings),
-      },
+      salon: salonInfo,
     })
   } catch (error) {
     console.error('Session check error:', error)

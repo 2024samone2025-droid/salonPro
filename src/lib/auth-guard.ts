@@ -70,17 +70,30 @@ export async function requireAuth(req?: NextRequest, requiredPermission?: keyof 
   const subject = req ? getSessionFromRequest(req) : await getSession()
   if (!subject) return unauthorized()
 
-  // 3. Verify membership against the resolved salon. Non-members are treated
-  //    exactly like "no session" — no existence leak.
-  const member = await db.user.findFirst({
-    where: { id: subject.id, salonId: salon.id, active: true },
-    select: { id: true, name: true, role: true, staffId: true },
-  })
-  if (!member) return unauthorized()
+  // 3. Verify membership against the resolved salon. Non-members (staff or owner)
+  //    are treated exactly like "no session" — no existence leak.
+  let user: SessionUser
+  let permissions: Permissions | null
 
-  const role = member.role as UserRole
-  const permissions = ROLE_PERMISSIONS[role] || null
-  const user: SessionUser = { kind: 'staff', id: member.id, name: member.name, role, staffId: member.staffId }
+  if (subject.kind === 'owner') {
+    // Owners get admin rights directly via the OwnerSalon link — no User row.
+    const link = await db.ownerSalon.findUnique({
+      where: { ownerId_salonId: { ownerId: subject.id, salonId: salon.id } },
+      select: { owner: { select: { name: true, email: true } } },
+    })
+    if (!link) return unauthorized()
+    user = { kind: 'owner', id: subject.id, name: link.owner.name, role: 'admin', staffId: null, email: link.owner.email }
+    permissions = ROLE_PERMISSIONS.admin
+  } else {
+    const member = await db.user.findFirst({
+      where: { id: subject.id, salonId: salon.id, active: true },
+      select: { id: true, name: true, role: true, staffId: true },
+    })
+    if (!member) return unauthorized()
+    const role = member.role as UserRole
+    user = { kind: 'staff', id: member.id, name: member.name, role, staffId: member.staffId }
+    permissions = ROLE_PERMISSIONS[role] || null
+  }
 
   if (requiredPermission && permissions && !permissions[requiredPermission]) {
     return {
