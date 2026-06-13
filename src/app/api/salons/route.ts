@@ -1,5 +1,7 @@
 import { db } from '@/lib/db'
 import { hashPin, createSessionToken, ROLE_PERMISSIONS, type UserRole } from '@/lib/auth'
+import { validateSubdomain } from '@/lib/constants'
+import { Prisma } from '@prisma/client'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(req: NextRequest) {
@@ -10,13 +12,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'All fields required' }, { status: 400 })
     }
 
-    // Validate subdomain format
-    const cleanSubdomain = subdomain.toLowerCase().trim()
-    if (!cleanSubdomain.match(/^[a-z0-9-]+$/)) {
-      return NextResponse.json({ error: 'Subdomain must be lowercase letters, numbers, or hyphens' }, { status: 400 })
+    // Validate subdomain format / length / reserved names (shared rules)
+    const cleanSubdomain = subdomain.trim().toLowerCase()
+    const check = validateSubdomain(cleanSubdomain)
+    if (!check.valid) {
+      return NextResponse.json({ error: check.error }, { status: 400 })
     }
 
-    // Check if subdomain exists
+    // Fast pre-check for a friendly message in the common case. Not authoritative:
+    // the unique constraint (caught below as P2002) is what actually prevents a
+    // race between two near-simultaneous signups claiming the same subdomain.
     const existingSalon = await db.salon.findUnique({ where: { subdomain: cleanSubdomain } })
     if (existingSalon) {
       return NextResponse.json({ error: 'Subdomain already taken' }, { status: 409 })
@@ -70,18 +75,37 @@ export async function POST(req: NextRequest) {
 
     return response
   } catch (error) {
+    // Race backstop: the unique constraint on Salon.subdomain rejects the loser
+    // of two simultaneous signups. Surface it as a clean 409, not a 500.
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === 'P2002' &&
+      (error.meta?.target as string[] | undefined)?.includes('subdomain')
+    ) {
+      return NextResponse.json({ error: 'Subdomain already taken' }, { status: 409 })
+    }
     console.error('Salon creation error:', error)
     return NextResponse.json({ error: 'Failed to create salon' }, { status: 500 })
   }
 }
 
-// Check if subdomain is available
+// Check if subdomain is available (powers the signup live-availability UX).
 export async function GET(req: NextRequest) {
   const subdomain = req.nextUrl.searchParams.get('subdomain')
   if (!subdomain) {
     return NextResponse.json({ error: 'Subdomain required' }, { status: 400 })
   }
 
-  const existing = await db.salon.findUnique({ where: { subdomain } })
-  return NextResponse.json({ available: !existing })
+  // Apply the same rules server-side so the endpoint can't be probed past them.
+  const value = subdomain.trim().toLowerCase()
+  const check = validateSubdomain(value)
+  if (!check.valid) {
+    return NextResponse.json({ available: false, reason: check.error })
+  }
+
+  const existing = await db.salon.findUnique({ where: { subdomain: value } })
+  return NextResponse.json({
+    available: !existing,
+    reason: existing ? 'Subdomain already taken' : undefined,
+  })
 }

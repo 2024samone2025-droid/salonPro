@@ -78,3 +78,48 @@ export const PAYMENT_STATUS_CONFIG = {
 
 export type AppointmentStatus = keyof typeof STATUS_CONFIG
 export type PaymentStatus = keyof typeof PAYMENT_STATUS_CONFIG
+
+/* ──────────────────────────────────────────────────────────────────────────
+ * Subdomain rules — single source of truth for signup (client + API).
+ * This module is client-safe (no server imports), so the signup page, the
+ * availability endpoint, and the create endpoint all share these rules and
+ * can never disagree. Documented in /context/DATA_MODELS.md.
+ * ────────────────────────────────────────────────────────────────────────── */
+
+export const SUBDOMAIN_MIN_LENGTH = 3
+export const SUBDOMAIN_MAX_LENGTH = 30
+
+// Reserved system/infra names that must never be claimed as a salon subdomain.
+// NOTE: 'demo' is intentionally NOT reserved — it's a legitimate (seed) tenant
+// and the uniqueness constraint already protects it.
+export const RESERVED_SUBDOMAINS: ReadonlySet<string> = new Set([
+  'www', 'api', 'app', 'admin', 'dashboard', 'mail', 'email', 'smtp', 'ftp',
+  'ns1', 'ns2', 'cdn', 'assets', 'static', 'media', 'blog', 'status', 'docs',
+  'help', 'support', 'signup', 'login', 'register', 'auth', 'account', 'billing',
+  'settings', 'pricing', 'about', 'contact', 'salonpro', 'salon', 'root',
+  'system', 'internal', 'staging', 'test',
+])
+
+// Start and end alphanumeric; hyphens allowed only in between.
+const SUBDOMAIN_PATTERN = /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/
+
+/**
+ * Validate a subdomain against format, length, and reserved-name rules.
+ * Normalizes (trim + lowercase) before checking. Returns the first failure.
+ */
+export function validateSubdomain(raw: string): { valid: boolean; error?: string } {
+  const value = raw.trim().toLowerCase()
+  if (value.length < SUBDOMAIN_MIN_LENGTH) {
+    return { valid: false, error: `Must be at least ${SUBDOMAIN_MIN_LENGTH} characters` }
+  }
+  if (value.length > SUBDOMAIN_MAX_LENGTH) {
+    return { valid: false, error: `Must be at most ${SUBDOMAIN_MAX_LENGTH} characters` }
+  }
+  if (!SUBDOMAIN_PATTERN.test(value)) {
+    return { valid: false, error: 'Use lowercase letters, numbers, and hyphens (no leading or trailing hyphen)' }
+  }
+  if (RESERVED_SUBDOMAINS.has(value)) {
+    return { valid: false, error: 'This subdomain is reserved' }
+  }
+  return { valid: true }
+}
