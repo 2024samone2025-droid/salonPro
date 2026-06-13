@@ -4,24 +4,35 @@ config({ path: '.env', override: true })
 console.log('DATABASE_URL:', process.env.DATABASE_URL?.substring(0, 50) + '...')
 
 import { PrismaClient } from '@prisma/client'
-import crypto from 'crypto'
+import { scrypt, randomBytes } from 'crypto'
+import { promisify } from 'util'
 
 const db = new PrismaClient({
   log: ['warn', 'error'],
 })
 
-function hashPin(pin: string): string {
-  return crypto.createHash('sha256').update(pin).digest('hex')
+const DEMO_PASSWORD = 'demo1234'
+
+// scrypt "salt:hash" — must match src/lib/password.ts (inlined so this standalone
+// script doesn't depend on the @/ alias under tsx).
+const scryptAsync = promisify(scrypt)
+async function hashPassword(plain: string): Promise<string> {
+  const salt = randomBytes(16).toString('hex')
+  const derived = (await scryptAsync(plain, salt, 64)) as Buffer
+  return `${salt}:${derived.toString('hex')}`
 }
 
 async function seed() {
   console.log('Clearing existing data...')
+  await db.oneTimeToken.deleteMany()
   await db.payment.deleteMany()
   await db.appointment.deleteMany()
   await db.user.deleteMany()
   await db.customer.deleteMany()
   await db.staff.deleteMany()
   await db.service.deleteMany()
+  await db.ownerSalon.deleteMany()
+  await db.owner.deleteMany()
   await db.salon.deleteMany()
 
   console.log('Creating demo salon...')
@@ -50,13 +61,17 @@ async function seed() {
   ])
 
   console.log('Creating users...')
-  const pin1 = hashPin('1234')
-  const pin2 = hashPin('5678')
-  const pin3 = hashPin('9012')
+  const demoHash = await hashPassword(DEMO_PASSWORD)
 
-  await db.user.create({ data: { name: 'Admin', pin: pin1, role: 'admin', active: true, salonId: salon.id } })
-  await db.user.create({ data: { name: 'Alice', pin: pin2, role: 'receptionist', active: true, staffId: staff[3].id, salonId: salon.id } })
-  await db.user.create({ data: { name: 'Marie', pin: pin3, role: 'stylist', active: true, staffId: staff[0].id, salonId: salon.id } })
+  await db.user.create({ data: { name: 'Admin', email: 'admin@demo.salonpro.me', passwordHash: demoHash, role: 'admin', active: true, salonId: salon.id } })
+  await db.user.create({ data: { name: 'Alice', email: 'alice@demo.salonpro.me', passwordHash: demoHash, role: 'receptionist', active: true, staffId: staff[3].id, salonId: salon.id } })
+  await db.user.create({ data: { name: 'Marie', email: 'marie@demo.salonpro.me', passwordHash: demoHash, role: 'stylist', active: true, staffId: staff[0].id, salonId: salon.id } })
+
+  console.log('Creating demo owner...')
+  const owner = await db.owner.create({
+    data: { email: 'owner@demo.salonpro.me', passwordHash: demoHash, name: 'Demo Owner' },
+  })
+  await db.ownerSalon.create({ data: { ownerId: owner.id, salonId: salon.id } })
 
   console.log('Creating customers...')
   const customers = await Promise.all([
@@ -232,10 +247,11 @@ async function seed() {
   console.log(`   Services: ${services.length}`)
   console.log(`   Appointments: ${appointmentCount}`)
   console.log(`   Users: 3`)
-  console.log('\nLogin credentials:')
-  console.log('   Admin:         name=Admin,   pin=1234')
-  console.log('   Receptionist:  name=Alice,   pin=5678')
-  console.log('   Stylist:       name=Marie,   pin=9012')
+  console.log('\nLogin credentials (all password: ' + DEMO_PASSWORD + '):')
+  console.log('   Admin:         admin@demo.salonpro.me')
+  console.log('   Receptionist:  alice@demo.salonpro.me')
+  console.log('   Stylist:       marie@demo.salonpro.me')
+  console.log('   Owner:         owner@demo.salonpro.me')
 
   await db.$disconnect()
 }

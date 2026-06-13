@@ -1,6 +1,8 @@
 import { db } from '@/lib/db'
-import { hashPin } from '@/lib/auth'
+import { hashPassword } from '@/lib/password'
 import { NextResponse } from 'next/server'
+
+const DEMO_PASSWORD = 'demo1234'
 
 export async function POST() {
   try {
@@ -37,14 +39,12 @@ export async function POST() {
       db.staff.create({ data: { name: 'Alice Niyonsaba', phone: '+250788456789', role: 'receptionist', active: true, salonId: salon.id } }),
     ])
 
-    // Create demo users with hashed PINs
-    const pin1 = hashPin('1234') // Admin PIN
-    const pin2 = hashPin('5678') // Receptionist PIN
-    const pin3 = hashPin('9012') // Stylist PIN
+    // Create demo users — email + password (PINs retired). All share DEMO_PASSWORD.
+    const demoHash = await hashPassword(DEMO_PASSWORD)
 
-    await db.user.create({ data: { name: 'Admin', pin: pin1, role: 'admin', active: true, salonId: salon.id } })
-    await db.user.create({ data: { name: 'Alice', pin: pin2, role: 'receptionist', active: true, staffId: staff[3].id, salonId: salon.id } })
-    await db.user.create({ data: { name: 'Marie', pin: pin3, role: 'stylist', active: true, staffId: staff[0].id, salonId: salon.id } })
+    await db.user.create({ data: { name: 'Admin', email: 'admin@demo.salonpro.me', passwordHash: demoHash, role: 'admin', active: true, salonId: salon.id } })
+    await db.user.create({ data: { name: 'Alice', email: 'alice@demo.salonpro.me', passwordHash: demoHash, role: 'receptionist', active: true, staffId: staff[3].id, salonId: salon.id } })
+    await db.user.create({ data: { name: 'Marie', email: 'marie@demo.salonpro.me', passwordHash: demoHash, role: 'stylist', active: true, staffId: staff[0].id, salonId: salon.id } })
 
     // Create more customers for variety
     const customers = await Promise.all([
@@ -252,9 +252,9 @@ export async function POST() {
         appointments: appointmentData.length,
         users: 3,
         userAccounts: [
-          { name: 'Admin', role: 'admin', pin: '1234' },
-          { name: 'Alice', role: 'receptionist', pin: '5678' },
-          { name: 'Marie', role: 'stylist', pin: '9012' },
+          { name: 'Admin', role: 'admin', email: 'admin@demo.salonpro.me', password: DEMO_PASSWORD },
+          { name: 'Alice', role: 'receptionist', email: 'alice@demo.salonpro.me', password: DEMO_PASSWORD },
+          { name: 'Marie', role: 'stylist', email: 'marie@demo.salonpro.me', password: DEMO_PASSWORD },
         ],
       },
     })

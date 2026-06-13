@@ -10,7 +10,7 @@ src/
       dashboard|appointments|customers|staff|services|reports|settings|billing/page.tsx
     api/                    route handlers (see "API" below)
     book/[subdomain]/       public self-booking page (path-param tenant; not Host-resolved)
-    login/                  UnifiedLogin: one email-first screen on every host; staff PIN one click away
+    login/                  UnifiedLogin: one email+password screen on every host (no PINs)
     signup/                 create salon + owner account
     page.tsx                marketing landing ("/")
     layout.tsx              root layout: fonts, theme bootstrap script, <Toaster>
@@ -46,9 +46,9 @@ The operating salon is derived from the **request Host**, never the token or req
 ## Authentication & authorization (two surfaces)
 Cookie-only (the Bearer/`localStorage` channel was retired). The `salonpro_session` cookie is **host-only** (no `Domain`), so it's naturally isolated per subdomain. Logic in `src/lib/auth.ts`; guard in `src/lib/auth-guard.ts` (`requireAuth(req?, permission?)`). `AUTH_SECRET` is **required** (no fallback — fails loudly).
 
-- **Staff** — per-salon `User`, name + SHA-256 **PIN**, login at the tenant host (`<sub>/login`). Roles: `admin`, `receptionist`, `stylist` (`src/lib/permissions.ts`, `ROLE_PERMISSIONS`, client-safe).
+- **Staff** — per-salon `User`, **email + scrypt password** (`lib/password.ts`; email unique per salon), login at the tenant host (`<sub>/login` → `/api/auth/login`). PINs were retired. Roles: `admin`, `receptionist`, `stylist` (`src/lib/permissions.ts`, `ROLE_PERMISSIONS`, client-safe).
 - **Owner** — global `Owner` (email + **scrypt** password, `lib/password.ts`), logs in at the **root** host (`/login`), gets a short-lived root-owner cookie (`salonpro_owner`), picks a salon, and is handed off to the subdomain via a **single-use exchange token** (`/api/owner/select` → `/api/auth/exchange`). An owner has **admin** rights to any salon it's linked to via `OwnerSalon` — **no `User` row required**.
-- **Login UI is unified** (`src/app/login/UnifiedLogin.tsx`, rendered on every host): email-first owner flow + a one-click staff PIN path. The two identities above are unchanged — this is presentation only. The email step makes **no backend call** (no "is this an owner?" lookup); only `/api/owner/login` verifies, failing generically, so the screen never leaks whether an email exists. On the apex the staff path collects a subdomain and redirects to `<sub>/login` to finish PIN on the salon's own host.
+- **Single login UI** (`src/app/login/UnifiedLogin.tsx`, every host): email → password, no PINs. A **tenant host** signs staff in against that salon (`/api/auth/login`); the **apex** is the owner flow (`/api/owner/login` → picker → handoff) plus a "Go to your salon" link that sends a team member to `<sub>/login`. The email step makes **no backend call**; credentials are only verified on submit, failing generically, so the screen never leaks whether an email exists.
 - **`requireAuth`** decodes the cookie (discriminated `kind: 'staff' | 'owner'`), resolves the Host salon, then verifies membership: staff → active `User` in that salon; owner → `OwnerSalon` link. Two failures: unknown subdomain → 404; valid subdomain + non-member → **401 identical to no-session** (no existence leak). Role/name come from the fresh DB row.
 - **Auth gating is client-side** in `AppShell` (`/api/auth/me`); the **server** `(app)` layout only does salon-resolution + `notFound()` (a logged-out visitor briefly sees the shell before the client redirect — known-deferred). Owners have no `User`, so `/api/auth/me` and `users/me/tour-complete` branch on `kind`.
 - Server routes enforce via `requireAuth`; nav visibility via `nav-items.ts` (display only — does **not** guard routes).
@@ -81,8 +81,8 @@ export async function GET(req: NextRequest) {
 | File | Purpose |
 |---|---|
 | `db.ts` | Prisma client singleton (`db`). **Use this.** |
-| `auth.ts` | session create/verify (staff + owner, discriminated `kind`), PIN hashing, root-owner + single-use exchange tokens, `AUTH_SECRET` (required) |
-| `password.ts` | scrypt `hashPassword`/`verifyPassword` (owner passwords; NOT staff PINs) |
+| `auth.ts` | session create/verify (staff + owner, discriminated `kind`), root-owner + single-use exchange tokens, `AUTH_SECRET` (required) |
+| `password.ts` | scrypt `hashPassword`/`verifyPassword` (all account passwords — staff `User` and `Owner`) |
 | `subdomain.ts` | edge-safe `getSubdomainLabel(host, ROOT_DOMAIN)` + `SALON_SUBDOMAIN_HEADER` |
 | `auth-guard.ts` | `requireAuth(req?, permission?)` → `{ authorized, user, permissions, salonId, error }`; salonId from Host + membership verify |
 | `permissions.ts` | `ROLE_PERMISSIONS`, `ROLE_LABELS`, `PERMISSION_MATRIX_ROWS` (client-safe) |

@@ -32,16 +32,6 @@ export type SessionUser =
   | { kind: 'staff'; id: string; name: string; role: UserRole; staffId: string | null }
   | { kind: 'owner'; id: string; name: string; role: 'admin'; staffId: null; email: string }
 
-// Hash PIN using Node.js crypto (synchronous, reliable)
-export function hashPin(pin: string): string {
-  return crypto.createHash('sha256').update(pin).digest('hex')
-}
-
-// Verify a PIN against a hash
-export function verifyPin(pin: string, hash: string): boolean {
-  return hashPin(pin) === hash
-}
-
 // Create a staff session token using HMAC (synchronous, reliable). Accepts a
 // loose shape (any extra fields like a legacy salonId are ignored) so callers
 // that still build richer objects don't need to change.

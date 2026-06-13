@@ -82,26 +82,34 @@ _Verified: `tsc --noEmit` + `eslint .` clean. Not browser-smoke-tested. Signup n
 
 **Deployment prerequisite (out of code scope):** wildcard DNS `*.salonpro.me` + wildcard SSL before Phase 1 deploys.
 
-## Unified email-first login (2026-06-13)
+## Single email+password login — PINs retired (2026-06-13)
 
-Replaced the host-branched `/login` (separate `OwnerLogin`/`StaffLogin`) with one
-`UnifiedLogin.tsx` on every host: email-first owner flow + a one-click staff PIN
-path. **Frontend-only** — no schema/API/cookie changes; all owner + staff endpoints
-reused as-is.
-- [x] `UnifiedLogin.tsx`: owner email → password → picker/handoff (lifted from old
-  `OwnerLogin`); staff PIN via reused `LoginPage` (tenant host) or a subdomain
-  redirect (apex). Host-aware default: tenant→PIN, apex→email. `tsc` + lint clean.
-- [x] `login/page.tsx` wraps it in `AuthProvider`; deleted `OwnerLogin`/`StaffLogin`.
-- **No email enumeration:** the email step makes no backend call; only
-  `/api/owner/login` verifies (generic failure).
-- [ ] **Browser smoke test pending** (user, after dev-server restart): apex owner
-  email→password→picker; apex "Team member?"→subdomain redirect; tenant-host staff
-  PIN + "Owner?" toggle; logged-in staff hitting `/login`→`/dashboard`.
+Everyone now signs in with **email + password**; the SHA-256 PIN is gone (the brief
+hybrid that kept PINs was superseded). Roles (`admin`/`receptionist`/`stylist`) still
+govern access. Chose the lower-risk model: one login *screen* on every host, but the
+cross-subdomain **handoff/exchange/token layer is untouched**.
+- [x] Schema: `User` += `email` (lowercased) + `passwordHash` (scrypt), −`pin`;
+  `@@unique([salonId, email])`. Apply: `prisma db push --force-reset --accept-data-loss` + reseed.
+- [x] `/api/auth/login` → email+password scoped to the host salon (generic failure).
+- [x] Staff creation: `/api/users`, `/api/users/[id]`, `/api/auth/signup`, the seed
+  route + `UsersTab` use email+password. Removed `hashPin`/`verifyPin`.
+- [x] `UnifiedLogin.tsx`: email → password everywhere. Tenant host = staff login;
+  apex = owner login + "Go to your salon" link. Deleted the PIN `LoginPage`.
+- [x] `seed-neon.ts` reseeds demo: `admin/alice/marie@demo.salonpro.me` + demo owner,
+  all password `demo1234`. `tsc` + lint clean.
+- **No email enumeration:** the email step makes no backend call; only the login
+  POST verifies, generically.
+- [ ] **User: run `prisma db push --force-reset --accept-data-loss` + reseed, restart
+  dev server, smoke test** — apex owner email→password→picker; apex "Go to your
+  salon"→`<sub>/login`; tenant-host staff email+password (admin vs stylist scope);
+  logged-in staff hitting `/login`→`/dashboard`.
 
-**Deferred — full unification (chose hybrid instead):** giving every staff `User` an
-email+password and retiring PINs (schema migration + backfill incl. demo data). Not
-done by choice — PINs stay for fast shared-terminal login. Revisit if the product
-moves to per-staff email accounts.
+**Login model decision:** staff log in at their salon's address (Slack/Shopify
+workspace-URL style), owners at the apex with a picker. The fully-merged "single
+apex door that finds your salon(s) and handoffs staff in" was considered and
+**not** built — it would mean generalizing the freshly-built handoff/exchange layer
+for staff + global-unique emails. Revisit only if people who own one salon **and**
+work staff at another become common.
 
 ---
 
