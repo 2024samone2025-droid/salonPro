@@ -17,14 +17,16 @@ Template — fill in the product/roadmap sections. The cleanup backlog at the bo
 ---
 
 ## Cleanup backlog (from initial /context audit — 2026-06-13)
-These are flagged, not done. Decide and tackle when convenient.
 
-- [ ] **Retire legacy toast system.** sonner is the real one (mounted in `(app)/layout.tsx`). Remove the radix trio `hooks/use-toast.ts` + `ui/toast.tsx` + `ui/toaster.tsx` and its mount in root `app/layout.tsx`.
-- [ ] **Delete dead `src/lib/prisma.ts`** (empty, imported by nothing — real client is `lib/db.ts`).
-- [ ] **Decide on `@tanstack/react-query`** — installed but unused (no `QueryClientProvider`). Adopt it (would replace the `useEffect`+`fetch` pattern) or drop the dependency.
-- [ ] **Check `next-themes`** — likely unused now (theme handled by custom `data-theme` script + `theme-toggle.tsx`). Drop if dead.
-- [ ] **Amend `specs/ui/design-system.md`** — its last entry says dark-only / no toggle / Plus Jakarta Sans, but code is light+dark with a toggle and **Poppins**. Add an amendment line.
-- [ ] **Reconcile payment status naming** — DB `Payment.status` comment says `partial`; UI `PAYMENT_STATUS_CONFIG` uses `partially_paid`.
+Done 2026-06-13:
+- [x] **Retired legacy toast system.** Deleted `hooks/use-toast.ts` + `ui/toast.tsx` + `ui/toaster.tsx` and removed the radix `<Toaster>` mount from root `app/layout.tsx`. sonner remains, mounted in `(app)/layout.tsx` + `BookingFlow.tsx`.
+- [x] **Deleted dead `src/lib/prisma.ts`** (empty; real client is `lib/db.ts`).
+- [x] **Amended `specs/ui/design-system.md`** with the 2026-06-13 row (light restored, toggle re-added, Poppins).
+- [x] **Reconciled payment status naming** — `PAYMENT_STATUS_CONFIG` key `partially_paid` → `partial` to match the value used by `AppointmentDialog`, seed, dashboard, reports (partial badges now render their amber style).
+
+Deferred (need `npm install`; disk was full at the time — do when disk is healthy):
+- [ ] **Drop `@tanstack/react-query`** from `package.json` — unused (no `QueryClientProvider`/`useQuery`). Or adopt it to replace the `useEffect`+`fetch` pattern.
+- [ ] **Drop `next-themes`** from `package.json` — unused (theme handled by custom `data-theme` script + `theme-toggle.tsx`).
 
 ## Product gaps (carried from old worklogs — decide build vs defer)
 - [ ] Real Stripe billing (15,000 RWF zero-decimal price, webhook, downgrade grace).

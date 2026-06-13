@@ -66,7 +66,7 @@ export const PAYMENT_STATUS_CONFIG = {
     label: 'Unpaid',
     badgeClass: 'bg-status-noshow-bg text-status-noshow-fg border-transparent',
   },
-  partially_paid: {
+  partial: {
     label: 'Partial',
     badgeClass: 'bg-status-progress-bg text-status-progress-fg border-transparent',
   },
