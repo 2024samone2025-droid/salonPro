@@ -5,7 +5,17 @@ import crypto from 'crypto'
 // Session cookie name
 const SESSION_COOKIE = 'salonpro_session'
 const SESSION_MAX_AGE = 60 * 60 * 24 * 7 // 7 days
-const AUTH_SECRET = process.env.AUTH_SECRET || 'salonpro-rwanda-secret-key-2025'
+
+// Fail loudly if the signing secret is missing — never fall back to a hardcoded
+// value, which would let anyone forge sessions. Required in every environment.
+function requireAuthSecret(): string {
+  const secret = process.env.AUTH_SECRET
+  if (!secret) {
+    throw new Error('AUTH_SECRET environment variable is required (set it in .env)')
+  }
+  return secret
+}
+const AUTH_SECRET = requireAuthSecret()
 
 // Role-based permissions live in ./permissions (client-safe); re-export for server callers
 import { ROLE_PERMISSIONS, type Permissions, type UserRole } from './permissions'
