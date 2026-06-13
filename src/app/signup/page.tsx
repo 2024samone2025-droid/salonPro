@@ -15,8 +15,9 @@ type SubStatus = 'idle' | 'invalid' | 'checking' | 'available' | 'taken'
 export default function SalonSignupPage() {
   const [salonName, setSalonName] = useState('')
   const [subdomain, setSubdomain] = useState('')
-  const [adminName, setAdminName] = useState('')
-  const [adminPin, setAdminPin] = useState('')
+  const [ownerName, setOwnerName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -80,7 +81,7 @@ export default function SalonSignupPage() {
       const res = await fetch('/api/salons', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ salonName, subdomain, adminName, adminPin }),
+        body: JSON.stringify({ salonName, subdomain, ownerName, email, password }),
       })
 
       const data = await res.json()
@@ -88,12 +89,11 @@ export default function SalonSignupPage() {
       if (!res.ok) {
         setError(data.error || 'Failed to create salon')
       } else {
-        setSuccess(`Salon created! Redirecting to your salon...`)
-        if (data.token) {
-          localStorage.setItem('salonpro_token', data.token)
-        }
+        // data.redirect is the single-use exchange URL on the new subdomain; it
+        // sets the owner session cookie and lands on /dashboard logged in.
+        setSuccess('Salon created! Redirecting to your salon…')
         setTimeout(() => {
-          window.location.href = `/?salon=${data.salon.subdomain}`
+          window.location.href = data.redirect
         }, 1000)
       }
     } catch {
@@ -117,7 +117,7 @@ export default function SalonSignupPage() {
         <Card>
           <CardHeader>
             <CardTitle>Create Salon</CardTitle>
-            <CardDescription>Set up your salon and admin account</CardDescription>
+            <CardDescription>Set up your salon and owner account</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -144,7 +144,7 @@ export default function SalonSignupPage() {
                     aria-invalid={subStatus === 'invalid' || subStatus === 'taken'}
                     required
                   />
-                  <span className="text-sm text-muted-foreground">.salonpro.com</span>
+                  <span className="text-sm text-muted-foreground">.salonpro.me</span>
                 </div>
                 {subStatus !== 'idle' && (
                   <p
@@ -164,25 +164,40 @@ export default function SalonSignupPage() {
               </div>
 
               <div>
-                <Label htmlFor="adminName">Admin Name</Label>
+                <Label htmlFor="ownerName">Your Name</Label>
                 <Input
-                  id="adminName"
-                  placeholder="Admin User"
-                  value={adminName}
-                  onChange={(e) => setAdminName(e.target.value)}
+                  id="ownerName"
+                  placeholder="Jane Doe"
+                  value={ownerName}
+                  onChange={(e) => setOwnerName(e.target.value)}
+                  autoComplete="name"
                   required
                 />
               </div>
 
               <div>
-                <Label htmlFor="adminPin">Admin PIN</Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
-                  id="adminPin"
+                  id="email"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="email"
+                  required
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
                   type="password"
-                  placeholder="4-6 digit PIN"
-                  value={adminPin}
-                  onChange={(e) => setAdminPin(e.target.value)}
-                  maxLength={6}
+                  placeholder="At least 8 characters"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="new-password"
+                  minLength={8}
                   required
                 />
               </div>
@@ -200,7 +215,11 @@ export default function SalonSignupPage() {
                 </Alert>
               )}
 
-              <Button type="submit" className="w-full" disabled={loading || !salonName || !adminName || !adminPin || subStatus !== 'available'}>
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={loading || !salonName || !ownerName || !email || password.length < 8 || subStatus !== 'available'}
+              >
                 {loading ? <Loader2 className="size-4 animate-spin mr-2" /> : null}
                 Create Salon
               </Button>
