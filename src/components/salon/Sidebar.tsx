@@ -124,7 +124,7 @@ export default function SalonSidebar() {
                           : 'text-sidebar-foreground/60 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground/90'
                       )}
                     >
-                      <Link href={item.href}>
+                      <Link href={item.href} data-tour={`nav${item.href.replace('/', '-')}`}>
                         <Icon
                           className={cn(
                             "size-4 transition-colors",

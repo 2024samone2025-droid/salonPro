@@ -142,3 +142,80 @@
     -webkit-font-smoothing: antialiased;
   }
 }
+
+/*
+ * Driver.js product tour — popover restyled with the app's semantic Tailwind
+ * utilities so it follows every theme automatically. Driver renders plain DOM
+ * (not React), so we can't drop shadcn components in; @apply-ing the same
+ * classes those components use is the equivalent.
+ * Note: driver.css sets `font` shorthands that reset the font-family — the
+ * font-sans in each text rule restores Poppins.
+ */
+.driver-popover {
+  @apply max-w-80 rounded-lg border-hairline border-border bg-card p-4 text-foreground shadow-xl;
+}
+.driver-popover-title {
+  @apply font-sans text-[15px] font-medium text-foreground;
+}
+.driver-popover-description {
+  @apply mt-1 font-sans text-[13px] leading-relaxed text-muted-foreground;
+}
+.driver-popover-progress-text {
+  @apply font-sans text-xs text-ink-faint;
+}
+.driver-popover-footer {
+  @apply mt-3.5 gap-2;
+}
+.driver-popover-footer button {
+  @apply rounded-sm px-3.5 py-2 font-sans text-[13px] font-medium leading-none transition-colors;
+  text-shadow: none;
+}
+.driver-popover-footer button:focus-visible {
+  @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+}
+/* Next/Done — the one solid accent action (same recipe as Button primary) */
+.driver-popover-next-btn {
+  @apply border-0 bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground;
+}
+/* Back — ghost (same recipe as Button ghost) */
+.driver-popover-prev-btn {
+  @apply border-hairline border-line-strong bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground;
+}
+/* Close (×) — generous tap target */
+.driver-popover-close-btn {
+  @apply size-8 text-base text-ink-faint hover:bg-transparent hover:text-foreground;
+}
+/* Arrows must match the popover surface */
+.driver-popover-arrow-side-left {
+  @apply border-l-card;
+}
+.driver-popover-arrow-side-right {
+  @apply border-r-card;
+}
+.driver-popover-arrow-side-top {
+  @apply border-t-card;
+}
+.driver-popover-arrow-side-bottom {
+  @apply border-b-card;
+}
+
+/* Mobile: near-full-width popover, 44px touch targets, larger type */
+@media (max-width: 640px) {
+  .driver-popover {
+    max-width: min(calc(100vw - 24px), 360px);
+  }
+  .driver-popover-title {
+    @apply text-base;
+  }
+  .driver-popover-description {
+    @apply text-sm;
+  }
+  .driver-popover-footer button {
+    @apply px-4 text-sm;
+    padding-top: 13px; /* ≥44px tall tap target */
+    padding-bottom: 13px;
+  }
+  .driver-popover-close-btn {
+    @apply size-10;
+  }
+}

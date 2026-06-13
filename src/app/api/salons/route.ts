@@ -34,6 +34,7 @@ export async function POST(req: NextRequest) {
           pin: hashPin(adminPin),
           role: 'admin',
           active: true,
+          tourCompleted: false,
           salonId: salon.id,
         },
       })

@@ -29,6 +29,7 @@ export async function POST(req: NextRequest) {
         pin: hashPin(pin),
         role: 'receptionist',
         active: true,
+        tourCompleted: false,
         salonId,
       },
     })

@@ -53,6 +53,7 @@ export default function MobileTabBar() {
                 key={item.href}
                 href={item.href}
                 aria-current={isActive ? 'page' : undefined}
+                data-tour={`m-nav${item.href.replace('/', '-')}`}
                 className={cn(
                   'flex flex-col items-center justify-center gap-0.5 h-14 text-[10px] font-medium transition-colors',
                   isActive
@@ -69,6 +70,7 @@ export default function MobileTabBar() {
             variant="plain"
             onClick={() => setMoreOpen(true)}
             aria-expanded={moreOpen}
+            data-tour="nav-more"
             className={cn(
               'flex h-14 flex-col items-center justify-center gap-0.5 rounded-none px-0 text-[10px] font-medium hover:bg-transparent',
               moreActive

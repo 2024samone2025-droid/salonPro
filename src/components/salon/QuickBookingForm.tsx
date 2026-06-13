@@ -204,7 +204,7 @@ export default function QuickBookingForm({ selectedDate, onBookingCreated }: Qui
   if (!canCreate) return null
 
   return (
-    <Card className="shadow-sm">
+    <Card className="shadow-sm" data-tour="quick-booking">
       <CardHeader className="pb-3">
         <div className="flex items-center gap-2">
           <div className="flex items-center justify-center size-8 rounded-lg bg-muted">
