@@ -49,13 +49,16 @@ _Verified: `tsc --noEmit` + `eslint .` clean. Not browser-smoke-tested yet (see 
 - **Dev URL pattern changed:** a bare `localhost:3000` with no tenant now resolves to NO salon → **404 is expected, not a broken build**. Run the app via `demo.localhost:3000` (browsers resolve `*.localhost` to 127.0.0.1) or `localhost:3000/?salon=demo` (dev-only `?salon=` fallback). `ROOT_DOMAIN=localhost:3000` in dev. Documented in `.env.example`.
 - **Flash of app shell (deferred):** the `(app)` auth gate stays client-side in Phase 1, so a logged-out (or cross-tenant) visitor briefly sees the shell before the client `me` call redirects to `/login`. Known-deferred — server-side gate / flash-prevention is intentionally out of Phase 1 scope.
 
-**Phase 2 — owner identity + global login (ship together; depends on 0+1)**
-- [ ] `crypto.scrypt` password util.
-- [ ] `POST /api/owner/login`: email+password → linked salons → one = exchange token; many = picker list.
-- [ ] `GET /api/auth/exchange` (subdomain): consume one-time token, set owner session cookie, redirect to `/dashboard` (strip `?t=`).
-- [ ] `requireAuth` owner branch: verify `OwnerSalon` link → admin perms; owner `AuthResult` (`id=ownerId`, `role='admin'`, `staffId=null`, `isOwner=true`).
-- [ ] Owner-specific surgery: `/api/auth/me` + `/api/users/me/tour-complete` branch on owner (return owner profile, skip tour — owners have no `User` row).
-- [ ] Root `/login` owner UI + multi-salon picker UI.
+**Phase 2 — owner identity + global login (ship together; depends on 0+1)** — ✅ done 2026-06-13
+- [x] `crypto.scrypt` password util (`lib/password.ts`, salt:hash, timing-safe).
+- [x] Owner session token + root-owner + single-use exchange tokens in `auth.ts`; `SessionUser` widened to staff|owner union.
+- [x] Picker auth via **root owner session cookie** (`salonpro_owner`, 30 min): `POST /api/owner/login` (sets it, returns salons), `GET /api/owner/me` (restore), `POST /api/owner/select` (mint exchange token + redirect URL).
+- [x] `GET /api/auth/exchange` (subdomain): verify token + host match, consume nonce atomically (single-use), set owner session cookie, redirect to `/dashboard`.
+- [x] `requireAuth` owner branch: verify `OwnerSalon` link → admin perms; non-linked owner → 401 no-leak.
+- [x] Owner-specific surgery: `/api/auth/me` owner branch; `/api/users/me/tour-complete` no-ops for owners.
+- [x] Host-branched `/login`: root host → `OwnerLogin` (email/password + picker); tenant host → `StaffLogin`.
+
+_Verified: `tsc --noEmit` + `eslint .` clean. Not browser-smoke-tested. **Owner flow dev-testing needs `demo.localhost:3000` (real subdomain host), NOT `?salon=`** — the handoff sets a host-only cookie on the subdomain. Deferred: owner login rate-limiting; a root-domain owner logout (subdomain logout only clears the tenant cookie; root-owner cookie expires on its own)._
 
 **Phase 3 — signup → owner (depends on 2)**
 - [ ] `/api/salons`: unauth → create `Owner` inline; authed owner → link to existing; **authed staff → reject (403)**. Drop admin-`User` creation; auto-login owner via exchange. Update signup form fields (email/password vs name/PIN). Keep subdomain hardening.
