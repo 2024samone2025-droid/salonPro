@@ -162,6 +162,10 @@ model Owner {
   email        String   @unique // stored lowercased
   passwordHash String   // scrypt (salt$hash) — NOT the SHA-256 used for staff PINs
   name         String
+  // true = a temp/placeholder password that should be reset on first login.
+  // Set by the backfill script; ENFORCEMENT is a deferred follow-up (the flag is
+  // currently an unenforced marker — login still works with the temp password).
+  mustResetPassword Boolean @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
