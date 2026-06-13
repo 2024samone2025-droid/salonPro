@@ -9,7 +9,8 @@ export async function POST(req: NextRequest) {
 
   try {
     await db.user.update({
-      where: { id: auth.user!.id, salonId: auth.user!.salonId },
+      // salonId comes from the resolved host (auth.salonId), not the token.
+      where: { id: auth.user!.id, salonId: auth.salonId },
       data: { tourCompleted: true },
     })
     return new NextResponse(null, { status: 204 })
