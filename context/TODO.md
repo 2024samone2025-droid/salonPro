@@ -73,7 +73,7 @@ _Verified: `tsc --noEmit` + `eslint .` clean. Not browser-smoke-tested. Signup n
 - Decision: **option (a)** — supply emails, placeholder password, no claim flow.
 - [x] Added `Owner.mustResetPassword` flag (additive db push).
 - [x] `scripts/backfill-owners.ts`: idempotent, **dry-run by default / `--commit` to write**; `SUBDOMAIN_TO_EMAIL` map at top (`demo` pre-filled); creates Owner+OwnerSalon only (never touches `User`); prints temp passwords for newly-created owners.
-- [ ] **You:** fill the email map (6 salons: `demo` done; `hello`, `mysalon`, `mysalon1`, `vision3030`, `vision`), run dry-run, then `bun run scripts/backfill-owners.ts --commit` and save the printed temp passwords.
+- [ ] **You:** fill the email map (6 salons: `demo` done; `hello`, `mysalon`, `mysalon1`, `vision3030`, `vision`), run dry-run, then `npx tsx scripts/backfill-owners.ts --commit` (no bun needed — `npx tsx` works) and save the printed temp passwords.
 - [ ] **Deferred follow-up (Phase 4.5):** build forced-reset-on-first-login *enforcement* — login checks `mustResetPassword` → set-new-password screen/endpoint. Until then the flag is an unenforced marker and temp passwords work for login.
 
 **Phase 5 — docs (final)**

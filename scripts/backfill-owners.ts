@@ -6,10 +6,10 @@
  * — it never reads or writes User (staff PINs are untouched).
  *
  *   Dry run (default, NO writes — lists what it would do):
- *     bun run scripts/backfill-owners.ts
+ *     npx tsx scripts/backfill-owners.ts        (or: bun run scripts/backfill-owners.ts)
  *
  *   Commit (writes; prints temp passwords for newly-created owners):
- *     bun run scripts/backfill-owners.ts --commit
+ *     npx tsx scripts/backfill-owners.ts --commit
  *
  * Idempotent: owners are looked up by email (check-or-create) and links are
  * guarded by @@unique([ownerId, salonId]), so re-running creates no duplicates
