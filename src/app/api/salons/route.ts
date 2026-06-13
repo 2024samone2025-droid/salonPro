@@ -9,10 +9,9 @@ import {
   ROOT_OWNER_MAX_AGE,
 } from '@/lib/auth'
 import { validateSubdomain } from '@/lib/constants'
+import { buildExchangeUrl } from '@/lib/handoff'
 import { Prisma } from '@prisma/client'
 import { NextRequest, NextResponse } from 'next/server'
-
-const ROOT_DOMAIN = process.env.ROOT_DOMAIN || 'localhost:3000'
 
 const salonView = (s: { id: string; name: string; subdomain: string; plan: string }) => ({
   id: s.id,
@@ -21,16 +20,16 @@ const salonView = (s: { id: string; name: string; subdomain: string; plan: strin
   plan: s.plan,
 })
 
-// Mint a single-use exchange token + nonce and build the subdomain handoff URL,
-// so a freshly created/linked salon logs the owner straight in (Phase 2 flow).
-async function buildOwnerHandoff(ownerId: string, salonSubdomain: string, salonId: string): Promise<string> {
+// Mint a single-use exchange token + nonce and build the (request-relative)
+// subdomain handoff URL, so a freshly created/linked salon logs the owner
+// straight in (Phase 2 flow).
+async function buildOwnerHandoff(req: NextRequest, ownerId: string, salonSubdomain: string, salonId: string): Promise<string> {
   const nonce = await db.oneTimeToken.create({
     data: { ownerId, salonId, expiresAt: new Date(Date.now() + 60 * 1000) },
     select: { id: true },
   })
   const token = createExchangeToken({ jti: nonce.id, ownerId, salonId })
-  const scheme = process.env.NODE_ENV === 'production' ? 'https' : 'http'
-  return `${scheme}://${salonSubdomain}.${ROOT_DOMAIN}/api/auth/exchange?t=${encodeURIComponent(token)}`
+  return buildExchangeUrl(req, salonSubdomain, token)
 }
 
 // Map a unique-constraint violation to a friendly 409. Returns null if it isn't one.
@@ -97,7 +96,7 @@ export async function POST(req: NextRequest) {
           await tx.ownerSalon.create({ data: { ownerId, salonId: s.id } })
           return s
         })
-        const redirect = await buildOwnerHandoff(ownerId, salon.subdomain, salon.id)
+        const redirect = await buildOwnerHandoff(req, ownerId, salon.subdomain, salon.id)
         return NextResponse.json({ salon: salonView(salon), redirect })
       } catch (error) {
         const conflict = p2002Response(error)
@@ -136,7 +135,7 @@ export async function POST(req: NextRequest) {
         return { owner, salon }
       })
 
-      const redirect = await buildOwnerHandoff(result.owner.id, result.salon.subdomain, result.salon.id)
+      const redirect = await buildOwnerHandoff(req, result.owner.id, result.salon.subdomain, result.salon.id)
       const response = NextResponse.json({ salon: salonView(result.salon), redirect })
 
       // Log the new owner in at the root host too, so they can return to switch
