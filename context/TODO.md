@@ -60,8 +60,14 @@ _Verified: `tsc --noEmit` + `eslint .` clean. Not browser-smoke-tested yet (see 
 
 _Verified: `tsc --noEmit` + `eslint .` clean. Not browser-smoke-tested. **Owner flow dev-testing needs `demo.localhost:3000` (real subdomain host), NOT `?salon=`** — the handoff sets a host-only cookie on the subdomain. Deferred: owner login rate-limiting; a root-domain owner logout (subdomain logout only clears the tenant cookie; root-owner cookie expires on its own)._
 
-**Phase 3 — signup → owner (depends on 2)**
-- [ ] `/api/salons`: unauth → create `Owner` inline; authed owner → link to existing; **authed staff → reject (403)**. Drop admin-`User` creation; auto-login owner via exchange. Update signup form fields (email/password vs name/PIN). Keep subdomain hardening.
+**Phase 3 — signup → owner (depends on 2)** — ✅ done 2026-06-13
+- [x] `/api/salons` POST owner-aware: **hard staff gate first** (valid staff `salonpro_session` → 403, before any owner cookie is read); authed owner (owner session or root-owner cookie) → create Salon + link; unauth → mint new `Owner` (name+email+scrypt password) + Salon + link in one tx. Dropped admin-`User` creation.
+- [x] Unauth + existing email → **409, never attach** (no password side-door). Both paths return an exchange-redirect URL (auto-login); unauth also sets the root-owner cookie. Subdomain + email P2002 → 409.
+- [x] Signup form: owner name + email + password (min 8) instead of admin name/PIN; redirects via the handoff URL. Suffix shown as `.salonpro.me`.
+
+_Known tradeoff (conscious, not accidental): the 409 "that email already has an account" message is a minor **email-enumeration oracle** — it reveals which emails are registered owners. Accepted for clearer signup UX on a salon SaaS. Revisit if abuse appears (e.g. generic message + email-based recovery)._
+
+_Verified: `tsc --noEmit` + `eslint .` clean. Not browser-smoke-tested. Signup now creates real `Owner` rows, so the Phase 2 owner-login flow becomes exercisable (test at `<sub>.localhost:3000`). "Add another salon" UI for authed owners not built yet (API supports it)._
 
 **Phase 4 — migrate existing data**
 - [ ] Backfill `Owner` + `OwnerSalon` for existing salons. **BLOCKED on decision:** (a) supply email per salon + placeholder/forced-reset (no claim flow), OR (b) PIN-verified "claim your owner account" flow. _(User left the pick blank — needs answer before this phase.)_
