@@ -88,10 +88,9 @@ export default function SalonSignupPage() {
       if (!res.ok) {
         setError(data.error || 'Failed to create salon')
       } else {
+        // Session is established via the httpOnly cookie set by /api/salons.
+        // (Cross-subdomain auto-login is reworked in Phase 3.)
         setSuccess(`Salon created! Redirecting to your salon...`)
-        if (data.token) {
-          localStorage.setItem('salonpro_token', data.token)
-        }
         setTimeout(() => {
           window.location.href = `/?salon=${data.salon.subdomain}`
         }, 1000)
