@@ -7,6 +7,11 @@ export async function POST(req: NextRequest) {
   const auth = await requireAuth(req)
   if (!auth.authorized) return auth.error
 
+  // Owners have no User row (and no first-run tour) — nothing to mark.
+  if (auth.user!.kind === 'owner') {
+    return new NextResponse(null, { status: 204 })
+  }
+
   try {
     await db.user.update({
       // salonId comes from the resolved host (auth.salonId), not the token.
