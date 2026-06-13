@@ -62,7 +62,7 @@ const features: { icon: LucideIcon; title: string; blurb: string; items: string[
     icon: Smartphone,
     title: 'Any device, anywhere',
     blurb: 'Works on the phone you already have.',
-    items: ['Mobile-first design', 'Keeps working offline', 'Quick PIN login for staff'],
+    items: ['Mobile-first design', 'Keeps working offline', 'Simple login for every staff member'],
   },
 ]
 
@@ -83,7 +83,7 @@ const faqs = [
   },
   {
     q: 'Can my staff use it on their own phones?',
-    a: 'Yes. Each staff member gets their own PIN login. They see their own schedule, while only you see revenue and reports.',
+    a: 'Yes. Each staff member gets their own login. They see their own schedule, while only you see revenue and reports.',
   },
   {
     q: 'What happens to my data if I stop paying?',
@@ -414,7 +414,7 @@ export default function LandingPage() {
                 ★★★★★
               </div>
               <p className="quote">
-                “My staff learned it in one afternoon — the PIN login means everyone uses their
+                “My staff learned it in one afternoon — everyone signs in with their
                 own account on the same tablet. Even when internet drops, it keeps working.”
               </p>
               <div className="person">
