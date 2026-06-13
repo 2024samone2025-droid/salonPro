@@ -69,8 +69,12 @@ _Known tradeoff (conscious, not accidental): the 409 "that email already has an 
 
 _Verified: `tsc --noEmit` + `eslint .` clean. Not browser-smoke-tested. Signup now creates real `Owner` rows, so the Phase 2 owner-login flow becomes exercisable (test at `<sub>.localhost:3000`). "Add another salon" UI for authed owners not built yet (API supports it)._
 
-**Phase 4 — migrate existing data**
-- [ ] Backfill `Owner` + `OwnerSalon` for existing salons. **BLOCKED on decision:** (a) supply email per salon + placeholder/forced-reset (no claim flow), OR (b) PIN-verified "claim your owner account" flow. _(User left the pick blank — needs answer before this phase.)_
+**Phase 4 — migrate existing data** — script ready 2026-06-13 (awaiting emails + run)
+- Decision: **option (a)** — supply emails, placeholder password, no claim flow.
+- [x] Added `Owner.mustResetPassword` flag (additive db push).
+- [x] `scripts/backfill-owners.ts`: idempotent, **dry-run by default / `--commit` to write**; `SUBDOMAIN_TO_EMAIL` map at top (`demo` pre-filled); creates Owner+OwnerSalon only (never touches `User`); prints temp passwords for newly-created owners.
+- [ ] **You:** fill the email map (6 salons: `demo` done; `hello`, `mysalon`, `mysalon1`, `vision3030`, `vision`), run dry-run, then `bun run scripts/backfill-owners.ts --commit` and save the printed temp passwords.
+- [ ] **Deferred follow-up (Phase 4.5):** build forced-reset-on-first-login *enforcement* — login checks `mustResetPassword` → set-new-password screen/endpoint. Until then the flag is an unenforced marker and temp passwords work for login.
 
 **Phase 5 — docs (final)**
 - [ ] Update `context/ARCHITECTURE.md` + `context/DATA_MODELS.md`.
