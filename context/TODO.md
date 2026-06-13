@@ -35,10 +35,17 @@ Branch: `feat/owner-accounts-subdomain-tenancy` (off `main`). Big, sensitive (au
 - [ ] _Note:_ `.env.example` is git-ignored repo-wide, so the documented `AUTH_SECRET` line there is local-only — decide whether to force-track it.
 
 **Phase 1 — subdomain tenancy unit (must ship together; staff auth keeps working)**
-- [ ] Middleware: parse `Host` → `x-salon-subdomain` for ALL requests; `ROOT_DOMAIN` env; root/`www` + reserved (`app`/`api`) = no-tenant; `sub.localhost:3000` dev; `?salon=` dev-only fallback.
-- [ ] Server `(app)/layout.tsx` wrapper: resolve subdomain → salon via Prisma, `notFound()` on unknown, BEFORE auth; pass salon to existing client shell.
-- [ ] `requireAuth`: salonId from resolved Host; verify staff `User` belongs to resolved salon; preserve `AuthResult` shape (13/14 call sites unchanged).
-- [ ] Retire Bearer/`localStorage` channel (`authFetch`, `getSessionFromRequest`, `/api/auth/me` header fallback, client `login`/`refreshSession`) — same pass as `requireAuth`.
+- [ ] Middleware: parse `Host` → `x-salon-subdomain` (on the **request**) for ALL requests; `ROOT_DOMAIN` env; root/`www` + reserved (`app`/`api`) = no-tenant; `sub.localhost:3000` dev; `?salon=` dev-only fallback. Excludes the public booking surface (`/book/[subdomain]`, `/api/public/booking/[subdomain]`), which stays path-param.
+- [ ] Server `(app)/layout.tsx` wrapper: resolve subdomain → salon via Prisma, `notFound()` on unknown, BEFORE auth; render extracted client `AppShell`.
+- [ ] `requireAuth`: salonId from resolved Host; verify staff `User` belongs to resolved salon; role from DB row; preserve `AuthResult` shape (13/14 call sites unchanged). Two failures: unknown subdomain → 404; valid subdomain + non-member → 401 identical to no-session (no existence leak).
+- [ ] Drop `salonId` from the token payload entirely (host is sole authority); update the one `auth.user.salonId` caller (`tour-complete`) → `auth.salonId`.
+- [ ] Host-aware `/api/auth/me` (sub-decision B): same resolve + membership check; stale cross-tenant cookie → 401 `{user:null}` → client redirects to that tenant's login.
+- [ ] Drop the `'demo'` silent default (sub-decision A) from `/api/auth/login` + resolution.
+- [ ] Retire Bearer/`localStorage` channel (`authFetch`, `getSessionFromRequest`, `/api/auth/me` header fallback, client `login`/`refreshSession`) — cookie-only.
+
+**Phase 1 — notes / known-deferred (so these aren't mistaken for bugs later):**
+- **Dev URL pattern changed:** a bare `localhost:3000` with no tenant now resolves to NO salon → **404 is expected, not a broken build**. Run the app via `demo.localhost:3000` (browsers resolve `*.localhost` to 127.0.0.1) or `localhost:3000/?salon=demo` (dev-only `?salon=` fallback). `ROOT_DOMAIN=localhost:3000` in dev. Documented in `.env.example`.
+- **Flash of app shell (deferred):** the `(app)` auth gate stays client-side in Phase 1, so a logged-out (or cross-tenant) visitor briefly sees the shell before the client `me` call redirects to `/login`. Known-deferred — server-side gate / flash-prevention is intentionally out of Phase 1 scope.
 
 **Phase 2 — owner identity + global login (ship together; depends on 0+1)**
 - [ ] `crypto.scrypt` password util.
