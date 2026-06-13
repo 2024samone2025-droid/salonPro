@@ -1,89 +1,164 @@
 import { db } from '@/lib/db'
-import { hashPin, createSessionToken, ROLE_PERMISSIONS, type UserRole } from '@/lib/auth'
+import { hashPassword } from '@/lib/password'
+import {
+  verifySessionToken,
+  verifyRootOwnerToken,
+  createRootOwnerToken,
+  createExchangeToken,
+  ROOT_OWNER_COOKIE,
+  ROOT_OWNER_MAX_AGE,
+} from '@/lib/auth'
 import { validateSubdomain } from '@/lib/constants'
 import { Prisma } from '@prisma/client'
 import { NextRequest, NextResponse } from 'next/server'
 
+const ROOT_DOMAIN = process.env.ROOT_DOMAIN || 'localhost:3000'
+
+const salonView = (s: { id: string; name: string; subdomain: string; plan: string }) => ({
+  id: s.id,
+  name: s.name,
+  subdomain: s.subdomain,
+  plan: s.plan,
+})
+
+// Mint a single-use exchange token + nonce and build the subdomain handoff URL,
+// so a freshly created/linked salon logs the owner straight in (Phase 2 flow).
+async function buildOwnerHandoff(ownerId: string, salonSubdomain: string, salonId: string): Promise<string> {
+  const nonce = await db.oneTimeToken.create({
+    data: { ownerId, salonId, expiresAt: new Date(Date.now() + 60 * 1000) },
+    select: { id: true },
+  })
+  const token = createExchangeToken({ jti: nonce.id, ownerId, salonId })
+  const scheme = process.env.NODE_ENV === 'production' ? 'https' : 'http'
+  return `${scheme}://${salonSubdomain}.${ROOT_DOMAIN}/api/auth/exchange?t=${encodeURIComponent(token)}`
+}
+
+// Map a unique-constraint violation to a friendly 409. Returns null if it isn't one.
+function p2002Response(error: unknown): NextResponse | null {
+  if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+    const target = error.meta?.target as string[] | undefined
+    if (target?.includes('email')) {
+      return NextResponse.json({ error: 'That email already has an account. Log in to add another salon.' }, { status: 409 })
+    }
+    if (target?.includes('subdomain')) {
+      return NextResponse.json({ error: 'Subdomain already taken' }, { status: 409 })
+    }
+  }
+  return null
+}
+
 export async function POST(req: NextRequest) {
   try {
-    const { salonName, subdomain, adminName, adminPin } = await req.json()
+    const body = await req.json()
+    const { salonName, subdomain } = body
 
-    if (!salonName || !subdomain || !adminName || !adminPin) {
-      return NextResponse.json({ error: 'All fields required' }, { status: 400 })
+    if (!salonName || !subdomain) {
+      return NextResponse.json({ error: 'Salon name and subdomain are required' }, { status: 400 })
     }
 
-    // Validate subdomain format / length / reserved names (shared rules)
-    const cleanSubdomain = subdomain.trim().toLowerCase()
+    const cleanSubdomain = String(subdomain).trim().toLowerCase()
     const check = validateSubdomain(cleanSubdomain)
     if (!check.valid) {
       return NextResponse.json({ error: check.error }, { status: 400 })
     }
 
-    // Fast pre-check for a friendly message in the common case. Not authoritative:
-    // the unique constraint (caught below as P2002) is what actually prevents a
-    // race between two near-simultaneous signups claiming the same subdomain.
+    // ── HARD STAFF GATE ──────────────────────────────────────────────────────
+    // If ANY present cookie decodes to a valid staff session, reject — evaluated
+    // BEFORE any owner cookie is read, so a staff cookie paired with a borrowed
+    // or forged owner cookie can never let the owner branch win.
+    const sessionToken = req.cookies.get('salonpro_session')?.value
+    const subject = sessionToken ? verifySessionToken(sessionToken) : null
+    if (subject?.kind === 'staff') {
+      return NextResponse.json({ error: 'Staff accounts cannot create salons' }, { status: 403 })
+    }
+
+    // ── Resolve an authenticated OWNER (owner session, else root-owner cookie) ─
+    let ownerId: string | null = null
+    if (subject?.kind === 'owner') {
+      ownerId = subject.id
+    } else {
+      const rootToken = req.cookies.get(ROOT_OWNER_COOKIE)?.value
+      const rootOwner = rootToken ? verifyRootOwnerToken(rootToken) : null
+      if (rootOwner) ownerId = rootOwner.id
+    }
+
+    // Friendly pre-check (not authoritative — the unique constraint, caught as
+    // P2002 below, is what actually prevents a race).
     const existingSalon = await db.salon.findUnique({ where: { subdomain: cleanSubdomain } })
     if (existingSalon) {
       return NextResponse.json({ error: 'Subdomain already taken' }, { status: 409 })
     }
 
-    // Create salon and admin in transaction
-    const result = await db.$transaction(async (tx) => {
-      const salon = await tx.salon.create({
-        data: { name: salonName, subdomain: cleanSubdomain, plan: 'free' },
-      })
-
-      const admin = await tx.user.create({
-        data: {
-          name: adminName,
-          pin: hashPin(adminPin),
-          role: 'admin',
-          active: true,
-          tourCompleted: false,
-          salonId: salon.id,
-        },
-      })
-
-      return { salon, admin }
-    })
-
-    // Create session for auto-login
-    const sessionUser = {
-      id: result.admin.id,
-      name: result.admin.name,
-      role: result.admin.role as 'admin' | 'receptionist' | 'stylist',
-      staffId: null,
-      salonId: result.salon.id,
+    // ── Authenticated owner → create Salon + link only ───────────────────────
+    if (ownerId) {
+      try {
+        const salon = await db.$transaction(async (tx) => {
+          const s = await tx.salon.create({ data: { name: salonName, subdomain: cleanSubdomain, plan: 'free' } })
+          await tx.ownerSalon.create({ data: { ownerId, salonId: s.id } })
+          return s
+        })
+        const redirect = await buildOwnerHandoff(ownerId, salon.subdomain, salon.id)
+        return NextResponse.json({ salon: salonView(salon), redirect })
+      } catch (error) {
+        const conflict = p2002Response(error)
+        if (conflict) return conflict
+        throw error
+      }
     }
 
-    const token = createSessionToken(sessionUser)
+    // ── Unauthenticated → mint a NEW owner (only path that creates an Owner) ──
+    const { ownerName, email, password } = body
+    if (!ownerName || !email || !password) {
+      return NextResponse.json({ error: 'Name, email and password are required' }, { status: 400 })
+    }
+    const normalizedEmail = String(email).trim().toLowerCase()
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(normalizedEmail)) {
+      return NextResponse.json({ error: 'Enter a valid email address' }, { status: 400 })
+    }
+    if (String(password).length < 8) {
+      return NextResponse.json({ error: 'Password must be at least 8 characters' }, { status: 400 })
+    }
 
-    const response = NextResponse.json({
-      user: sessionUser,
-      permissions: ROLE_PERMISSIONS.admin,
-      token,
-      salon: { id: result.salon.id, name: result.salon.name, subdomain: result.salon.subdomain, plan: result.salon.plan },
-    })
+    // Known tradeoff: this 409 is a minor email-enumeration oracle (reveals which
+    // emails are registered owners) — accepted for UX clarity. We never attach to
+    // an existing owner on an unauthenticated request (no password side-door).
+    const existingOwner = await db.owner.findUnique({ where: { email: normalizedEmail } })
+    if (existingOwner) {
+      return NextResponse.json({ error: 'That email already has an account. Log in to add another salon.' }, { status: 409 })
+    }
 
-    response.cookies.set('salonpro_session', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7,
-      path: '/',
-    })
+    const passwordHash = await hashPassword(password)
+    try {
+      const result = await db.$transaction(async (tx) => {
+        const owner = await tx.owner.create({ data: { name: ownerName, email: normalizedEmail, passwordHash } })
+        const salon = await tx.salon.create({ data: { name: salonName, subdomain: cleanSubdomain, plan: 'free' } })
+        await tx.ownerSalon.create({ data: { ownerId: owner.id, salonId: salon.id } })
+        return { owner, salon }
+      })
 
-    return response
+      const redirect = await buildOwnerHandoff(result.owner.id, result.salon.subdomain, result.salon.id)
+      const response = NextResponse.json({ salon: salonView(result.salon), redirect })
+
+      // Log the new owner in at the root host too, so they can return to switch
+      // salons without re-auth within the window.
+      response.cookies.set(
+        ROOT_OWNER_COOKIE,
+        createRootOwnerToken({ id: result.owner.id, name: result.owner.name, email: result.owner.email }),
+        {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          maxAge: ROOT_OWNER_MAX_AGE,
+          path: '/',
+        }
+      )
+      return response
+    } catch (error) {
+      const conflict = p2002Response(error)
+      if (conflict) return conflict
+      throw error
+    }
   } catch (error) {
-    // Race backstop: the unique constraint on Salon.subdomain rejects the loser
-    // of two simultaneous signups. Surface it as a clean 409, not a 500.
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === 'P2002' &&
-      (error.meta?.target as string[] | undefined)?.includes('subdomain')
-    ) {
-      return NextResponse.json({ error: 'Subdomain already taken' }, { status: 409 })
-    }
     console.error('Salon creation error:', error)
     return NextResponse.json({ error: 'Failed to create salon' }, { status: 500 })
   }
