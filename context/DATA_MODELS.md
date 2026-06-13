@@ -19,12 +19,22 @@ Salon ──┬─< Customer ──< Appointment >── Service
 |---|---|---|
 | `id` | String | PK |
 | `name` | String | |
-| `subdomain` | String | **unique** — tenant resolution |
+| `subdomain` | String | **unique** — tenant resolution. Rules below. |
 | `plan` | String | `free` \| `pro` (default `free`) |
 | `stripeCustomerId` | String? | |
 | `stripeSubscriptionId` | String? | |
 | `settings` | Json? | `SalonSettings`: businessHours, slotIntervalMinutes, publicBookingEnabled, currency — read via `parseSalonSettings()` |
 | relations | — | customers, staff, services, appointments, payments, users |
+
+#### Subdomain rules (single source of truth: `src/lib/constants.ts`)
+A salon's `subdomain` is validated by **`validateSubdomain()`** in `lib/constants.ts` — the one place these rules live, shared by the signup page, the availability endpoint (`GET /api/salons?subdomain=`), and the create endpoint (`POST /api/salons`). The module is client-safe, so the UI and the API can never disagree.
+
+- **Charset**: lowercase `a–z`, digits `0–9`, hyphen. Must start and end alphanumeric (no leading/trailing hyphen). Pattern: `^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$`.
+- **Length**: `SUBDOMAIN_MIN_LENGTH` 3 … `SUBDOMAIN_MAX_LENGTH` 30.
+- **Reserved**: not in `RESERVED_SUBDOMAINS` (infra/product names — `www`, `api`, `app`, `admin`, `billing`, `salonpro`, … ~35 total). `demo` is intentionally **not** reserved (legitimate seed tenant; the unique constraint already protects it).
+- **Uniqueness / race**: the DB `@unique` constraint is authoritative. `POST /api/salons` keeps a fast pre-check for a friendly 409, and also catches Prisma **P2002** on `subdomain` → 409 (prevents the two-simultaneous-signups race from surfacing as a 500).
+
+When adding a reserved name or changing the rules, edit `RESERVED_SUBDOMAINS` / `validateSubdomain()` in `lib/constants.ts` and update this section.
 
 ### Customer
 `name`, `phone`, `notes` (default ''), `salonId`, `appointments[]`. Indexes: `phone`, `name`, `salonId`.

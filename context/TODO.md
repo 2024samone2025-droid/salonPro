@@ -33,4 +33,4 @@ Cleanup backlog complete.
 - [ ] Marketing-vs-product gap: WhatsApp/SMS reminders, offline mode, birthday reminders, data export, 30-day Pro trial (build or soften landing copy).
 - [ ] Landing placeholders: real `WHATSAPP_URL`; `/privacy` + `/terms` pages (or drop footer links).
 - [ ] Responsive: icon-rail sidebar (768–1024px); mobile booking FAB.
-- [ ] Signup: subdomain conflict handling.
+- [x] Signup: subdomain conflict handling — done 2026-06-13. Shared `validateSubdomain()` + `RESERVED_SUBDOMAINS` in `lib/constants.ts`; race-safe create (P2002 → 409); debounced live availability check on the signup page. See [DATA_MODELS.md](./DATA_MODELS.md#subdomain-rules-single-source-of-truth-srclibconstantsts).

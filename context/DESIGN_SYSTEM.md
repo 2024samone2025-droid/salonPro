@@ -88,6 +88,13 @@ Two have customized CVA variants worth knowing:
 - **Toast (sonner)** — transient confirmations, 4s, undo where reversible.
 - **Alert banner** — persistent must-act info (trial, payment failed).
 
+### Inline field validation (async availability)
+For fields whose validity depends on the server (e.g. the signup **subdomain** field), use the inline status-line pattern rather than waiting for submit — reference impl: `src/app/signup/page.tsx`.
+- **Validate locally first** (instant, synchronous) for format/length/reserved errors; only hit the server when the value is locally valid.
+- **Debounce ~450ms**, then fetch; abort the in-flight request on each keystroke so only the latest value's result shows (no stale flicker).
+- **Status line** sits directly under the input, `text-xs` with a leading icon: `Loader2` + `text-muted-foreground` (checking) → `Check` + `text-success` (available) → `AlertCircle` + `text-destructive` (invalid/taken). Set `aria-invalid` on the input for the error states.
+- **Gate submit** on the success state — don't allow submitting a value the live check rejected.
+
 ---
 
 ## Status → token map (`src/lib/constants.ts`)

@@ -5,8 +5,12 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Triangle, AlertCircle, Loader2 } from 'lucide-react'
-import { useState } from 'react'
+import { Triangle, AlertCircle, Loader2, Check } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { cn } from '@/lib/utils'
+import { validateSubdomain, SUBDOMAIN_MAX_LENGTH } from '@/lib/constants'
+
+type SubStatus = 'idle' | 'invalid' | 'checking' | 'available' | 'taken'
 
 export default function SalonSignupPage() {
   const [salonName, setSalonName] = useState('')
@@ -16,6 +20,55 @@ export default function SalonSignupPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [subStatus, setSubStatus] = useState<SubStatus>('idle')
+  const [subMessage, setSubMessage] = useState('')
+
+  // Live subdomain availability: validate locally first (instant), then
+  // debounce a server check. Cleanup aborts the in-flight request and clears
+  // the timer on every keystroke, so only the latest value's result is applied.
+  useEffect(() => {
+    if (!subdomain) {
+      setSubStatus('idle')
+      setSubMessage('')
+      return
+    }
+
+    const local = validateSubdomain(subdomain)
+    if (!local.valid) {
+      setSubStatus('invalid')
+      setSubMessage(local.error ?? 'Invalid subdomain')
+      return
+    }
+
+    setSubStatus('checking')
+    setSubMessage('')
+    const controller = new AbortController()
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/salons?subdomain=${encodeURIComponent(subdomain)}`, {
+          signal: controller.signal,
+        })
+        const data = await res.json()
+        if (data.available) {
+          setSubStatus('available')
+          setSubMessage('Available')
+        } else {
+          setSubStatus('taken')
+          setSubMessage(data.reason || 'Already taken')
+        }
+      } catch (err) {
+        if ((err as Error).name !== 'AbortError') {
+          setSubStatus('idle')
+          setSubMessage('')
+        }
+      }
+    }, 450)
+
+    return () => {
+      clearTimeout(timer)
+      controller.abort()
+    }
+  }, [subdomain])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -87,10 +140,27 @@ export default function SalonSignupPage() {
                     placeholder="mysalon"
                     value={subdomain}
                     onChange={(e) => setSubdomain(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                    maxLength={SUBDOMAIN_MAX_LENGTH}
+                    aria-invalid={subStatus === 'invalid' || subStatus === 'taken'}
                     required
                   />
                   <span className="text-sm text-muted-foreground">.salonpro.com</span>
                 </div>
+                {subStatus !== 'idle' && (
+                  <p
+                    className={cn(
+                      'mt-1.5 flex items-center gap-1 text-xs',
+                      subStatus === 'checking' && 'text-muted-foreground',
+                      subStatus === 'available' && 'text-success',
+                      (subStatus === 'invalid' || subStatus === 'taken') && 'text-destructive'
+                    )}
+                  >
+                    {subStatus === 'checking' && <Loader2 className="size-3 animate-spin" />}
+                    {subStatus === 'available' && <Check className="size-3" />}
+                    {(subStatus === 'invalid' || subStatus === 'taken') && <AlertCircle className="size-3" />}
+                    {subStatus === 'checking' ? 'Checking availability…' : subMessage}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -130,7 +200,7 @@ export default function SalonSignupPage() {
                 </Alert>
               )}
 
-              <Button type="submit" className="w-full" disabled={loading || !salonName || !subdomain || !adminName || !adminPin}>
+              <Button type="submit" className="w-full" disabled={loading || !salonName || !adminName || !adminPin || subStatus !== 'available'}>
                 {loading ? <Loader2 className="size-4 animate-spin mr-2" /> : null}
                 Create Salon
               </Button>
