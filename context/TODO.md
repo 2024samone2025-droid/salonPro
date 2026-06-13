@@ -76,8 +76,9 @@ _Verified: `tsc --noEmit` + `eslint .` clean. Not browser-smoke-tested. Signup n
 - [ ] **You:** fill the email map (6 salons: `demo` done; `hello`, `mysalon`, `mysalon1`, `vision3030`, `vision`), run dry-run, then `npx tsx scripts/backfill-owners.ts --commit` (no bun needed — `npx tsx` works) and save the printed temp passwords.
 - [ ] **Deferred follow-up (Phase 4.5):** build forced-reset-on-first-login *enforcement* — login checks `mustResetPassword` → set-new-password screen/endpoint. Until then the flag is an unenforced marker and temp passwords work for login.
 
-**Phase 5 — docs (final)**
-- [ ] Update `context/ARCHITECTURE.md` + `context/DATA_MODELS.md`.
+**Phase 5 — docs (final)** — ✅ done 2026-06-13
+- [x] `ARCHITECTURE.md`: Host-is-authority multi-tenancy (two-stage resolve), two auth surfaces (owner email/password + staff PIN, cookie-only), updated folder tree + lib modules + API resources. Fixed stale react-query/`prisma.ts` mentions.
+- [x] `DATA_MODELS.md`: added Owner / OwnerSalon / OneTimeToken, clarified User as per-salon staff, owner-aware `/api/salons` + owner/exchange routes, db-push (baselined) + `npx tsx` note. Removed stale payment-status note.
 
 **Deployment prerequisite (out of code scope):** wildcard DNS `*.salonpro.me` + wildcard SSL before Phase 1 deploys.
 
