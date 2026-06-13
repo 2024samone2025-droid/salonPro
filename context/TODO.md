@@ -23,10 +23,10 @@ Done 2026-06-13:
 - [x] **Deleted dead `src/lib/prisma.ts`** (empty; real client is `lib/db.ts`).
 - [x] **Amended `specs/ui/design-system.md`** with the 2026-06-13 row (light restored, toggle re-added, Poppins).
 - [x] **Reconciled payment status naming** — `PAYMENT_STATUS_CONFIG` key `partially_paid` → `partial` to match the value used by `AppointmentDialog`, seed, dashboard, reports (partial badges now render their amber style).
+- [x] **Dropped `@tanstack/react-query`** from `package.json` — was unused (no `QueryClientProvider`/`useQuery`); lockfile synced.
+- [x] **Dropped `next-themes`** from `package.json` — was unused (theme handled by custom `data-theme` script + `theme-toggle.tsx`); lockfile synced.
 
-Deferred (need `npm install`; disk was full at the time — do when disk is healthy):
-- [ ] **Drop `@tanstack/react-query`** from `package.json` — unused (no `QueryClientProvider`/`useQuery`). Or adopt it to replace the `useEffect`+`fetch` pattern.
-- [ ] **Drop `next-themes`** from `package.json` — unused (theme handled by custom `data-theme` script + `theme-toggle.tsx`).
+Cleanup backlog complete.
 
 ## Product gaps (carried from old worklogs — decide build vs defer)
 - [ ] Real Stripe billing (15,000 RWF zero-decimal price, webhook, downgrade grace).
