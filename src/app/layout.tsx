@@ -3,7 +3,6 @@ import { Poppins, Geist_Mono } from "next/font/google";
 // Order matters: driver.css first so the tour overrides in globals.css win
 import "driver.js/dist/driver.css";
 import "./globals.css";
-import { Toaster } from "@/components/ui/toaster";
 
 const sans = Poppins({
   variable: "--font-sans",
@@ -49,7 +48,6 @@ export default function RootLayout({
           </div>
         </noscript>
         {children}
-        <Toaster key="toaster" />
       </body>
     </html>
   );
