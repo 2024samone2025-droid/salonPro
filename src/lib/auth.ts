@@ -26,14 +26,11 @@ export type { Permissions, UserRole }
 // The session subject decoded from the cookie. salonId is intentionally NOT
 // here — the operating salon is always derived from the request Host (see
 // requireAuth), never the token, so it can't drift. `kind` discriminates the
-// auth surface; only 'staff' exists in Phase 1 ('owner' is added in Phase 2).
-export interface SessionUser {
-  kind: 'staff'
-  id: string
-  name: string
-  role: UserRole
-  staffId: string | null
-}
+// two auth surfaces. Owners surface as admins with no staff filter so all the
+// existing role/staffId-based call sites keep working unchanged.
+export type SessionUser =
+  | { kind: 'staff'; id: string; name: string; role: UserRole; staffId: string | null }
+  | { kind: 'owner'; id: string; name: string; role: 'admin'; staffId: null; email: string }
 
 // Hash PIN using Node.js crypto (synchronous, reliable)
 export function hashPin(pin: string): string {
@@ -66,6 +63,20 @@ export function createSessionToken(user: { id: string; name: string; role: UserR
   return token
 }
 
+// Create an OWNER session token (same salonpro_session cookie + format as staff,
+// just a different subject). Set by the exchange endpoint on the subdomain.
+export function createOwnerSessionToken(owner: { id: string; name: string; email: string }): string {
+  const payload = JSON.stringify({
+    kind: 'owner',
+    id: owner.id,
+    name: owner.name,
+    email: owner.email,
+    exp: Date.now() + SESSION_MAX_AGE * 1000,
+  })
+  const signature = crypto.createHmac('sha256', AUTH_SECRET).update(payload).digest('hex')
+  return Buffer.from(JSON.stringify({ payload, signature })).toString('base64')
+}
+
 // Verify and decode a session token
 export function verifySessionToken(token: string): SessionUser | null {
   try {
@@ -80,6 +91,10 @@ export function verifySessionToken(token: string): SessionUser | null {
 
     // Check expiration
     if (data.exp && Date.now() > data.exp) return null
+
+    if (data.kind === 'owner') {
+      return { kind: 'owner', id: data.id, name: data.name, role: 'admin', staffId: null, email: data.email }
+    }
 
     // `kind` defaults to 'staff' so pre-Phase-1 tokens (no kind) still decode.
     return {
@@ -141,4 +156,81 @@ export function getStaffFilter(user: SessionUser): string | null {
     return user.staffId
   }
   return null // null means no filter, see all
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+ * Owner cross-domain login tokens (Phase 2)
+ *
+ * Two short-lived signed tokens distinct from the session cookie:
+ *  - root-owner: proves "this browser authenticated as owner X" at the root
+ *    host, so the salon picker can mint exchange tokens without re-auth.
+ *  - exchange:   single-use handoff carried in ?t= to <sub>.../api/auth/exchange,
+ *    where it is swapped for the owner session cookie.
+ * ────────────────────────────────────────────────────────────────────────── */
+
+export const ROOT_OWNER_COOKIE = 'salonpro_owner'
+export const ROOT_OWNER_MAX_AGE = 60 * 30 // 30 minutes
+const EXCHANGE_MAX_AGE = 60 // 60 seconds
+
+function signToken(obj: Record<string, unknown>): string {
+  const payload = JSON.stringify(obj)
+  const signature = crypto.createHmac('sha256', AUTH_SECRET).update(payload).digest('hex')
+  return Buffer.from(JSON.stringify({ payload, signature })).toString('base64')
+}
+
+function readToken(token: string): Record<string, unknown> | null {
+  try {
+    const { payload, signature } = JSON.parse(Buffer.from(token, 'base64').toString())
+    const expected = crypto.createHmac('sha256', AUTH_SECRET).update(payload).digest('hex')
+    if (signature !== expected) return null
+    const data = JSON.parse(payload)
+    if (data.exp && Date.now() > data.exp) return null
+    return data
+  } catch {
+    return null
+  }
+}
+
+export interface RootOwnerSession {
+  id: string
+  name: string
+  email: string
+}
+
+export function createRootOwnerToken(owner: RootOwnerSession): string {
+  return signToken({
+    scope: 'root-owner',
+    id: owner.id,
+    name: owner.name,
+    email: owner.email,
+    exp: Date.now() + ROOT_OWNER_MAX_AGE * 1000,
+  })
+}
+
+export function verifyRootOwnerToken(token: string): RootOwnerSession | null {
+  const data = readToken(token)
+  if (!data || data.scope !== 'root-owner') return null
+  return { id: data.id as string, name: data.name as string, email: data.email as string }
+}
+
+export interface ExchangePayload {
+  jti: string
+  ownerId: string
+  salonId: string
+}
+
+export function createExchangeToken(p: ExchangePayload): string {
+  return signToken({
+    scope: 'exchange',
+    jti: p.jti,
+    ownerId: p.ownerId,
+    salonId: p.salonId,
+    exp: Date.now() + EXCHANGE_MAX_AGE * 1000,
+  })
+}
+
+export function verifyExchangeToken(token: string): ExchangePayload | null {
+  const data = readToken(token)
+  if (!data || data.scope !== 'exchange') return null
+  return { jti: data.jti as string, ownerId: data.ownerId as string, salonId: data.salonId as string }
 }
