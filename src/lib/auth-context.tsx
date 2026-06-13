@@ -23,11 +23,15 @@ export interface Permissions {
 }
 
 export interface SessionUser {
+  /** 'owner' = global owner account (admin via OwnerSalon link); 'staff' = per-salon User. */
+  kind?: 'staff' | 'owner'
   id: string
   name: string
   role: UserRole
   staffId: string | null
   salonId: string
+  /** owner accounts only */
+  email?: string
   /** false = first-run product tour not yet seen (populated by /api/auth/me) */
   tourCompleted?: boolean
 }
