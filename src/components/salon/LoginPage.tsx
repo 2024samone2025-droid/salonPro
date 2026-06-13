@@ -15,9 +15,9 @@ import {
 } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Separator } from '@/components/ui/separator'
-import { Eye, EyeOff, AlertCircle, Shield, CalendarDays, Scissors, Triangle } from 'lucide-react'
+import { Eye, EyeOff, AlertCircle, Shield, CalendarDays, Scissors, Triangle, Mail } from 'lucide-react'
 
-export default function LoginPage() {
+export default function LoginPage({ onSwitchToOwner }: { onSwitchToOwner?: () => void } = {}) {
   const { login, salon } = useAuth()
   const [name, setName] = useState('')
   const [pin, setPin] = useState('')
@@ -154,7 +154,17 @@ export default function LoginPage() {
               </div>
             </div>
           </CardContent>
-          <CardFooter className="justify-center pb-3 sm:pb-4 pt-0">
+          <CardFooter className="flex-col gap-2 pb-3 sm:pb-4 pt-0">
+            {onSwitchToOwner && (
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full h-9 text-[13px] sm:text-sm text-muted-foreground hover:text-foreground font-normal"
+                onClick={onSwitchToOwner}
+              >
+                <Mail className="size-3.5 mr-1.5" /> Owner? Sign in with email
+              </Button>
+            )}
             <p className="text-[11px] text-muted-foreground/50 font-mono">PIN-based authentication</p>
           </CardFooter>
         </Card>
