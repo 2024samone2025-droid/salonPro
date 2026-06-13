@@ -16,7 +16,7 @@ Salon ──┬─< Customer ──< Appointment >── Service
 OneTimeToken   standalone — single-use owner cross-domain login handoff
 ```
 
-**Two auth identities:** `Owner` (global, email+password, admin via `OwnerSalon`) vs `User` (per-salon staff, name+PIN). See ARCHITECTURE.md → Authentication.
+**Two auth identities:** `Owner` (global, email+password, admin via `OwnerSalon`) vs `User` (per-salon staff, email+password). Both use scrypt; PINs were retired. See ARCHITECTURE.md → Authentication.
 
 ## Models
 
@@ -66,14 +66,14 @@ Indexes: `date`, `status`, `staffId`, `customerId`, `salonId`.
 `status` (`unpaid` \| `partial` \| `paid`, default `unpaid`), `method` (`cash` \| `mtn_momo` \| `airtel_money`, default `cash`), `amount` (Float, default 0), `salonId`, `appointmentId` (**unique**). Indexes: `status`, `method`, `salonId`. (`PAYMENT_STATUS_CONFIG` in `lib/constants.ts` is keyed `partial` to match.)
 
 ### User (per-salon staff auth)
-`name`, `pin` (SHA-256 hash), `role` (`admin` \| `receptionist` \| `stylist`, default `receptionist`), `active` (Bool), `staffId?` (optional link to Staff, `onDelete: SetNull`), `salonId`. Indexes: `role`, `pin`, `salonId`. Belongs to exactly one salon; identified by `name` within that salon (login is name + PIN at the tenant host).
+`name`, `email` (lowercased), `passwordHash` (**scrypt** `salt:hash`, `lib/password.ts`), `role` (`admin` \| `receptionist` \| `stylist`, default `receptionist`), `active` (Bool), `tourCompleted` (Bool), `staffId?` (optional link to Staff, `onDelete: SetNull`), `salonId`. **`@@unique([salonId, email])`** — email is the login handle, unique within a salon. Indexes: `role`, `salonId`. Belongs to exactly one salon; login is email + password at the tenant host (`/api/auth/login`). PINs were retired.
 
 ### Owner (global owner identity)
 | Field | Type | Notes |
 |---|---|---|
 | `id` | String | PK |
 | `email` | String | **unique**, stored lowercased — the global login handle |
-| `passwordHash` | String | **scrypt** `salt:hash` (`lib/password.ts`) — NOT the SHA-256 used for PINs |
+| `passwordHash` | String | **scrypt** `salt:hash` (`lib/password.ts`) — same scheme as staff `User` |
 | `name` | String | |
 | `mustResetPassword` | Boolean | default false. Set by the backfill script; **enforcement deferred** — currently an unenforced marker (login works with the temp password). |
 | relations | — | `salons` (OwnerSalon[]) |
@@ -99,7 +99,7 @@ All authed routes scoped by `salonId` via `requireAuth` (salonId from the Host, 
 
 | Route | Purpose |
 |---|---|
-| `auth/login`, `auth/logout`, `auth/me` | staff session lifecycle (name + PIN), host-aware |
+| `auth/login`, `auth/logout`, `auth/me` | staff session lifecycle (email + password), host-aware |
 | `auth/exchange` | consume single-use owner token (on subdomain) → set owner session cookie |
 | `auth/signup` | add a staff `User` to the current salon (requires auth) |
 | `owner/login`, `owner/me`, `owner/select` | owner email/password login + salon picker + mint exchange token (root host) |
