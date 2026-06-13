@@ -23,12 +23,16 @@ import { ROLE_PERMISSIONS, type Permissions, type UserRole } from './permissions
 export { ROLE_PERMISSIONS }
 export type { Permissions, UserRole }
 
+// The session subject decoded from the cookie. salonId is intentionally NOT
+// here — the operating salon is always derived from the request Host (see
+// requireAuth), never the token, so it can't drift. `kind` discriminates the
+// auth surface; only 'staff' exists in Phase 1 ('owner' is added in Phase 2).
 export interface SessionUser {
+  kind: 'staff'
   id: string
   name: string
   role: UserRole
   staffId: string | null
-  salonId: string
 }
 
 // Hash PIN using Node.js crypto (synchronous, reliable)
@@ -41,14 +45,16 @@ export function verifyPin(pin: string, hash: string): boolean {
   return hashPin(pin) === hash
 }
 
-// Create a session token using HMAC (synchronous, reliable)
-export function createSessionToken(user: SessionUser): string {
+// Create a staff session token using HMAC (synchronous, reliable). Accepts a
+// loose shape (any extra fields like a legacy salonId are ignored) so callers
+// that still build richer objects don't need to change.
+export function createSessionToken(user: { id: string; name: string; role: UserRole; staffId: string | null }): string {
   const payload = JSON.stringify({
+    kind: 'staff',
     id: user.id,
     name: user.name,
     role: user.role,
     staffId: user.staffId,
-    salonId: user.salonId,
     exp: Date.now() + SESSION_MAX_AGE * 1000,
   })
 
@@ -75,12 +81,13 @@ export function verifySessionToken(token: string): SessionUser | null {
     // Check expiration
     if (data.exp && Date.now() > data.exp) return null
 
+    // `kind` defaults to 'staff' so pre-Phase-1 tokens (no kind) still decode.
     return {
+      kind: 'staff',
       id: data.id,
       name: data.name,
       role: data.role as UserRole,
       staffId: data.staffId || null,
-      salonId: data.salonId,
     }
   } catch {
     return null
