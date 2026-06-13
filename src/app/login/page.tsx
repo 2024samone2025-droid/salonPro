@@ -1,11 +1,16 @@
 import { headers } from 'next/headers'
 import { SALON_SUBDOMAIN_HEADER } from '@/lib/subdomain'
-import StaffLogin from './StaffLogin'
-import OwnerLogin from './OwnerLogin'
+import { AuthProvider } from '@/lib/auth-context'
+import UnifiedLogin from './UnifiedLogin'
 
-// Host-branched login: a tenant host (x-salon-subdomain present) shows the staff
-// name+PIN login; the root host shows the owner email/password login + picker.
+// One unified, email-first login on every host. The tenant subdomain (set by the
+// middleware as x-salon-subdomain) is passed down so the staff PIN path knows
+// which salon it's on; on the apex it's null and staff are routed to their host.
 export default async function LoginRoute() {
   const subdomain = (await headers()).get(SALON_SUBDOMAIN_HEADER)
-  return subdomain ? <StaffLogin /> : <OwnerLogin />
+  return (
+    <AuthProvider>
+      <UnifiedLogin subdomain={subdomain} />
+    </AuthProvider>
+  )
 }
