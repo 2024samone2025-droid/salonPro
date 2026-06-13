@@ -49,7 +49,7 @@ interface AuthContextType {
   permissions: Permissions | null
   loading: boolean
   salon: SalonInfo | null
-  login: (name: string, pin: string) => Promise<{ success: boolean; error?: string }>
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
   logout: () => Promise<void>
   refreshSession: () => Promise<void>
   authFetch: (url: string, options?: RequestInit) => Promise<Response>
@@ -95,7 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refreshSession()
   }, [refreshSession])
 
-  const login = async (name: string, pin: string): Promise<{ success: boolean; error?: string }> => {
+  const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     try {
       // Tenant comes from the Host. In dev only, forward ?salon= if present so the
       // middleware can resolve it on a bare localhost (no 'demo' default).
@@ -104,7 +104,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, pin }),
+        body: JSON.stringify({ email, password }),
       })
       const data = await res.json()
       if (res.ok) {

@@ -1,5 +1,6 @@
 import { db } from '@/lib/db'
-import { verifyPin, createSessionToken, ROLE_PERMISSIONS, type UserRole } from '@/lib/auth'
+import { createSessionToken, ROLE_PERMISSIONS, type UserRole } from '@/lib/auth'
+import { verifyPassword } from '@/lib/password'
 import { parseSalonSettings } from '@/lib/salon-settings'
 import { SALON_SUBDOMAIN_HEADER } from '@/lib/subdomain'
 import { NextRequest, NextResponse } from 'next/server'
@@ -7,6 +8,8 @@ import { NextRequest, NextResponse } from 'next/server'
 // Staff login, scoped to the salon resolved from the Host (the middleware sets
 // x-salon-subdomain; in dev it honours ?salon= as a fallback). No 'demo'
 // default — the Host is the only authority for which salon we authenticate against.
+// Email + password (PINs were retired); failure is generic so we never reveal
+// whether an email exists in this salon.
 export async function POST(req: NextRequest) {
   try {
     const subdomain = req.headers.get(SALON_SUBDOMAIN_HEADER)
@@ -19,14 +22,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Salon not found' }, { status: 404 })
     }
 
-    const { name, pin } = await req.json()
-    if (!name || !pin) {
-      return NextResponse.json({ error: 'Name and PIN are required' }, { status: 400 })
+    const { email, password } = await req.json()
+    if (!email || !password) {
+      return NextResponse.json({ error: 'Email and password are required' }, { status: 400 })
     }
 
-    const allUsers = await db.user.findMany({ where: { salonId: salon.id, active: true } })
-    const user = allUsers.find((u) => u.name.toLowerCase() === name.toLowerCase())
-    if (!user || !verifyPin(pin, user.pin)) {
+    const normalized = String(email).trim().toLowerCase()
+    const user = await db.user.findFirst({
+      where: { salonId: salon.id, email: normalized, active: true },
+    })
+    if (!user || !(await verifyPassword(password, user.passwordHash))) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
     }
 

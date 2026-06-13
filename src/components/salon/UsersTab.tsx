@@ -44,6 +44,7 @@ import {
 interface UserRow {
   id: string
   name: string
+  email: string
   role: UserRole
   active: boolean
   staffId: string | null
@@ -58,7 +59,8 @@ interface StaffOption {
 interface FormState {
   id: string | null
   name: string
-  pin: string
+  email: string
+  password: string
   role: UserRole
   staffId: string
   active: boolean
@@ -67,11 +69,15 @@ interface FormState {
 const EMPTY_FORM: FormState = {
   id: null,
   name: '',
-  pin: '',
+  email: '',
+  password: '',
   role: 'receptionist',
   staffId: '',
   active: true,
 }
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const MIN_PASSWORD_LENGTH = 8
 
 function accessLabel(value: string | boolean): React.ReactNode {
   if (value === true) return <Check className="size-4 text-success mx-auto" aria-label="Yes" />
@@ -118,7 +124,8 @@ export default function UsersTab() {
     setForm({
       id: u.id,
       name: u.name,
-      pin: '',
+      email: u.email,
+      password: '',
       role: u.role,
       staffId: u.staffId || '',
       active: u.active,
@@ -131,23 +138,28 @@ export default function UsersTab() {
       toast.error('Name must be at least 2 characters')
       return
     }
-    if (!form.id && !/^\d{4,6}$/.test(form.pin)) {
-      toast.error('PIN must be 4–6 digits')
+    if (!EMAIL_RE.test(form.email.trim())) {
+      toast.error('A valid email is required')
       return
     }
-    if (form.id && form.pin && !/^\d{4,6}$/.test(form.pin)) {
-      toast.error('New PIN must be 4–6 digits')
+    if (!form.id && form.password.length < MIN_PASSWORD_LENGTH) {
+      toast.error(`Password must be at least ${MIN_PASSWORD_LENGTH} characters`)
+      return
+    }
+    if (form.id && form.password && form.password.length < MIN_PASSWORD_LENGTH) {
+      toast.error(`New password must be at least ${MIN_PASSWORD_LENGTH} characters`)
       return
     }
     setSaving(true)
     try {
       const payload: Record<string, unknown> = {
         name: form.name.trim(),
+        email: form.email.trim().toLowerCase(),
         role: form.role,
         staffId: form.staffId || null,
         active: form.active,
       }
-      if (form.pin) payload.pin = form.pin
+      if (form.password) payload.password = form.password
 
       const res = form.id
         ? await authFetch(`/api/users/${form.id}`, {
@@ -300,8 +312,8 @@ export default function UsersTab() {
             <DialogTitle>{form.id ? 'Edit user' : 'Add user'}</DialogTitle>
             <DialogDescription>
               {form.id
-                ? 'Update this user’s access. Leave PIN empty to keep the current one.'
-                : 'They will sign in with this name and PIN.'}
+                ? 'Update this user’s access. Leave password empty to keep the current one.'
+                : 'They will sign in with this email and password.'}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -315,14 +327,25 @@ export default function UsersTab() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="user-pin">{form.id ? 'New PIN (optional)' : 'PIN'}</Label>
+              <Label htmlFor="user-email">Email</Label>
               <Input
-                id="user-pin"
-                inputMode="numeric"
-                placeholder={form.id ? 'Leave empty to keep current PIN' : '4–6 digits'}
-                value={form.pin}
-                onChange={(e) => setForm({ ...form, pin: e.target.value.replace(/\D/g, '') })}
-                maxLength={6}
+                id="user-email"
+                type="email"
+                autoComplete="off"
+                placeholder="name@example.com"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="user-password">{form.id ? 'New password (optional)' : 'Password'}</Label>
+              <Input
+                id="user-password"
+                type="password"
+                autoComplete="new-password"
+                placeholder={form.id ? 'Leave empty to keep current password' : 'At least 8 characters'}
+                value={form.password}
+                onChange={(e) => setForm({ ...form, password: e.target.value })}
               />
             </div>
             <div className="space-y-1.5">

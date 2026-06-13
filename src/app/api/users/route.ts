@@ -1,14 +1,16 @@
 import { db } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth-guard'
-import { hashPin } from '@/lib/auth'
+import { hashPassword } from '@/lib/password'
 
 const VALID_ROLES = ['admin', 'receptionist', 'stylist']
-const PIN_RE = /^\d{4,6}$/
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const MIN_PASSWORD_LENGTH = 8
 
 function sanitize(user: {
   id: string
   name: string
+  email: string
   role: string
   active: boolean
   staffId: string | null
@@ -18,6 +20,7 @@ function sanitize(user: {
   return {
     id: user.id,
     name: user.name,
+    email: user.email,
     role: user.role,
     active: user.active,
     staffId: user.staffId,
@@ -52,24 +55,28 @@ export async function POST(req: NextRequest) {
   if (!body) return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
 
   const name = String(body.name || '').trim()
-  const pin = String(body.pin || '')
+  const email = String(body.email || '').trim().toLowerCase()
+  const password = String(body.password || '')
   const role = String(body.role || 'receptionist')
   const staffId = body.staffId ? String(body.staffId) : null
 
   if (name.length < 2 || name.length > 40) {
     return NextResponse.json({ error: 'Name must be 2–40 characters' }, { status: 400 })
   }
-  if (!PIN_RE.test(pin)) {
-    return NextResponse.json({ error: 'PIN must be 4–6 digits' }, { status: 400 })
+  if (!EMAIL_RE.test(email)) {
+    return NextResponse.json({ error: 'A valid email is required' }, { status: 400 })
+  }
+  if (password.length < MIN_PASSWORD_LENGTH) {
+    return NextResponse.json({ error: `Password must be at least ${MIN_PASSWORD_LENGTH} characters` }, { status: 400 })
   }
   if (!VALID_ROLES.includes(role)) {
     return NextResponse.json({ error: 'Invalid role' }, { status: 400 })
   }
 
-  // Login matches names case-insensitively per salon — enforce uniqueness the same way
-  const existing = await db.user.findMany({ where: { salonId: auth.salonId }, select: { name: true } })
-  if (existing.some((u) => u.name.toLowerCase() === name.toLowerCase())) {
-    return NextResponse.json({ error: 'A user with that name already exists' }, { status: 409 })
+  // Email is the login identifier, unique per salon.
+  const existing = await db.user.findFirst({ where: { salonId: auth.salonId, email }, select: { id: true } })
+  if (existing) {
+    return NextResponse.json({ error: 'A user with that email already exists' }, { status: 409 })
   }
 
   if (staffId) {
@@ -80,7 +87,8 @@ export async function POST(req: NextRequest) {
   const user = await db.user.create({
     data: {
       name,
-      pin: hashPin(pin),
+      email,
+      passwordHash: await hashPassword(password),
       role,
       staffId,
       active: body.active !== undefined ? Boolean(body.active) : true,

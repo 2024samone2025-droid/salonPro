@@ -1,10 +1,11 @@
 import { db } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth-guard'
-import { hashPin } from '@/lib/auth'
+import { hashPassword } from '@/lib/password'
 
 const VALID_ROLES = ['admin', 'receptionist', 'stylist']
-const PIN_RE = /^\d{4,6}$/
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const MIN_PASSWORD_LENGTH = 8
 
 export async function PATCH(
   req: NextRequest,
@@ -30,16 +31,24 @@ export async function PATCH(
     if (name.length < 2 || name.length > 40) {
       return NextResponse.json({ error: 'Name must be 2–40 characters' }, { status: 400 })
     }
-    if (name.toLowerCase() !== target.name.toLowerCase()) {
-      const existing = await db.user.findMany({
-        where: { salonId: auth.salonId, NOT: { id } },
-        select: { name: true },
+    data.name = name
+  }
+
+  if (body.email !== undefined) {
+    const email = String(body.email).trim().toLowerCase()
+    if (!EMAIL_RE.test(email)) {
+      return NextResponse.json({ error: 'A valid email is required' }, { status: 400 })
+    }
+    if (email !== target.email) {
+      const existing = await db.user.findFirst({
+        where: { salonId: auth.salonId, email, NOT: { id } },
+        select: { id: true },
       })
-      if (existing.some((u) => u.name.toLowerCase() === name.toLowerCase())) {
-        return NextResponse.json({ error: 'A user with that name already exists' }, { status: 409 })
+      if (existing) {
+        return NextResponse.json({ error: 'A user with that email already exists' }, { status: 409 })
       }
     }
-    data.name = name
+    data.email = email
   }
 
   if (body.role !== undefined) {
@@ -65,12 +74,12 @@ export async function PATCH(
     }
   }
 
-  if (body.pin !== undefined && body.pin !== '') {
-    const pin = String(body.pin)
-    if (!PIN_RE.test(pin)) {
-      return NextResponse.json({ error: 'PIN must be 4–6 digits' }, { status: 400 })
+  if (body.password !== undefined && body.password !== '') {
+    const password = String(body.password)
+    if (password.length < MIN_PASSWORD_LENGTH) {
+      return NextResponse.json({ error: `Password must be at least ${MIN_PASSWORD_LENGTH} characters` }, { status: 400 })
     }
-    data.pin = hashPin(pin)
+    data.passwordHash = await hashPassword(password)
   }
 
   // Last-admin protection: the salon must always keep at least one active admin
@@ -99,6 +108,7 @@ export async function PATCH(
   return NextResponse.json({
     id: updated.id,
     name: updated.name,
+    email: updated.email,
     role: updated.role,
     active: updated.active,
     staffId: updated.staffId,
