@@ -23,7 +23,7 @@ Branch: `feat/owner-accounts-subdomain-tenancy` (off `main`). Big, sensitive (au
 **Decisions locked:**
 - Owner identity is a global layer ABOVE per-salon `User`; owners get admin rights directly via `OwnerSalon` (no `User` row required).
 - `salonId` derives from the resolved Host (subdomain), NOT the token; verified against the subject's membership (401 on mismatch, no redirect).
-- Owner login at root `salonpro.me/login` (host-branched; tenant host `/login` = staff PIN).
+- Owner login at root `salonpro.me/login` (originally host-branched; superseded 2026-06-13 by the unified email-first `/login` — see below).
 - Signup creates owner inline; authed owner → links to existing account; **authed staff → rejected (no orphan salon)**.
 - Retire the Bearer/`localStorage` token channel → cookie-only.
 - Prod domain `salonpro.me`; `?salon=` is dev-only. Cookies stay host-only (no `Domain`).
@@ -81,6 +81,27 @@ _Verified: `tsc --noEmit` + `eslint .` clean. Not browser-smoke-tested. Signup n
 - [x] `DATA_MODELS.md`: added Owner / OwnerSalon / OneTimeToken, clarified User as per-salon staff, owner-aware `/api/salons` + owner/exchange routes, db-push (baselined) + `npx tsx` note. Removed stale payment-status note.
 
 **Deployment prerequisite (out of code scope):** wildcard DNS `*.salonpro.me` + wildcard SSL before Phase 1 deploys.
+
+## Unified email-first login (2026-06-13)
+
+Replaced the host-branched `/login` (separate `OwnerLogin`/`StaffLogin`) with one
+`UnifiedLogin.tsx` on every host: email-first owner flow + a one-click staff PIN
+path. **Frontend-only** — no schema/API/cookie changes; all owner + staff endpoints
+reused as-is.
+- [x] `UnifiedLogin.tsx`: owner email → password → picker/handoff (lifted from old
+  `OwnerLogin`); staff PIN via reused `LoginPage` (tenant host) or a subdomain
+  redirect (apex). Host-aware default: tenant→PIN, apex→email. `tsc` + lint clean.
+- [x] `login/page.tsx` wraps it in `AuthProvider`; deleted `OwnerLogin`/`StaffLogin`.
+- **No email enumeration:** the email step makes no backend call; only
+  `/api/owner/login` verifies (generic failure).
+- [ ] **Browser smoke test pending** (user, after dev-server restart): apex owner
+  email→password→picker; apex "Team member?"→subdomain redirect; tenant-host staff
+  PIN + "Owner?" toggle; logged-in staff hitting `/login`→`/dashboard`.
+
+**Deferred — full unification (chose hybrid instead):** giving every staff `User` an
+email+password and retiring PINs (schema migration + backfill incl. demo data). Not
+done by choice — PINs stay for fast shared-terminal login. Revisit if the product
+moves to per-staff email accounts.
 
 ---
 
