@@ -28,6 +28,8 @@ export interface SessionUser {
   role: UserRole
   staffId: string | null
   salonId: string
+  /** false = first-run product tour not yet seen (populated by /api/auth/me) */
+  tourCompleted?: boolean
 }
 
 export interface SalonInfo {

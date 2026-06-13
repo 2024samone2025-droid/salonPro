@@ -573,6 +573,7 @@ export default function AppointmentsView() {
             size="sm"
             className="shrink-0"
             onClick={handleShareBookingLink}
+            data-tour="share-booking"
           >
             <Share2 className="size-3.5 sm:mr-1" />
             <span className="hidden sm:inline">Share booking link</span>
@@ -604,7 +605,7 @@ export default function AppointmentsView() {
         )}
       </div>
 
-      <Card className="overflow-hidden">
+      <Card className="overflow-hidden" data-tour="appointments-grid">
         <CardHeader className="pb-2">
           <CardTitle className="text-base flex items-center gap-2">
             <CalendarDays className="size-4 text-muted-foreground" />

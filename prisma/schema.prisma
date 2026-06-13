@@ -138,6 +138,8 @@ model User {
   pin       String   // SHA-256 hashed PIN
   role      String   @default("receptionist") // admin, receptionist, stylist
   active    Boolean  @default(true)
+  // default(true) so existing rows skip the tour; user-creation routes set false explicitly
+  tourCompleted Boolean @default(true)
   staffId   String?  // optional link to Staff record
   staff     Staff?   @relation(fields: [staffId], references: [id], onDelete: SetNull)
   createdAt DateTime   @default(now())

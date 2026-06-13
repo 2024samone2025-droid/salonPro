@@ -20,13 +20,16 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ user: null, permissions: null, salon: null }, { status: 401 })
     }
 
-    // Fetch salon info
-    const salon = await db.salon.findUnique({ where: { id: user.salonId } })
+    // Fetch salon info + fresh per-user flags the JWT doesn't carry
+    const [salon, dbUser] = await Promise.all([
+      db.salon.findUnique({ where: { id: user.salonId } }),
+      db.user.findUnique({ where: { id: user.id }, select: { tourCompleted: true } }),
+    ])
 
     const permissions = ROLE_PERMISSIONS[user.role as UserRole] || null
 
     return NextResponse.json({
-      user,
+      user: { ...user, tourCompleted: dbUser?.tourCompleted ?? true },
       permissions,
       salon: salon
         ? {
