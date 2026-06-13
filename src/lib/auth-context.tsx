@@ -23,11 +23,15 @@ export interface Permissions {
 }
 
 export interface SessionUser {
+  /** 'owner' = global owner account (admin via OwnerSalon link); 'staff' = per-salon User. */
+  kind?: 'staff' | 'owner'
   id: string
   name: string
   role: UserRole
   staffId: string | null
   salonId: string
+  /** owner accounts only */
+  email?: string
   /** false = first-run product tour not yet seen (populated by /api/auth/me) */
   tourCompleted?: boolean
 }
@@ -53,8 +57,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null)
 
-const TOKEN_KEY = 'salonpro_token'
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<SessionUser | null>(null)
   const [permissions, setPermissions] = useState<Permissions | null>(null)
@@ -68,13 +70,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     isInitialMount.current = false
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem(TOKEN_KEY) : null
-      const headers: Record<string, string> = {}
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`
-      }
-
-      const res = await fetch('/api/auth/me', { headers })
+      // Cookie-only: the httpOnly session cookie is sent automatically (same-origin).
+      const res = await fetch('/api/auth/me')
       if (res.ok) {
         const data = await res.json()
         setUser(data.user)
@@ -84,7 +81,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(null)
         setPermissions(null)
         setSalon(null)
-        localStorage.removeItem(TOKEN_KEY)
       }
     } catch {
       setUser(null)
@@ -101,21 +97,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (name: string, pin: string): Promise<{ success: boolean; error?: string }> => {
     try {
-      // Include salon param for dev mode
-      const salonParam = new URLSearchParams(window.location.search).get('salon') || 'demo'
-      const res = await fetch(`/api/auth/login?salon=${salonParam}`, {
+      // Tenant comes from the Host. In dev only, forward ?salon= if present so the
+      // middleware can resolve it on a bare localhost (no 'demo' default).
+      const salonParam = new URLSearchParams(window.location.search).get('salon')
+      const url = salonParam ? `/api/auth/login?salon=${encodeURIComponent(salonParam)}` : '/api/auth/login'
+      const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, pin }),
       })
       const data = await res.json()
       if (res.ok) {
+        // Session is established via the httpOnly cookie set in the response.
         setUser(data.user)
         setPermissions(data.permissions)
-        if (data.token) {
-          localStorage.setItem(TOKEN_KEY, data.token)
-        }
-        // Salon info is already in response
         setSalon(data.salon)
         return { success: true }
       }
@@ -134,16 +129,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null)
     setPermissions(null)
     setSalon(null)
-    localStorage.removeItem(TOKEN_KEY)
   }
 
+  // Cookie-only now. Kept as a thin wrapper so existing callers don't change;
+  // the httpOnly session cookie rides along automatically on same-origin requests.
   const authFetch = useCallback(async (url: string, options: RequestInit = {}): Promise<Response> => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem(TOKEN_KEY) : null
-    const headers = new Headers(options.headers || {})
-    if (token) {
-      headers.set('Authorization', `Bearer ${token}`)
-    }
-    return fetch(url, { ...options, headers })
+    return fetch(url, options)
   }, [])
 
   return (

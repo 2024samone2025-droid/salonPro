@@ -25,6 +25,7 @@ model Salon {
   appointments  Appointment[]
   payments      Payment[]
   users         User[]
+  owners        OwnerSalon[]
 }
 
 model Customer {
@@ -151,4 +152,53 @@ model User {
   @@index([role])
   @@index([pin])
   @@index([salonId])
+}
+
+// Global owner identity — sits ABOVE per-salon User rows. An owner authenticates
+// at the root domain (email + password) and is granted admin rights to every
+// salon they are linked to via OwnerSalon, WITHOUT needing a per-salon User row.
+model Owner {
+  id           String   @id @default(cuid())
+  email        String   @unique // stored lowercased
+  passwordHash String   // scrypt (salt$hash) — NOT the SHA-256 used for staff PINs
+  name         String
+  // true = a temp/placeholder password that should be reset on first login.
+  // Set by the backfill script; ENFORCEMENT is a deferred follow-up (the flag is
+  // currently an unenforced marker — login still works with the temp password).
+  mustResetPassword Boolean @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  salons OwnerSalon[]
+}
+
+// Owner ↔ Salon membership. One owner may run several salons; one salon may have
+// several owners. This is the link that grants an owner admin rights to a salon.
+model OwnerSalon {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  ownerId String
+  owner   Owner  @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  salonId String
+  salon   Salon  @relation(fields: [salonId], references: [id], onDelete: Cascade)
+
+  @@unique([ownerId, salonId])
+  @@index([salonId])
+}
+
+// Single-use, short-lived nonce backing the cross-domain session handoff. The
+// owner logs in at the root domain; we mint one of these, embed its id (jti) in a
+// signed token, and redirect to <salon>.salonpro.me, where it is consumed exactly
+// once in exchange for a per-subdomain session cookie.
+model OneTimeToken {
+  id         String    @id @default(cuid()) // = jti carried in the signed token
+  ownerId    String
+  salonId    String
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([expiresAt])
 }
