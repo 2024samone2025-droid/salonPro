@@ -34,14 +34,16 @@ Branch: `feat/owner-accounts-subdomain-tenancy` (off `main`). Big, sensitive (au
 - [x] Additive schema: `Owner`, `OwnerSalon`, `OneTimeToken` + `Salon.owners`; applied via `prisma db push` (baselined repo, no `migrate dev`). Commit `0dc65b2`.
 - [ ] _Note:_ `.env.example` is git-ignored repo-wide, so the documented `AUTH_SECRET` line there is local-only — decide whether to force-track it.
 
-**Phase 1 — subdomain tenancy unit (must ship together; staff auth keeps working)**
-- [ ] Middleware: parse `Host` → `x-salon-subdomain` (on the **request**) for ALL requests; `ROOT_DOMAIN` env; root/`www` + reserved (`app`/`api`) = no-tenant; `sub.localhost:3000` dev; `?salon=` dev-only fallback. Excludes the public booking surface (`/book/[subdomain]`, `/api/public/booking/[subdomain]`), which stays path-param.
-- [ ] Server `(app)/layout.tsx` wrapper: resolve subdomain → salon via Prisma, `notFound()` on unknown, BEFORE auth; render extracted client `AppShell`.
-- [ ] `requireAuth`: salonId from resolved Host; verify staff `User` belongs to resolved salon; role from DB row; preserve `AuthResult` shape (13/14 call sites unchanged). Two failures: unknown subdomain → 404; valid subdomain + non-member → 401 identical to no-session (no existence leak).
-- [ ] Drop `salonId` from the token payload entirely (host is sole authority); update the one `auth.user.salonId` caller (`tour-complete`) → `auth.salonId`.
-- [ ] Host-aware `/api/auth/me` (sub-decision B): same resolve + membership check; stale cross-tenant cookie → 401 `{user:null}` → client redirects to that tenant's login.
-- [ ] Drop the `'demo'` silent default (sub-decision A) from `/api/auth/login` + resolution.
-- [ ] Retire Bearer/`localStorage` channel (`authFetch`, `getSessionFromRequest`, `/api/auth/me` header fallback, client `login`/`refreshSession`) — cookie-only.
+**Phase 1 — subdomain tenancy unit (must ship together; staff auth keeps working)** — ✅ done 2026-06-13
+- [x] Middleware: parse `Host` → `x-salon-subdomain` (on the **request**) for ALL requests; `ROOT_DOMAIN` env; root/`www` + reserved (`app`/`api`) = no-tenant; `sub.localhost:3000` dev; `?salon=` dev-only fallback. Excludes the public booking surface (`/book/[subdomain]`, `/api/public/booking/[subdomain]`), which stays path-param. New `lib/subdomain.ts` (edge-safe label extraction).
+- [x] Server `(app)/layout.tsx` wrapper: resolve subdomain → salon via Prisma, `notFound()` on unknown, BEFORE auth; renders extracted client `AppShell`.
+- [x] `requireAuth`: salonId from resolved Host; verify staff `User` belongs to resolved salon; role from DB row; `AuthResult` shape preserved (13/14 call sites unchanged). Two failures: unknown subdomain → 404; valid subdomain + non-member → 401 identical to no-session.
+- [x] Dropped `salonId` from the token payload (host is sole authority); `tour-complete` uses `auth.salonId`.
+- [x] Host-aware `/api/auth/me` (sub-decision B): same resolve + membership check.
+- [x] Dropped the `'demo'` silent default (sub-decision A) from `/api/auth/login` + client.
+- [x] Retired Bearer/`localStorage` channel — cookie-only (`auth-guard`, `auth-context`, `/api/auth/me`, signup page).
+
+_Verified: `tsc --noEmit` + `eslint .` clean. Not browser-smoke-tested yet (see below). Owner login still Phase 2._
 
 **Phase 1 — notes / known-deferred (so these aren't mistaken for bugs later):**
 - **Dev URL pattern changed:** a bare `localhost:3000` with no tenant now resolves to NO salon → **404 is expected, not a broken build**. Run the app via `demo.localhost:3000` (browsers resolve `*.localhost` to 127.0.0.1) or `localhost:3000/?salon=demo` (dev-only `?salon=` fallback). `ROOT_DOMAIN=localhost:3000` in dev. Documented in `.env.example`.
