@@ -62,7 +62,7 @@ export async function GET() {
     // Staff: membership against the resolved salon; fresh role + tour flag.
     const member = await db.user.findFirst({
       where: { id: subject.id, salonId: salon.id, active: true },
-      select: { id: true, name: true, role: true, staffId: true, tourCompleted: true },
+      select: { id: true, name: true, role: true, staffId: true, tourCompleted: true, mustResetPassword: true },
     })
     if (!member) return loggedOut()
 
@@ -77,6 +77,7 @@ export async function GET() {
         staffId: member.staffId,
         salonId: salon.id,
         tourCompleted: member.tourCompleted,
+        mustResetPassword: member.mustResetPassword,
       },
       permissions,
       salon: salonInfo,

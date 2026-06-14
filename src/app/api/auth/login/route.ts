@@ -52,6 +52,7 @@ export async function POST(req: NextRequest) {
         role: user.role,
         staffId: user.staffId,
         salonId: salon.id,
+        mustResetPassword: user.mustResetPassword,
       },
       permissions,
       salon: {
