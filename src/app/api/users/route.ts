@@ -89,6 +89,9 @@ export async function POST(req: NextRequest) {
       name,
       email,
       passwordHash: await hashPassword(password),
+      // Admin sets a temporary password here; the staff member must choose their
+      // own on first login (cleared by /api/auth/change-password).
+      mustResetPassword: true,
       role,
       staffId,
       active: body.active !== undefined ? Boolean(body.active) : true,
