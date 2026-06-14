@@ -14,6 +14,27 @@ import MobileTabBar from '@/components/salon/MobileTabBar'
 import { Triangle, Search } from 'lucide-react'
 import ThemeToggle from '@/components/theme-toggle'
 import TourController from '@/components/salon/TourController'
+import ChangePasswordForm from '@/components/salon/ChangePasswordForm'
+
+// First-login gate: a staff member whose admin set a temporary password must
+// choose their own before the app unlocks. refreshSession() inside the form
+// clears mustResetPassword, so a successful change drops straight into the app.
+function ForcePasswordReset() {
+  return (
+    <div className="min-h-screen w-full flex items-center justify-center bg-background p-4">
+      <div className="w-full max-w-sm space-y-6">
+        <div className="space-y-1.5 text-center">
+          <Triangle className="size-6 mx-auto fill-foreground text-foreground" />
+          <h1 className="text-lg font-semibold text-foreground">Set your password</h1>
+          <p className="text-sm text-muted-foreground">
+            Choose a password only you know before you start.
+          </p>
+        </div>
+        <ChangePasswordForm forced />
+      </div>
+    </div>
+  )
+}
 
 function Splash() {
   return (
@@ -51,6 +72,10 @@ function AppFrame({ children }: { children: React.ReactNode }) {
 
   if (loading || !user) {
     return <Splash />
+  }
+
+  if (user.kind === 'staff' && user.mustResetPassword) {
+    return <ForcePasswordReset />
   }
 
   return (
