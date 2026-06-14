@@ -34,6 +34,8 @@ export interface SessionUser {
   email?: string
   /** false = first-run product tour not yet seen (populated by /api/auth/me) */
   tourCompleted?: boolean
+  /** staff only: admin set a temp password → must choose their own before using the app */
+  mustResetPassword?: boolean
 }
 
 export interface SalonInfo {

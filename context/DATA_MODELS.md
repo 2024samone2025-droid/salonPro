@@ -66,7 +66,9 @@ Indexes: `date`, `status`, `staffId`, `customerId`, `salonId`.
 `status` (`unpaid` \| `partial` \| `paid`, default `unpaid`), `method` (`cash` \| `mtn_momo` \| `airtel_money`, default `cash`), `amount` (Float, default 0), `salonId`, `appointmentId` (**unique**). Indexes: `status`, `method`, `salonId`. (`PAYMENT_STATUS_CONFIG` in `lib/constants.ts` is keyed `partial` to match.)
 
 ### User (per-salon staff auth)
-`name`, `email` (lowercased), `passwordHash` (**scrypt** `salt:hash`, `lib/password.ts`), `role` (`admin` \| `receptionist` \| `stylist`, default `receptionist`), `active` (Bool), `tourCompleted` (Bool), `staffId?` (optional link to Staff, `onDelete: SetNull`), `salonId`. **`@@unique([salonId, email])`** — email is the login handle, unique within a salon. Indexes: `role`, `salonId`. Belongs to exactly one salon; login is email + password at the tenant host (`/api/auth/login`). PINs were retired.
+`name`, `email` (lowercased), `passwordHash` (**scrypt** `salt:hash`, `lib/password.ts`), `mustResetPassword` (Bool, default false), `role` (`admin` \| `receptionist` \| `stylist`, default `receptionist`), `active` (Bool), `tourCompleted` (Bool), `staffId?` (optional link to Staff, `onDelete: SetNull`), `salonId`. **`@@unique([salonId, email])`** — email is the login handle, unique within a salon. Indexes: `role`, `salonId`. Belongs to exactly one salon; login is email + password at the tenant host (`/api/auth/login`). PINs were retired.
+
+`mustResetPassword` is **set true** by `/api/users` POST (admin gives a temporary password) and **enforced**: `AppShell` gates such staff behind a forced "Set your password" screen. `POST /api/auth/change-password` (staff only) verifies the current password, sets a new one (≥8, must differ), and clears the flag. Staff can also change their password anytime from the sidebar; owners are rejected (they manage theirs at the apex).
 
 ### Owner (global owner identity)
 | Field | Type | Notes |
