@@ -228,6 +228,18 @@ export default function SalonSidebar() {
           </p>
         </div>
       </SidebarFooter>
+
+      <Dialog open={passwordOpen} onOpenChange={setPasswordOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Change password</DialogTitle>
+            <DialogDescription>
+              Enter your current password, then choose a new one.
+            </DialogDescription>
+          </DialogHeader>
+          <ChangePasswordForm onSuccess={() => setPasswordOpen(false)} />
+        </DialogContent>
+      </Dialog>
     </Sidebar>
   )
 }
