@@ -31,10 +31,28 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Check, Loader2, Minus, Plus, Pencil, UserPlus } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { Check, Loader2, Minus, Plus, Pencil, UserPlus, MoreHorizontal, RefreshCw, Ban } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuth } from '@/lib/auth-context'
 import InviteStaffDialog from './InviteStaffDialog'
+import InviteLinkPanel from './InviteLinkPanel'
 import {
   PERMISSION_MATRIX_ROWS,
   ROLE_LABELS,
@@ -50,6 +68,7 @@ interface UserRow {
   active: boolean
   staffId: string | null
   staff: { id: string; name: string } | null
+  inviteStatus: 'pending' | 'expired' | null
 }
 
 interface StaffOption {
@@ -96,6 +115,9 @@ export default function UsersTab() {
   const [inviteOpen, setInviteOpen] = useState(false)
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
+  const [rotatedUrl, setRotatedUrl] = useState<string | null>(null)
+  const [revokeTarget, setRevokeTarget] = useState<UserRow | null>(null)
+  const [inviteBusy, setInviteBusy] = useState(false)
 
   const load = useCallback(async () => {
     try {
@@ -189,6 +211,56 @@ export default function UsersTab() {
     }
   }
 
+  // Rotate: kill the old link and mint a fresh one, shown for copying. The row
+  // stays pending with its 72h window reset.
+  const rotateInvite = async (u: UserRow) => {
+    setInviteBusy(true)
+    try {
+      const res = await authFetch('/api/staff/invite/revoke', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: u.id, rotate: true }),
+      })
+      const body = await res.json().catch(() => null)
+      if (!res.ok) {
+        toast.error(body?.error || 'Could not refresh the invite link')
+        return
+      }
+      setRotatedUrl(body.acceptUrl as string)
+      load()
+    } catch {
+      toast.error('Something went wrong')
+    } finally {
+      setInviteBusy(false)
+    }
+  }
+
+  // Revoke: invalidate the current link without issuing a new one. The user stays
+  // inactive and the row's invite indicator clears.
+  const confirmRevoke = async () => {
+    if (!revokeTarget) return
+    setInviteBusy(true)
+    try {
+      const res = await authFetch('/api/staff/invite/revoke', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: revokeTarget.id }),
+      })
+      const body = await res.json().catch(() => null)
+      if (!res.ok) {
+        toast.error(body?.error || 'Could not revoke the invite')
+        return
+      }
+      toast.success('Invite revoked')
+      setRevokeTarget(null)
+      load()
+    } catch {
+      toast.error('Something went wrong')
+    } finally {
+      setInviteBusy(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="space-y-4">
@@ -253,6 +325,12 @@ export default function UsersTab() {
                       <Badge variant="outline" className="bg-success/10 text-success border-success/20">
                         Active
                       </Badge>
+                    ) : u.inviteStatus === 'pending' ? (
+                      <Badge variant="outline">Invite pending</Badge>
+                    ) : u.inviteStatus === 'expired' ? (
+                      <Badge variant="outline" className="bg-muted text-muted-foreground">
+                        Invite expired
+                      </Badge>
                     ) : (
                       <Badge variant="outline" className="bg-muted text-muted-foreground">
                         Inactive
@@ -260,15 +338,44 @@ export default function UsersTab() {
                     )}
                   </TableCell>
                   <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="size-8"
-                      onClick={() => openEdit(u)}
-                      aria-label={`Edit ${u.name}`}
-                    >
-                      <Pencil className="size-4" />
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="size-8"
+                          aria-label={`Actions for ${u.name}`}
+                        >
+                          <MoreHorizontal className="size-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => openEdit(u)}>
+                          <Pencil className="size-4" />
+                          Edit
+                        </DropdownMenuItem>
+                        {u.inviteStatus && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => rotateInvite(u)}
+                              disabled={inviteBusy}
+                            >
+                              <RefreshCw className="size-4" />
+                              New invite link
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => setRevokeTarget(u)}
+                              disabled={inviteBusy}
+                              className="text-destructive focus:text-destructive"
+                            >
+                              <Ban className="size-4" />
+                              Revoke invite
+                            </DropdownMenuItem>
+                          </>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
               ))}
@@ -320,6 +427,43 @@ export default function UsersTab() {
         canGrantAdmin={currentUser?.role === 'admin'}
         onInvited={load}
       />
+
+      {/* Rotated invite link (after "New invite link") */}
+      <Dialog open={!!rotatedUrl} onOpenChange={(o) => !o && setRotatedUrl(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>New invite link</DialogTitle>
+            <DialogDescription>
+              The previous link no longer works. Send this one instead — it works once and expires in
+              72 hours.
+            </DialogDescription>
+          </DialogHeader>
+          {rotatedUrl && <InviteLinkPanel url={rotatedUrl} />}
+          <DialogFooter>
+            <Button onClick={() => setRotatedUrl(null)}>Done</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Revoke confirmation */}
+      <AlertDialog open={!!revokeTarget} onOpenChange={(o) => !o && setRevokeTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Revoke this invite?</AlertDialogTitle>
+            <AlertDialogDescription>
+              The current link for {revokeTarget?.name} stops working immediately. You can send a new
+              invite later.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={inviteBusy}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmRevoke} disabled={inviteBusy}>
+              {inviteBusy && <Loader2 className="size-4 animate-spin" />}
+              Revoke
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Create / edit dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
