@@ -32,7 +32,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import ChangePasswordForm from '@/components/salon/ChangePasswordForm'
-import { Triangle, Search, LogOut, CreditCard, Settings, KeyRound } from 'lucide-react'
+import { Triangle, Search, LogOut, CreditCard, Settings, KeyRound, CircleUser } from 'lucide-react'
 import { allNavItems, navItemsForRole } from '@/components/salon/nav-items'
 
 const roleLabels: Record<UserRole, string> = {
@@ -175,6 +175,17 @@ export default function SalonSidebar() {
               </p>
             </div>
           </div>
+          <Button
+            asChild
+            variant="plain"
+            size="sm"
+            className="w-full justify-start text-sidebar-foreground/40 hover:text-sidebar-foreground hover:bg-sidebar-accent/60 transition-colors text-[13px] h-8"
+          >
+            <Link href="/account" aria-label="My account">
+              <CircleUser className="size-3.5 mr-2" aria-hidden="true" />
+              My account
+            </Link>
+          </Button>
           {user?.kind !== 'owner' && (
             <Button
               variant="plain"
