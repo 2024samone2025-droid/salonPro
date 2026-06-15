@@ -20,6 +20,7 @@ export interface Permissions {
   canManageServices: boolean
   canDeleteRecords: boolean
   canViewAllAppointments: boolean
+  canViewActivityLog: boolean
 }
 
 export interface SessionUser {
