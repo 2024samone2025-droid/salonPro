@@ -199,12 +199,16 @@ model OwnerSalon {
 }
 
 // Single-use, short-lived nonce backing the cross-domain session handoff. The
-// owner logs in at the root domain; we mint one of these, embed its id (jti) in a
+// subject logs in at the root domain; we mint one of these, embed its id (jti) in a
 // signed token, and redirect to <salon>.salonpro.me, where it is consumed exactly
 // once in exchange for a per-subdomain session cookie.
+//
+// Exactly ONE of ownerId / userId is set, identifying the subject being handed off:
+// ownerId = global Owner (owner flow); userId = per-salon staff User (staff flow).
 model OneTimeToken {
   id         String    @id @default(cuid()) // = jti carried in the signed token
-  ownerId    String
+  ownerId    String?
+  userId     String?
   salonId    String
   expiresAt  DateTime
   consumedAt DateTime?
