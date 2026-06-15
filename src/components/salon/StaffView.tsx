@@ -26,19 +26,15 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import {
-  Plus,
   Phone,
   UserCog,
   Loader2,
-  ShieldCheck,
   Scissors,
   Headset,
-  UserPlus,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuth } from '@/lib/auth-context'
 import EmptyState from '@/components/salon/EmptyState'
-import InviteStaffDialog from '@/components/salon/InviteStaffDialog'
 
 interface StaffMember {
   id: string
@@ -89,10 +85,9 @@ export default function StaffView() {
   const [showDialog, setShowDialog] = useState(false)
   const [editing, setEditing] = useState<StaffMember | null>(null)
   const [saving, setSaving] = useState(false)
-  const [inviteOpen, setInviteOpen] = useState(false)
   const isInitialMount = useRef(true)
 
-  const { user, permissions, authFetch } = useAuth()
+  const { permissions, authFetch } = useAuth()
   const canManage = permissions?.canManageStaff ?? false
   const isViewOnly = permissions?.staff === 'view'
 
@@ -122,15 +117,6 @@ export default function StaffView() {
     fetchStaff()
   }, [fetchStaff])
 
-  const openAdd = () => {
-    if (!canManage) return
-    setEditing(null)
-    setName('')
-    setPhone('')
-    setRole('stylist')
-    setShowDialog(true)
-  }
-
   const openEdit = (s: StaffMember) => {
     if (!canManage) return
     setEditing(s)
@@ -140,24 +126,24 @@ export default function StaffView() {
     setShowDialog(true)
   }
 
+  // Edit-only: staff are never created here. New workers join exclusively through
+  // owner-provisioned onboarding (Settings → Users), which auto-creates their roster
+  // slot. This dialog only edits an existing entry.
   const handleSave = async () => {
+    if (!editing) return
     if (!name.trim()) {
       toast.error('Staff name is required')
       return
     }
     setSaving(true)
     try {
-      const method = editing ? 'PUT' : 'POST'
-      const body = editing
-        ? { id: editing.id, name: name.trim(), phone: phone.trim(), role }
-        : { name: name.trim(), phone: phone.trim(), role }
       const res = await authFetch('/api/staff', {
-        method,
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+        body: JSON.stringify({ id: editing.id, name: name.trim(), phone: phone.trim(), role }),
       })
       if (res.ok) {
-        toast.success(editing ? 'Staff member updated' : 'Staff member added')
+        toast.success('Staff member updated')
         setShowDialog(false)
         fetchStaff()
       } else {
@@ -204,23 +190,9 @@ export default function StaffView() {
           </p>
         </div>
         {canManage && (
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto shrink-0">
-            <Button
-              variant="outline"
-              onClick={() => setInviteOpen(true)}
-              className="h-10 gap-2"
-            >
-              <UserPlus className="size-4" />
-              Invite staff
-            </Button>
-            <Button
-              onClick={openAdd}
-              className="h-10 gap-2 shadow-sm"
-            >
-              <Plus className="size-4" />
-              Add staff
-            </Button>
-          </div>
+          <p className="text-xs text-muted-foreground sm:text-right max-w-xs">
+            Add team members in Settings → Users. Stylists appear here automatically.
+          </p>
         )}
       </div>
 
@@ -246,9 +218,11 @@ export default function StaffView() {
         /* Empty state */
         <EmptyState
           icon={UserCog}
-          message="No staff members yet"
-          actionLabel={canManage ? '+ Add your first staff member' : undefined}
-          onAction={canManage ? openAdd : undefined}
+          message={
+            canManage
+              ? 'No staff yet — add a stylist in Settings → Users and they’ll show up here.'
+              : 'No staff members yet'
+          }
           className="py-10"
         />
       ) : (
@@ -379,16 +353,12 @@ export default function StaffView() {
         </>
       )}
 
-      {/* Add/Edit Dialog - only for admin */}
+      {/* Edit Dialog - only for admin (new staff join via onboarding, not here) */}
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editing ? 'Edit staff member' : 'Add staff member'}</DialogTitle>
-            <DialogDescription>
-              {editing
-                ? 'Update the staff member details below.'
-                : 'Fill in the details to add a new staff member.'}
-            </DialogDescription>
+            <DialogTitle>Edit staff member</DialogTitle>
+            <DialogDescription>Update the staff member details below.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
@@ -441,20 +411,11 @@ export default function StaffView() {
               disabled={saving}
             >
               {saving && <Loader2 className="size-4 mr-1.5 animate-spin" />}
-              {editing ? 'Save changes' : 'Add staff member'}
+              Save changes
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Invite staff (one-time link) dialog — creates a login User, surfaced in
-          Settings → Users, not in this Staff roster list. */}
-      <InviteStaffDialog
-        open={inviteOpen}
-        onOpenChange={setInviteOpen}
-        canGrantAdmin={user?.role === 'admin'}
-        onInvited={() => {}}
-      />
     </div>
   )
 }
