@@ -301,3 +301,30 @@ model ActivityLog {
 
   @@index([salonId, createdAt])
 }
+
+// Operator (platform-staff) actions, CROSS-tenant. Deliberately NOT ActivityLog:
+// that table is per-salon, scoped by salonId for owner transparency; operator
+// actions span tenants and must never be written there. Append-only, never updated
+// or deleted. Both actor and target are plain strings, NOT foreign keys: there is
+// no Operator table in v1 (the actor is an SSO email from an allowlist), and the
+// trail must outlive the tenant row it references (Salon cascades hard-delete all
+// children — the audit must survive even that). Written via lib/operator-audit.ts.
+enum OperatorAction {
+  SUSPEND
+  REACTIVATE
+  REVEAL_PII
+  VIEW_TENANT
+}
+
+model OperatorAuditLog {
+  id            String         @id @default(cuid())
+  operatorEmail String         // SSO actor; snapshot, intentionally NOT a foreign key
+  action        OperatorAction
+  targetSalonId String         // the salon acted on; plain string, NOT a foreign key
+  reason        String?        // required (enforced in the writer) for state changes; optional for reveals/views
+  metadata      Json?          // before/after where relevant
+  createdAt     DateTime       @default(now())
+
+  @@index([targetSalonId, createdAt])
+  @@index([createdAt])
+}
