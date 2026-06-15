@@ -44,6 +44,15 @@ export async function GET(
   if (!settings.publicBookingEnabled) {
     return NextResponse.json({ error: 'Online booking is disabled' }, { status: 404 })
   }
+  const rules = settings.bookingRules
+
+  // Advance-window cap: no slots offered beyond maxAdvanceDays from today.
+  const maxDate = new Date()
+  maxDate.setHours(0, 0, 0, 0)
+  maxDate.setDate(maxDate.getDate() + rules.maxAdvanceDays)
+  if (new Date(date + 'T00:00:00').getTime() > maxDate.getTime()) {
+    return NextResponse.json({ slots: [] })
+  }
 
   // Business hours for the requested weekday (0 = Sunday)
   const weekday = new Date(date + 'T00:00:00').getDay()
@@ -79,17 +88,17 @@ export async function GET(
   const busy = existing.map((a) => ({ start: toMinutes(a.startTime), end: toMinutes(a.endTime) }))
 
   const duration = service.duration
-  const now = new Date()
-  const todayStr = `${now.getFullYear()}-${(now.getMonth() + 1)
-    .toString()
-    .padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`
-  const nowMinutes = now.getHours() * 60 + now.getMinutes()
+  // Earliest bookable instant: now + the salon's minimum lead time.
+  const leadCutoffMs = Date.now() + rules.minLeadTimeHours * 60 * 60 * 1000
+  const { bufferBeforeMinutes: before, bufferAfterMinutes: after } = rules
 
   const slots: string[] = []
   for (let start = openMinutes; start + duration <= closeMinutes; start += slotStep) {
     const end = start + duration
-    if (date === todayStr && start <= nowMinutes) continue
-    const overlaps = busy.some((b) => start < b.end && end > b.start)
+    // Lead-time: the slot's start must be at or after the cutoff.
+    if (new Date(`${date}T${toTime(start)}:00`).getTime() < leadCutoffMs) continue
+    // Buffers: the slot plus its required gaps must clear every existing appointment.
+    const overlaps = busy.some((b) => start - before < b.end && end + after > b.start)
     if (!overlaps) slots.push(toTime(start))
   }
 

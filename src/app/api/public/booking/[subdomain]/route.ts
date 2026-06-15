@@ -9,6 +9,14 @@ function toMin(time: string) {
   return h * 60 + m
 }
 
+// Minutes → 'HH:mm', clamped to a single day so buffer-widened bounds stay valid.
+function toClock(total: number) {
+  const clamped = Math.min(24 * 60 - 1, Math.max(0, total))
+  return `${Math.floor(clamped / 60)
+    .toString()
+    .padStart(2, '0')}:${(clamped % 60).toString().padStart(2, '0')}`
+}
+
 function badSubdomain(subdomain: string) {
   return !subdomain || !/^[a-z0-9-]+$/.test(subdomain)
 }
@@ -103,9 +111,28 @@ export async function POST(
       .toString()
       .padStart(2, '0')}:${(endMinutes % 60).toString().padStart(2, '0')}`
 
+    const rules = settings.bookingRules
     const slotStart = new Date(`${date}T${startTime}:00`)
-    if (slotStart.getTime() < Date.now()) {
-      return NextResponse.json({ error: 'That time has already passed' }, { status: 400 })
+
+    // Lead time (subsumes the "already passed" check when lead time is 0).
+    const leadCutoffMs = Date.now() + rules.minLeadTimeHours * 60 * 60 * 1000
+    if (slotStart.getTime() < leadCutoffMs) {
+      const msg =
+        rules.minLeadTimeHours > 0
+          ? `Bookings must be made at least ${rules.minLeadTimeHours} hour(s) in advance`
+          : 'That time has already passed'
+      return NextResponse.json({ error: msg }, { status: 400 })
+    }
+
+    // Advance window.
+    const maxDate = new Date()
+    maxDate.setHours(0, 0, 0, 0)
+    maxDate.setDate(maxDate.getDate() + rules.maxAdvanceDays)
+    if (new Date(date + 'T00:00:00').getTime() > maxDate.getTime()) {
+      return NextResponse.json(
+        { error: `Bookings can only be made up to ${rules.maxAdvanceDays} day(s) ahead` },
+        { status: 400 }
+      )
     }
 
     // Respect the salon's business hours for the requested weekday
@@ -117,14 +144,19 @@ export async function POST(
       return NextResponse.json({ error: 'That time is outside opening hours' }, { status: 400 })
     }
 
+    // Buffers: widen the candidate's span by the required gaps before/after, so a
+    // conflict is detected if it would crowd an adjacent appointment.
+    const startMin = toMin(startTime)
+    const effStart = toClock(startMin - rules.bufferBeforeMinutes)
+    const effEnd = toClock(endMinutes + rules.bufferAfterMinutes)
     const conflict = await db.appointment.findFirst({
       where: {
         salonId: salon.id,
         staffId,
         date,
         status: { notIn: NON_BLOCKING_STATUSES },
-        startTime: { lt: endTime },
-        endTime: { gt: startTime },
+        startTime: { lt: effEnd },
+        endTime: { gt: effStart },
       },
     })
     if (conflict) {
