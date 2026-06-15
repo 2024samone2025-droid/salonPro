@@ -105,8 +105,21 @@ function cleanStr(v: unknown, max: number): string {
   return typeof v === 'string' ? v.trim().slice(0, max) : ''
 }
 
-function isHttpUrl(v: string): boolean {
-  return /^https?:\/\/.+/i.test(v)
+// Prepend https:// when the user omits the scheme (e.g. "instagram.com/x").
+function normalizeUrl(v: string): string {
+  const t = v.trim()
+  if (!t) return ''
+  return /^https?:\/\//i.test(t) ? t : `https://${t}`
+}
+
+// A normalized URL needs a scheme, a dotted host, and no whitespace.
+function isValidUrl(v: string): boolean {
+  return /^https?:\/\/[^\s.]+\.[^\s]+$/i.test(v)
+}
+
+// Sanitize a URL field: trim, auto-prepend scheme, then cap length.
+function urlStr(v: unknown, max: number): string {
+  return typeof v === 'string' ? normalizeUrl(v).slice(0, max) : ''
 }
 
 // Parse a raw profile blob into a complete, sanitized SalonProfile.
@@ -115,9 +128,9 @@ function parseProfile(raw: unknown): SalonProfile {
   const addr = (p.address && typeof p.address === 'object' ? p.address : {}) as Record<string, unknown>
   const social = (p.socialLinks && typeof p.socialLinks === 'object' ? p.socialLinks : {}) as Record<string, unknown>
   return {
-    logoUrl: cleanStr(p.logoUrl, PROFILE_URL_MAX),
+    logoUrl: urlStr(p.logoUrl, PROFILE_URL_MAX),
     phone: cleanStr(p.phone, PROFILE_TEXT_MAX),
-    websiteUrl: cleanStr(p.websiteUrl, PROFILE_URL_MAX),
+    websiteUrl: urlStr(p.websiteUrl, PROFILE_URL_MAX),
     address: {
       street: cleanStr(addr.street, PROFILE_TEXT_MAX),
       city: cleanStr(addr.city, PROFILE_TEXT_MAX),
@@ -125,9 +138,9 @@ function parseProfile(raw: unknown): SalonProfile {
       country: cleanStr(addr.country, PROFILE_TEXT_MAX),
     },
     socialLinks: {
-      instagram: cleanStr(social.instagram, PROFILE_URL_MAX),
-      facebook: cleanStr(social.facebook, PROFILE_URL_MAX),
-      tiktok: cleanStr(social.tiktok, PROFILE_URL_MAX),
+      instagram: urlStr(social.instagram, PROFILE_URL_MAX),
+      facebook: urlStr(social.facebook, PROFILE_URL_MAX),
+      tiktok: urlStr(social.tiktok, PROFILE_URL_MAX),
       whatsapp: cleanStr(social.whatsapp, PROFILE_TEXT_MAX),
     },
     tinNumber: cleanStr(p.tinNumber, PROFILE_TEXT_MAX),
@@ -181,17 +194,34 @@ export function parseSalonSettings(raw: unknown): SalonSettings {
 export function validateSettingsPatch(patch: Partial<SalonSettings>): string | null {
   if (patch.profile) {
     const p = patch.profile
-    // URL fields, when provided, must be absolute http(s) URLs.
-    const urlFields: [string, string | undefined][] = [
-      ['Logo URL', p.logoUrl],
-      ['Website URL', p.websiteUrl],
-      ['Instagram link', p.socialLinks?.instagram],
-      ['Facebook link', p.socialLinks?.facebook],
-      ['TikTok link', p.socialLinks?.tiktok],
+    // URL fields, when provided, must resolve to a valid URL once normalized
+    // (the scheme is auto-prepended, so "instagram.com/x" is accepted).
+    const urlFields: [string, string | undefined, number][] = [
+      ['Logo URL', p.logoUrl, PROFILE_URL_MAX],
+      ['Website URL', p.websiteUrl, PROFILE_URL_MAX],
+      ['Instagram link', p.socialLinks?.instagram, PROFILE_URL_MAX],
+      ['Facebook link', p.socialLinks?.facebook, PROFILE_URL_MAX],
+      ['TikTok link', p.socialLinks?.tiktok, PROFILE_URL_MAX],
     ]
-    for (const [label, value] of urlFields) {
-      if (value && !isHttpUrl(value)) {
-        return `${label} must start with http:// or https://`
+    for (const [label, value, max] of urlFields) {
+      if (!value) continue
+      if (value.length > max) return `${label} is too long (max ${max} characters)`
+      if (!isValidUrl(normalizeUrl(value))) return `${label} is not a valid URL`
+    }
+    // Free-text fields: enforce length at write time (parse also caps on read).
+    const textFields: [string, string | undefined][] = [
+      ['Phone', p.phone],
+      ['WhatsApp number', p.socialLinks?.whatsapp],
+      ['TIN', p.tinNumber],
+      ['License number', p.licenseNumber],
+      ['Street', p.address?.street],
+      ['City', p.address?.city],
+      ['District', p.address?.district],
+      ['Country', p.address?.country],
+    ]
+    for (const [label, value] of textFields) {
+      if (value && value.length > PROFILE_TEXT_MAX) {
+        return `${label} is too long (max ${PROFILE_TEXT_MAX} characters)`
       }
     }
   }
