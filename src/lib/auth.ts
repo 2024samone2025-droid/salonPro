@@ -224,3 +224,67 @@ export function verifyExchangeToken(token: string): ExchangePayload | null {
   if (!data || data.scope !== 'exchange') return null
   return { jti: data.jti as string, ownerId: data.ownerId as string, salonId: data.salonId as string }
 }
+
+/* ──────────────────────────────────────────────────────────────────────────
+ * STAFF apex login tokens (parallel to the owner tokens above — the owner path
+ * is deliberately left untouched).
+ *
+ *  - root-staff: proves "this browser authenticated as staff with these
+ *    password-verified salon memberships" at the root host, so the picker /
+ *    select step works without re-sending the password. Carries the verified
+ *    {userId, salonId} pairs (staff identity is per-salon, not global).
+ *  - staff-exchange: single-use handoff carried in ?t= to the subdomain's
+ *    /api/auth/exchange, swapped there for a STAFF session cookie.
+ * ────────────────────────────────────────────────────────────────────────── */
+
+export const ROOT_STAFF_COOKIE = 'salonpro_staff'
+export const ROOT_STAFF_MAX_AGE = ROOT_OWNER_MAX_AGE // 30 minutes, same window
+
+// One password-verified salon membership for the signing-in email.
+export interface StaffAccess {
+  userId: string
+  salonId: string
+}
+
+export interface RootStaffSession {
+  email: string
+  access: StaffAccess[]
+}
+
+export function createRootStaffToken(session: RootStaffSession): string {
+  return signToken({
+    scope: 'root-staff',
+    email: session.email,
+    access: session.access,
+    exp: Date.now() + ROOT_STAFF_MAX_AGE * 1000,
+  })
+}
+
+export function verifyRootStaffToken(token: string): RootStaffSession | null {
+  const data = readToken(token)
+  if (!data || data.scope !== 'root-staff') return null
+  const access = Array.isArray(data.access) ? (data.access as StaffAccess[]) : []
+  return { email: data.email as string, access }
+}
+
+export interface StaffExchangePayload {
+  jti: string
+  userId: string
+  salonId: string
+}
+
+export function createStaffExchangeToken(p: StaffExchangePayload): string {
+  return signToken({
+    scope: 'staff-exchange',
+    jti: p.jti,
+    userId: p.userId,
+    salonId: p.salonId,
+    exp: Date.now() + EXCHANGE_MAX_AGE * 1000,
+  })
+}
+
+export function verifyStaffExchangeToken(token: string): StaffExchangePayload | null {
+  const data = readToken(token)
+  if (!data || data.scope !== 'staff-exchange') return null
+  return { jti: data.jti as string, userId: data.userId as string, salonId: data.salonId as string }
+}

@@ -1,11 +1,19 @@
 import { db } from '@/lib/db'
-import { verifyExchangeToken, createOwnerSessionToken } from '@/lib/auth'
+import {
+  verifyExchangeToken,
+  createOwnerSessionToken,
+  verifyStaffExchangeToken,
+  createSessionToken,
+  type UserRole,
+} from '@/lib/auth'
 import { SALON_SUBDOMAIN_HEADER } from '@/lib/subdomain'
 import { NextRequest, NextResponse } from 'next/server'
 
 // Cross-domain handoff landing point, on the SUBDOMAIN host. Swaps a single-use
-// exchange token for an owner session cookie, then redirects to /dashboard
-// (which strips ?t= from the URL). Any failure falls back to /login on this host.
+// exchange token for a session cookie, then redirects to /dashboard (which strips
+// ?t= from the URL). Handles BOTH subjects: a staff-exchange token (apex staff
+// login) and an owner exchange token (owner login). Any failure falls back to
+// /login on this host.
 //
 // IMPORTANT: redirects are built against the request Host header, NOT req.url.
 // In the dev server (and behind proxies) req.url reports the bound address
@@ -22,22 +30,66 @@ function originFromHost(req: NextRequest): string {
   return `${proto}://${host}`
 }
 
+function setSessionAndRedirect(origin: string, sessionToken: string): NextResponse {
+  const response = NextResponse.redirect(new URL('/dashboard', origin))
+  response.cookies.set('salonpro_session', sessionToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 24 * 7,
+    path: '/',
+  })
+  return response
+}
+
 export async function GET(req: NextRequest) {
   const origin = originFromHost(req)
   const loginUrl = new URL('/login', origin)
 
   const t = req.nextUrl.searchParams.get('t')
-  const payload = t ? verifyExchangeToken(t) : null
-  if (!payload) return NextResponse.redirect(loginUrl)
+  if (!t) return NextResponse.redirect(loginUrl)
 
   // The token's salon must match the host we're actually on.
   const subdomain = req.headers.get(SALON_SUBDOMAIN_HEADER)
   if (!subdomain) return NextResponse.redirect(loginUrl)
   const salon = await db.salon.findUnique({ where: { subdomain }, select: { id: true } })
-  if (!salon || salon.id !== payload.salonId) return NextResponse.redirect(loginUrl)
+  if (!salon) return NextResponse.redirect(loginUrl)
 
-  // Consume the nonce atomically — single-use, unexpired. A replay (or concurrent
-  // double-spend) finds count === 0 and is rejected.
+  // ── Staff handoff (apex staff login) ───────────────────────────────────────
+  const staff = verifyStaffExchangeToken(t)
+  if (staff) {
+    if (salon.id !== staff.salonId) return NextResponse.redirect(loginUrl)
+
+    // Consume the nonce atomically — single-use, unexpired. A replay finds
+    // count === 0 and is rejected.
+    const consumed = await db.oneTimeToken.updateMany({
+      where: { id: staff.jti, consumedAt: null, expiresAt: { gt: new Date() } },
+      data: { consumedAt: new Date() },
+    })
+    if (consumed.count === 0) return NextResponse.redirect(loginUrl)
+
+    // Re-verify the user is still an active member of this salon, then mint the
+    // per-subdomain staff session.
+    const user = await db.user.findFirst({
+      where: { id: staff.userId, salonId: salon.id, active: true },
+      select: { id: true, name: true, role: true, staffId: true },
+    })
+    if (!user) return NextResponse.redirect(loginUrl)
+
+    const sessionToken = createSessionToken({
+      id: user.id,
+      name: user.name,
+      role: user.role as UserRole,
+      staffId: user.staffId,
+    })
+    return setSessionAndRedirect(origin, sessionToken)
+  }
+
+  // ── Owner handoff (owner login) ────────────────────────────────────────────
+  const payload = verifyExchangeToken(t)
+  if (!payload) return NextResponse.redirect(loginUrl)
+  if (salon.id !== payload.salonId) return NextResponse.redirect(loginUrl)
+
   const consumed = await db.oneTimeToken.updateMany({
     where: { id: payload.jti, consumedAt: null, expiresAt: { gt: new Date() } },
     data: { consumedAt: new Date() },
@@ -56,14 +108,5 @@ export async function GET(req: NextRequest) {
     name: link.owner.name,
     email: link.owner.email,
   })
-
-  const response = NextResponse.redirect(new URL('/dashboard', origin))
-  response.cookies.set('salonpro_session', sessionToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    maxAge: 60 * 60 * 24 * 7,
-    path: '/',
-  })
-  return response
+  return setSessionAndRedirect(origin, sessionToken)
 }
