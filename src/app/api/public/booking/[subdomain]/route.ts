@@ -1,6 +1,7 @@
 import { db } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
 import { parseSalonSettings } from '@/lib/salon-settings'
+import { parseStaffAvailability } from '@/lib/staff-availability'
 
 const NON_BLOCKING_STATUSES = ['cancelled', 'no_show']
 
@@ -43,8 +44,8 @@ export async function GET(
 
   const [services, staff] = await Promise.all([
     db.service.findMany({
-      where: { salonId: salon.id, active: true },
-      select: { id: true, name: true, price: true, duration: true },
+      where: { salonId: salon.id, active: true, onlineBookable: true },
+      select: { id: true, name: true, price: true, duration: true, description: true, category: true },
       orderBy: { name: 'asc' },
     }),
     db.staff.findMany({
@@ -95,7 +96,7 @@ export async function POST(
     }
 
     const [service, staff] = await Promise.all([
-      db.service.findFirst({ where: { id: serviceId, salonId: salon.id, active: true } }),
+      db.service.findFirst({ where: { id: serviceId, salonId: salon.id, active: true, onlineBookable: true } }),
       db.staff.findFirst({ where: { id: staffId, salonId: salon.id, active: true } }),
     ])
     if (!service) {
@@ -103,6 +104,22 @@ export async function POST(
     }
     if (!staff) {
       return NextResponse.json({ error: 'Selected stylist is not available' }, { status: 400 })
+    }
+
+    // Day off: salon-wide (staffId null) or this stylist → reject the booking.
+    const dayOff = await db.dayOff.findFirst({
+      where: { salonId: salon.id, date, OR: [{ staffId: null }, { staffId }] },
+      select: { staffId: true },
+    })
+    if (dayOff) {
+      return NextResponse.json(
+        {
+          error: dayOff.staffId
+            ? 'That stylist is off on that day'
+            : 'The salon is closed on that day',
+        },
+        { status: 400 }
+      )
     }
 
     const [h, m] = startTime.split(':').map(Number)
@@ -144,19 +161,32 @@ export async function POST(
       return NextResponse.json({ error: 'That time is outside opening hours' }, { status: 400 })
     }
 
-    // Buffers: widen the candidate's span by the required gaps before/after, so a
-    // conflict is detected if it would crowd an adjacent appointment.
+    // Respect the stylist's own availability (null = follows salon hours).
+    const staffAvail = parseStaffAvailability(staff.availability)
+    if (staffAvail) {
+      const sd = staffAvail[String(slotStart.getDay())]
+      if (sd.closed || toMin(startTime) < toMin(sd.open) || endMinutes > toMin(sd.close)) {
+        return NextResponse.json(
+          { error: 'That stylist is not available at that time' },
+          { status: 400 }
+        )
+      }
+    }
+
+    // Buffers protect each EXISTING appointment's reserved zone [start-before, end+after].
+    // Rearranged for a column comparison, the candidate conflicts with an existing row iff
+    //   existing.start < candidateEnd + before  AND  existing.end > candidateStart - after
     const startMin = toMin(startTime)
-    const effStart = toClock(startMin - rules.bufferBeforeMinutes)
-    const effEnd = toClock(endMinutes + rules.bufferAfterMinutes)
+    const windowEnd = toClock(endMinutes + rules.bufferBeforeMinutes)
+    const windowStart = toClock(startMin - rules.bufferAfterMinutes)
     const conflict = await db.appointment.findFirst({
       where: {
         salonId: salon.id,
         staffId,
         date,
         status: { notIn: NON_BLOCKING_STATUSES },
-        startTime: { lt: effEnd },
-        endTime: { gt: effStart },
+        startTime: { lt: windowEnd },
+        endTime: { gt: windowStart },
       },
     })
     if (conflict) {
