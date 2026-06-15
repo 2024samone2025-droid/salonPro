@@ -68,6 +68,58 @@ Extends the existing salon settings blob; admin-only via existing `/api/salon/se
 9. Nav entry in `nav-items.ts` (display-only). Honor `defaultLandingView` / `calendarDefaultView` /
    `timeFormat` / `firstDayOfWeek` at their read-sites. Commit per change.
 
+## Phase 4 — Staff weekly availability (catalog §4.1, core) — DONE (uncommitted)
+Per-stylist weekly working hours, keyed to the **Staff roster entry** (NOT User — the
+booking engine + appointments are Staff-keyed, and stylists may have no User account).
+Catalog §4.1 adapted: `user_id` → `Staff`; relational table → JSON field (consistent with
+how businessHours is stored). Scope = core weekly template only. **Deferred:** time-off
+approval workflow, recurring breaks, max-per-day, effective-date, staff self-service editing.
+- `Staff.availability Json?` (db:push). null = follows salon hours (no behavior change).
+- `lib/staff-availability.ts`: `StaffAvailability` (reuses `DayHours`), `parseStaffAvailability`
+  (→ null when unset/incomplete), `validateStaffAvailability`, `availabilityFromBusinessHours`.
+- Staff `PUT` validates `availability`; also **closed a pre-existing cross-tenant hole**
+  (update was `where:{id}` with no salon scope) via an ownership guard.
+- Slot engine intersects salon hours ∩ stylist availability in BOTH the `slots` route and
+  the public booking `POST` (unset → salon hours).
+- StaffView edit dialog: "Custom working hours" toggle + 7-day grid (stylists only; seeds
+  from salon business hours).
+
+## Phase 6 — Services depth (catalog §3.3 Service Catalog) — DONE (uncommitted)
+Add three honorable fields to `Service`, each wired to an existing engine (no dead data):
+- `category String @default("")` — groups the catalog (shown/grouped in ServicesView).
+- `description String @default("")` — client-facing; surfaced on the public booking page.
+- `onlineBookable Boolean @default(true)` — filters the public booking surface (in-store-only
+  services are hidden from / rejected by online booking but still bookable at the front desk).
+**Deferred (catalog §3.3, no engine yet):** per-staff pricing, peak pricing, deposits, packages,
+memberships, loyalty, promotions, service image upload, per-location overrides.
+1. Schema: add the 3 fields to `Service` (all defaulted → no backfill). db:push.
+2. Services API: POST/PUT accept the new fields; **whitelist editable fields + close pre-existing
+   tenancy holes** (PUT/DELETE were `where:{id}` unscoped; POST unvalidated) — same hardening as
+   the staff PUT. Validate price ≥ 0, duration > 0.
+3. Engine: public booking GET filters `onlineBookable: true` + returns `description`/`category`;
+   slots route + public POST service lookups require `onlineBookable: true` (server-side).
+4. UI: ServicesView add/edit form gains category + description + online-bookable toggle;
+   BookingFlow shows the description under each service name.
+
+## Phase 5 — Days off (salon-wide + per-stylist closures) — DONE (uncommitted)
+Admin-recorded whole-day closures that block online booking and are written to the activity
+log. Covers catalog §3.1 `holiday_schedule` + §4.1 `time_off`, UNIFIED into one model.
+**Decision:** a single relational `DayOff` model with a **nullable `staffId`** — null = whole
+salon closed (public holiday); set = just that stylist is off. (Deliberately relational, NOT
+JSON like Phase 4 — this is an unbounded dated list queried by date overlap; settings-JSON
+holidays idea was rejected.) No approval workflow (admin sets it, immediately authoritative).
+**Scope now:** whole-day only, single date per entry, admin-gated, scope picker = Whole salon
++ active stylists only. **Deferred:** partial-day windows, half-day custom hours, multi-day
+ranges, staff self-service.
+1. Schema: `DayOff { id, date (YYYY-MM-DD), reason, salonId, staffId?, createdAt }`,
+   `@@index([salonId, date])` + `@@index([staffId])`, cascade from Salon AND Staff. db:push.
+2. API `app/api/day-offs/route.ts`: GET (salon-scoped, joins staff name), POST (validate date +
+   staffId-belongs-to-salon), DELETE (?id=). Admin-gated; each mutation → logActivity.
+3. Engine: slots route + public POST run one query
+   `findFirst({ salonId, date, OR: [{ staffId: null }, { staffId }] })` → closed → no slots / 400.
+4. UI: `SalonClosures.tsx` (day-offs + active stylists) — list of upcoming/past with remove +
+   add form (date, scope picker, reason). Rendered as a card in the Salon settings tab.
+
 ## Phase 3 — Booking rules — DONE
 Scope: **public/customer-facing online booking only** — NOT the internal front-desk
 appointments route (applying buffers/lead-time there would block deliberate back-to-back
