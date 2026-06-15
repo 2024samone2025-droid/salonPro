@@ -7,6 +7,7 @@ import {
   UserCog,
   Scissors,
   BarChart3,
+  Activity,
   CreditCard,
   Settings,
 } from 'lucide-react'
@@ -28,6 +29,7 @@ export const allNavItems: NavItem[] = [
   { href: '/staff', label: 'Staff', icon: UserCog, roles: ['admin', 'receptionist'] },
   { href: '/services', label: 'Services', icon: Scissors, roles: ['admin', 'receptionist', 'stylist'] },
   { href: '/reports', label: 'Reports', icon: BarChart3, roles: ['admin', 'receptionist'] },
+  { href: '/activity', label: 'Activity', icon: Activity, roles: ['admin'] },
 ]
 
 export const billingNavItem: NavItem = {
