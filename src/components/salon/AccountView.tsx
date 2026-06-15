@@ -34,14 +34,18 @@ export default function AccountView() {
   const { user, refreshSession } = useAuth()
   const [data, setData] = useState<AccountData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
   const [saving, setSaving] = useState(false)
 
   const load = useCallback(async () => {
+    setLoading(true)
+    setError(false)
     try {
       const res = await fetch('/api/me/settings')
       if (!res.ok) throw new Error()
       setData(await res.json())
     } catch {
+      setError(true)
       toast.error('Failed to load your account settings')
     } finally {
       setLoading(false)
@@ -91,11 +95,23 @@ export default function AccountView() {
     }
   }
 
-  if (loading || !data) {
+  if (loading) {
     return (
       <div className="space-y-4 max-w-3xl">
         <Skeleton className="h-44 rounded-xl" />
         <Skeleton className="h-40 rounded-xl" />
+      </div>
+    )
+  }
+
+  if (error || !data) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-center text-muted-foreground">
+        <h3 className="text-lg font-semibold text-foreground">Couldn&apos;t load your account</h3>
+        <p className="text-sm mt-1">Something went wrong while loading your settings.</p>
+        <Button variant="outline" className="mt-4" onClick={load}>
+          Try again
+        </Button>
       </div>
     )
   }
