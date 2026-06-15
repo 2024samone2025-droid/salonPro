@@ -20,6 +20,7 @@ export interface Permissions {
   canDeleteRecords: boolean
   canViewAllAppointments: boolean
   canViewActivityLog: boolean
+  canReassignAppointment: boolean
 }
 
 export const ROLE_PERMISSIONS: Record<UserRole, Permissions> = {
@@ -38,6 +39,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permissions> = {
     canDeleteRecords: true,
     canViewAllAppointments: true,
     canViewActivityLog: true,
+    canReassignAppointment: true,
   },
   receptionist: {
     dashboard: 'full',
@@ -54,6 +56,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permissions> = {
     canDeleteRecords: false,
     canViewAllAppointments: true,
     canViewActivityLog: false,
+    canReassignAppointment: true,
   },
   stylist: {
     dashboard: 'view',
@@ -70,6 +73,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permissions> = {
     canDeleteRecords: false,
     canViewAllAppointments: false,
     canViewActivityLog: false,
+    canReassignAppointment: false,
   },
 }
 
@@ -95,4 +99,5 @@ export const PERMISSION_MATRIX_ROWS: { key: keyof Permissions; label: string }[]
   { key: 'canDeleteRecords', label: 'Delete records' },
   { key: 'canViewAllAppointments', label: 'See all appointments' },
   { key: 'canViewActivityLog', label: 'View activity log' },
+  { key: 'canReassignAppointment', label: 'Reassign appointment provider' },
 ]
