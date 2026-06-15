@@ -26,7 +26,6 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import {
-  Plus,
   Phone,
   UserCog,
   Loader2,
@@ -122,15 +121,6 @@ export default function StaffView() {
     fetchStaff()
   }, [fetchStaff])
 
-  const openAdd = () => {
-    if (!canManage) return
-    setEditing(null)
-    setName('')
-    setPhone('')
-    setRole('stylist')
-    setShowDialog(true)
-  }
-
   const openEdit = (s: StaffMember) => {
     if (!canManage) return
     setEditing(s)
@@ -204,23 +194,13 @@ export default function StaffView() {
           </p>
         </div>
         {canManage && (
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto shrink-0">
-            <Button
-              variant="outline"
-              onClick={() => setInviteOpen(true)}
-              className="h-10 gap-2"
-            >
-              <UserPlus className="size-4" />
-              Invite staff
-            </Button>
-            <Button
-              onClick={openAdd}
-              className="h-10 gap-2 shadow-sm"
-            >
-              <Plus className="size-4" />
-              Add staff
-            </Button>
-          </div>
+          <Button
+            onClick={() => setInviteOpen(true)}
+            className="h-10 gap-2 shadow-sm w-full sm:w-auto shrink-0"
+          >
+            <UserPlus className="size-4" />
+            Invite staff
+          </Button>
         )}
       </div>
 
@@ -247,8 +227,8 @@ export default function StaffView() {
         <EmptyState
           icon={UserCog}
           message="No staff members yet"
-          actionLabel={canManage ? '+ Add your first staff member' : undefined}
-          onAction={canManage ? openAdd : undefined}
+          actionLabel={canManage ? '+ Invite your first staff member' : undefined}
+          onAction={canManage ? () => setInviteOpen(true) : undefined}
           className="py-10"
         />
       ) : (
