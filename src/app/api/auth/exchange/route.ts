@@ -6,8 +6,25 @@ import { NextRequest, NextResponse } from 'next/server'
 // Cross-domain handoff landing point, on the SUBDOMAIN host. Swaps a single-use
 // exchange token for an owner session cookie, then redirects to /dashboard
 // (which strips ?t= from the URL). Any failure falls back to /login on this host.
+//
+// IMPORTANT: redirects are built against the request Host header, NOT req.url.
+// In the dev server (and behind proxies) req.url reports the bound address
+// (the apex, e.g. localhost:3000) rather than the subdomain we were actually
+// reached on — so `new URL('/dashboard', req.url)` would bounce the browser to
+// the apex, where the freshly-set subdomain cookie isn't visible, looping back
+// to /login. This mirrors how lib/handoff.ts builds the inbound URL.
+function originFromHost(req: NextRequest): string {
+  const proto =
+    req.headers.get('x-forwarded-proto')?.split(',')[0].trim() ||
+    req.nextUrl.protocol.replace(/:$/, '') ||
+    'http'
+  const host = (req.headers.get('x-forwarded-host') || req.headers.get('host') || '').split(',')[0].trim()
+  return `${proto}://${host}`
+}
+
 export async function GET(req: NextRequest) {
-  const loginUrl = new URL('/login', req.url)
+  const origin = originFromHost(req)
+  const loginUrl = new URL('/login', origin)
 
   const t = req.nextUrl.searchParams.get('t')
   const payload = t ? verifyExchangeToken(t) : null
@@ -40,7 +57,7 @@ export async function GET(req: NextRequest) {
     email: link.owner.email,
   })
 
-  const response = NextResponse.redirect(new URL('/dashboard', req.url))
+  const response = NextResponse.redirect(new URL('/dashboard', origin))
   response.cookies.set('salonpro_session', sessionToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
