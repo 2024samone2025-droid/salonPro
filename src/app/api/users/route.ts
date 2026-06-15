@@ -2,6 +2,7 @@ import { db } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth-guard'
 import { hashPassword } from '@/lib/password'
+import { logActivity } from '@/lib/activity'
 
 const VALID_ROLES = ['admin', 'receptionist', 'stylist']
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -119,6 +120,13 @@ export async function POST(req: NextRequest) {
       },
       include: { staff: { select: { id: true, name: true } } },
     })
+  })
+  await logActivity(auth, {
+    action: 'user.added',
+    targetType: 'user',
+    targetId: user.id,
+    summary: `Added ${user.name} as ${user.role}`,
+    metadata: { name: user.name, role: user.role, email: user.email },
   })
   return NextResponse.json(sanitize(user), { status: 201 })
 }
