@@ -2,8 +2,23 @@
 
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode, useRef } from 'react'
 import type { SalonSettings } from '@/lib/salon-settings'
-import type { UserSettings } from '@/lib/user-settings'
+import { DEFAULT_USER_SETTINGS, type Theme, type UserSettings } from '@/lib/user-settings'
 import { formatMoney } from '@/lib/utils'
+
+// Resolve a theme preference to the DOM. 'system' follows the OS; the bootstrap
+// script in the root layout reads the same localStorage key for first paint.
+function applyThemeToDom(theme: Theme) {
+  const dark =
+    theme === 'dark' ||
+    (theme === 'system' &&
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-color-scheme: dark)').matches)
+  if (dark) {
+    document.documentElement.setAttribute('data-theme', 'dark')
+  } else {
+    document.documentElement.removeAttribute('data-theme')
+  }
+}
 
 export type UserRole = 'admin' | 'receptionist' | 'stylist'
 
@@ -59,6 +74,8 @@ interface AuthContextType {
   logout: () => Promise<void>
   refreshSession: () => Promise<void>
   authFetch: (url: string, options?: RequestInit) => Promise<Response>
+  /** Set the theme: applies immediately, updates context, and persists. Resolves true on save. */
+  setTheme: (theme: Theme) => Promise<boolean>
 }
 
 const AuthContext = createContext<AuthContextType | null>(null)
@@ -110,17 +127,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       localStorage.setItem('theme', theme)
     } catch {}
-    const dark =
-      theme === 'dark' ||
-      (theme === 'system' &&
-        typeof window !== 'undefined' &&
-        window.matchMedia('(prefers-color-scheme: dark)').matches)
-    if (dark) {
-      document.documentElement.setAttribute('data-theme', 'dark')
-    } else {
-      document.documentElement.removeAttribute('data-theme')
-    }
+    applyThemeToDom(theme)
+    // While on 'system', track OS light/dark changes that happen mid-session.
+    if (theme !== 'system' || typeof window === 'undefined') return
+    const mq = window.matchMedia('(prefers-color-scheme: dark)')
+    const onChange = () => applyThemeToDom('system')
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
   }, [theme])
+
+  // Owned theme setter: apply to the DOM now, update context optimistically (so a
+  // later refreshSession can't revert it on the success path), then persist.
+  const setTheme = useCallback(async (next: Theme): Promise<boolean> => {
+    try {
+      localStorage.setItem('theme', next)
+    } catch {}
+    applyThemeToDom(next)
+    setUser((u) =>
+      u
+        ? {
+            ...u,
+            settings: {
+              ...(u.settings ?? DEFAULT_USER_SETTINGS),
+              appPreferences: {
+                ...(u.settings?.appPreferences ?? DEFAULT_USER_SETTINGS.appPreferences),
+                theme: next,
+              },
+            },
+          }
+        : u
+    )
+    try {
+      const res = await fetch('/api/me/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ settings: { appPreferences: { theme: next } } }),
+      })
+      return res.ok
+    } catch {
+      return false
+    }
+  }, [])
 
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     try {
@@ -165,7 +212,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user, permissions, loading, salon, login, logout, refreshSession, authFetch }}>
+    <AuthContext.Provider value={{ user, permissions, loading, salon, login, logout, refreshSession, authFetch, setTheme }}>
       {children}
     </AuthContext.Provider>
   )
@@ -183,6 +230,7 @@ export function useAuth() {
       logout: async () => {},
       refreshSession: async () => {},
       authFetch: async () => new Response(),
+      setTheme: async () => false,
     }
   }
   return context
