@@ -35,6 +35,12 @@ import {
 import { toast } from 'sonner'
 import { useAuth } from '@/lib/auth-context'
 import EmptyState from '@/components/salon/EmptyState'
+import { DAY_LABELS } from '@/lib/salon-settings'
+import {
+  availabilityFromBusinessHours,
+  parseStaffAvailability,
+  type StaffAvailability,
+} from '@/lib/staff-availability'
 
 interface StaffMember {
   id: string
@@ -42,6 +48,7 @@ interface StaffMember {
   phone: string
   role: string
   active: boolean
+  availability?: StaffAvailability | null
   createdAt: string
 }
 
@@ -87,13 +94,15 @@ export default function StaffView() {
   const [saving, setSaving] = useState(false)
   const isInitialMount = useRef(true)
 
-  const { permissions, authFetch } = useAuth()
+  const { permissions, authFetch, salon } = useAuth()
   const canManage = permissions?.canManageStaff ?? false
   const isViewOnly = permissions?.staff === 'view'
 
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [role, setRole] = useState('stylist')
+  // null = follows salon business hours; an object = custom weekly hours.
+  const [availability, setAvailability] = useState<StaffAvailability | null>(null)
 
   const fetchStaff = useCallback(async () => {
     if (!isInitialMount.current) {
@@ -123,7 +132,25 @@ export default function StaffView() {
     setName(s.name)
     setPhone(s.phone)
     setRole(s.role)
+    setAvailability(parseStaffAvailability(s.availability))
     setShowDialog(true)
+  }
+
+  // Toggle custom hours: on → seed from the salon's business hours; off → follow salon.
+  const toggleCustomHours = (on: boolean) => {
+    if (!on) {
+      setAvailability(null)
+      return
+    }
+    const hours = salon?.settings?.businessHours
+    setAvailability(hours ? availabilityFromBusinessHours(hours) : availabilityFromBusinessHours({}))
+  }
+
+  const updateAvailDay = (day: number, patch: Partial<StaffAvailability[string]>) => {
+    setAvailability((av) => {
+      if (!av) return av
+      return { ...av, [String(day)]: { ...av[String(day)], ...patch } }
+    })
   }
 
   // Edit-only: staff are never created here. New workers join exclusively through
@@ -140,7 +167,14 @@ export default function StaffView() {
       const res = await authFetch('/api/staff', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: editing.id, name: name.trim(), phone: phone.trim(), role }),
+        body: JSON.stringify({
+          id: editing.id,
+          name: name.trim(),
+          phone: phone.trim(),
+          role,
+          // Availability only applies to bookable stylists.
+          availability: role === 'stylist' ? availability : null,
+        }),
       })
       if (res.ok) {
         toast.success('Staff member updated')
@@ -401,6 +435,66 @@ export default function StaffView() {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Availability — bookable stylists only */}
+            {role === 'stylist' && (
+              <div className="space-y-3 rounded-lg border p-3">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-medium">Custom working hours</p>
+                    <p className="text-xs text-muted-foreground">
+                      {availability
+                        ? 'Online booking only offers this stylist within these hours.'
+                        : 'Off — this stylist follows the salon’s business hours.'}
+                    </p>
+                  </div>
+                  <Switch
+                    checked={availability !== null}
+                    onCheckedChange={toggleCustomHours}
+                    aria-label="Custom working hours"
+                  />
+                </div>
+
+                {availability && (
+                  <div className="space-y-1.5 pt-1">
+                    {DAY_LABELS.map((label, day) => {
+                      const hours = availability[String(day)]
+                      return (
+                        <div key={label} className="flex items-center gap-3">
+                          <div className="w-20 text-sm">{label}</div>
+                          <Switch
+                            checked={!hours.closed}
+                            onCheckedChange={(open) => updateAvailDay(day, { closed: !open })}
+                            aria-label={`${label} working`}
+                          />
+                          {hours.closed ? (
+                            <span className="text-sm text-muted-foreground">Off</span>
+                          ) : (
+                            <div className="flex items-center gap-2">
+                              <Input
+                                type="time"
+                                value={hours.open}
+                                onChange={(e) => updateAvailDay(day, { open: e.target.value })}
+                                className="w-28 h-9"
+                                aria-label={`${label} start time`}
+                              />
+                              <span className="text-sm text-muted-foreground">to</span>
+                              <Input
+                                type="time"
+                                value={hours.close}
+                                onChange={(e) => updateAvailDay(day, { close: e.target.value })}
+                                className="w-28 h-9"
+                                aria-label={`${label} end time`}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowDialog(false)}>

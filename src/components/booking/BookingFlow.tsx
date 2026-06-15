@@ -34,6 +34,7 @@ interface Service {
   name: string
   price: number
   duration: number
+  description?: string
 }
 interface Staff {
   id: string
@@ -329,10 +330,13 @@ export default function BookingFlow({ subdomain }: { subdomain: string }) {
                     </div>
                     <div>
                       <p className="text-sm font-medium">{s.name}</p>
+                      {s.description && (
+                        <p className="text-xs text-muted-foreground">{s.description}</p>
+                      )}
                       <p className="text-xs text-muted-foreground">{s.duration} min</p>
                     </div>
                   </div>
-                  <span className="text-sm font-semibold">{formatRWF(s.price)}</span>
+                  <span className="text-sm font-semibold shrink-0">{formatRWF(s.price)}</span>
                 </Button>
               ))}
             </>

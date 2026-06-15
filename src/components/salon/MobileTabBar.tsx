@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuth, type UserRole } from '@/lib/auth-context'
-import { allNavItems, billingNavItem, settingsNavItem, navItemsForRole } from '@/components/salon/nav-items'
+import { allNavItems, billingNavItem, settingsNavItem, accountNavItem, navItemsForRole } from '@/components/salon/nav-items'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -33,7 +33,7 @@ export default function MobileTabBar() {
 
   const role = user?.role as UserRole | undefined
   const tabItems = navItemsForRole(allNavItems.slice(0, 3), role)
-  const moreItems = navItemsForRole([...allNavItems.slice(3), settingsNavItem, billingNavItem], role)
+  const moreItems = navItemsForRole([...allNavItems.slice(3), accountNavItem, settingsNavItem, billingNavItem], role)
   const moreActive = moreItems.some((item) => item.href === pathname)
 
   if (!user) return null

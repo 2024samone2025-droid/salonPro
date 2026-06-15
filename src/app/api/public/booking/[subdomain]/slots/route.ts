@@ -1,6 +1,7 @@
 import { db } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
 import { parseSalonSettings } from '@/lib/salon-settings'
+import { parseStaffAvailability } from '@/lib/staff-availability'
 
 const NON_BLOCKING_STATUSES = ['cancelled', 'no_show']
 
@@ -44,6 +45,15 @@ export async function GET(
   if (!settings.publicBookingEnabled) {
     return NextResponse.json({ error: 'Online booking is disabled' }, { status: 404 })
   }
+  const rules = settings.bookingRules
+
+  // Advance-window cap: no slots offered beyond maxAdvanceDays from today.
+  const maxDate = new Date()
+  maxDate.setHours(0, 0, 0, 0)
+  maxDate.setDate(maxDate.getDate() + rules.maxAdvanceDays)
+  if (new Date(date + 'T00:00:00').getTime() > maxDate.getTime()) {
+    return NextResponse.json({ slots: [] })
+  }
 
   // Business hours for the requested weekday (0 = Sunday)
   const weekday = new Date(date + 'T00:00:00').getDay()
@@ -51,20 +61,39 @@ export async function GET(
   if (!dayHours || dayHours.closed) {
     return NextResponse.json({ slots: [] })
   }
-  const openMinutes = toMinutes(dayHours.open)
-  const closeMinutes = toMinutes(dayHours.close)
   const slotStep = settings.slotIntervalMinutes
 
   const service = await db.service.findFirst({
-    where: { id: serviceId, salonId: salon.id, active: true },
+    where: { id: serviceId, salonId: salon.id, active: true, onlineBookable: true },
     select: { duration: true },
   })
   const staff = await db.staff.findFirst({
     where: { id: staffId, salonId: salon.id, active: true },
-    select: { id: true },
+    select: { id: true, availability: true },
   })
   if (!service || !staff) {
     return NextResponse.json({ slots: [] })
+  }
+
+  // Day off: salon-wide (staffId null) or this stylist → no slots that date.
+  const dayOff = await db.dayOff.findFirst({
+    where: { salonId: salon.id, date, OR: [{ staffId: null }, { staffId }] },
+    select: { id: true },
+  })
+  if (dayOff) {
+    return NextResponse.json({ slots: [] })
+  }
+
+  // Effective hours = salon business hours ∩ this stylist's availability.
+  // Unset availability (null) means the stylist follows salon hours.
+  let openMinutes = toMinutes(dayHours.open)
+  let closeMinutes = toMinutes(dayHours.close)
+  const staffAvail = parseStaffAvailability(staff.availability)
+  if (staffAvail) {
+    const sd = staffAvail[String(weekday)]
+    if (sd.closed) return NextResponse.json({ slots: [] })
+    openMinutes = Math.max(openMinutes, toMinutes(sd.open))
+    closeMinutes = Math.min(closeMinutes, toMinutes(sd.close))
   }
 
   const existing = await db.appointment.findMany({
@@ -79,17 +108,19 @@ export async function GET(
   const busy = existing.map((a) => ({ start: toMinutes(a.startTime), end: toMinutes(a.endTime) }))
 
   const duration = service.duration
-  const now = new Date()
-  const todayStr = `${now.getFullYear()}-${(now.getMonth() + 1)
-    .toString()
-    .padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`
-  const nowMinutes = now.getHours() * 60 + now.getMinutes()
+  // Earliest bookable instant: now + the salon's minimum lead time.
+  const leadCutoffMs = Date.now() + rules.minLeadTimeHours * 60 * 60 * 1000
+  const { bufferBeforeMinutes: before, bufferAfterMinutes: after } = rules
 
   const slots: string[] = []
   for (let start = openMinutes; start + duration <= closeMinutes; start += slotStep) {
     const end = start + duration
-    if (date === todayStr && start <= nowMinutes) continue
-    const overlaps = busy.some((b) => start < b.end && end > b.start)
+    // Lead-time: the slot's start must be at or after the cutoff.
+    if (new Date(`${date}T${toTime(start)}:00`).getTime() < leadCutoffMs) continue
+    // Buffers protect each EXISTING appointment's reserved zone [start-before, end+after]:
+    // the candidate conflicts if it intrudes on that zone (so a configured gap is kept
+    // regardless of which booking came first).
+    const overlaps = busy.some((b) => start < b.end + after && end > b.start - before)
     if (!overlaps) slots.push(toTime(start))
   }
 

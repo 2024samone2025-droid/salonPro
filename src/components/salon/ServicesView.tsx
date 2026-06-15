@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
@@ -35,6 +36,9 @@ interface Service {
   price: number
   duration: number
   active: boolean
+  category: string
+  description: string
+  onlineBookable: boolean
   createdAt: string
 }
 
@@ -53,6 +57,9 @@ export default function ServicesView() {
   const [name, setName] = useState('')
   const [price, setPrice] = useState('')
   const [duration, setDuration] = useState('')
+  const [category, setCategory] = useState('')
+  const [description, setDescription] = useState('')
+  const [onlineBookable, setOnlineBookable] = useState(true)
 
   const fetchServices = useCallback(async () => {
     if (!isInitialMount.current) {
@@ -82,6 +89,9 @@ export default function ServicesView() {
     setName('')
     setPrice('')
     setDuration('')
+    setCategory('')
+    setDescription('')
+    setOnlineBookable(true)
     setShowDialog(true)
   }
 
@@ -91,6 +101,9 @@ export default function ServicesView() {
     setName(s.name)
     setPrice(s.price.toString())
     setDuration(s.duration.toString())
+    setCategory(s.category ?? '')
+    setDescription(s.description ?? '')
+    setOnlineBookable(s.onlineBookable ?? true)
     setShowDialog(true)
   }
 
@@ -110,9 +123,15 @@ export default function ServicesView() {
     setSaving(true)
     try {
       const method = editing ? 'PUT' : 'POST'
-      const body = editing
-        ? { id: editing.id, name: name.trim(), price: parseFloat(price), duration: parseInt(duration) }
-        : { name: name.trim(), price: parseFloat(price), duration: parseInt(duration) }
+      const fields = {
+        name: name.trim(),
+        price: parseFloat(price),
+        duration: parseInt(duration),
+        category: category.trim(),
+        description: description.trim(),
+        onlineBookable,
+      }
+      const body = editing ? { id: editing.id, ...fields } : fields
       const res = await authFetch('/api/services', {
         method,
         headers: { 'Content-Type': 'application/json' },
@@ -253,6 +272,14 @@ export default function ServicesView() {
                             {s.duration} min
                           </p>
                         </div>
+                        <div className="flex flex-col items-end gap-1">
+                          {s.category && (
+                            <Badge variant="outline" className="text-xs">{s.category}</Badge>
+                          )}
+                          {!s.onlineBookable && (
+                            <span className="text-[11px] text-muted-foreground">Front desk only</span>
+                          )}
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
@@ -374,6 +401,40 @@ export default function ServicesView() {
                   />
                 </div>
               </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="svc-category">Category</Label>
+              <Input
+                id="svc-category"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                placeholder="e.g., Hair, Nails, Skin"
+                maxLength={40}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="svc-description">Description</Label>
+              <Textarea
+                id="svc-description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Shown to customers on the booking page."
+                maxLength={280}
+                rows={2}
+              />
+            </div>
+            <div className="flex items-center justify-between gap-4 rounded-lg border p-3">
+              <div>
+                <p className="text-sm font-medium">Bookable online</p>
+                <p className="text-xs text-muted-foreground">
+                  When off, this service is front-desk only and hidden from the public booking page.
+                </p>
+              </div>
+              <Switch
+                checked={onlineBookable}
+                onCheckedChange={setOnlineBookable}
+                aria-label="Bookable online"
+              />
             </div>
           </div>
           <DialogFooter>

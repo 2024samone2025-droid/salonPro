@@ -19,6 +19,7 @@ import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 import { startTour } from '@/lib/tour'
+import SalonClosures from './SalonClosures'
 import {
   DAY_LABELS,
   SUPPORTED_CURRENCIES,
@@ -57,6 +58,48 @@ export default function SalonSettingsTab() {
 
   const updateSettings = (patch: Partial<SalonSettings>) => {
     setData((d) => (d ? { ...d, settings: { ...d.settings, ...patch } } : d))
+  }
+
+  const updateProfile = (patch: Partial<SalonSettings['profile']>) => {
+    setData((d) =>
+      d ? { ...d, settings: { ...d.settings, profile: { ...d.settings.profile, ...patch } } } : d
+    )
+  }
+
+  const updateAddress = (patch: Partial<SalonSettings['profile']['address']>) => {
+    setData((d) =>
+      d
+        ? {
+            ...d,
+            settings: {
+              ...d.settings,
+              profile: { ...d.settings.profile, address: { ...d.settings.profile.address, ...patch } },
+            },
+          }
+        : d
+    )
+  }
+
+  const updateSocial = (patch: Partial<SalonSettings['profile']['socialLinks']>) => {
+    setData((d) =>
+      d
+        ? {
+            ...d,
+            settings: {
+              ...d.settings,
+              profile: { ...d.settings.profile, socialLinks: { ...d.settings.profile.socialLinks, ...patch } },
+            },
+          }
+        : d
+    )
+  }
+
+  const updateBookingRules = (patch: Partial<SalonSettings['bookingRules']>) => {
+    setData((d) =>
+      d
+        ? { ...d, settings: { ...d.settings, bookingRules: { ...d.settings.bookingRules, ...patch } } }
+        : d
+    )
   }
 
   const updateDay = (day: number, patch: Partial<SalonSettings['businessHours'][string]>) => {
@@ -148,6 +191,140 @@ export default function SalonSettingsTab() {
         </CardContent>
       </Card>
 
+      {/* Business details */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Business details</CardTitle>
+          <CardDescription>
+            Contact info and links shown to customers. All fields are optional.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="salon-phone">Phone</Label>
+              <Input
+                id="salon-phone"
+                value={data.settings.profile.phone}
+                onChange={(e) => updateProfile({ phone: e.target.value })}
+                placeholder="+250 7.. ... ..."
+                maxLength={120}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="salon-website">Website</Label>
+              <Input
+                id="salon-website"
+                value={data.settings.profile.websiteUrl}
+                onChange={(e) => updateProfile({ websiteUrl: e.target.value })}
+                placeholder="https://example.com"
+                maxLength={300}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="salon-logo">Logo URL</Label>
+            <Input
+              id="salon-logo"
+              value={data.settings.profile.logoUrl}
+              onChange={(e) => updateProfile({ logoUrl: e.target.value })}
+              placeholder="https://.../logo.png"
+              maxLength={300}
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>Address</Label>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <Input
+                value={data.settings.profile.address.street}
+                onChange={(e) => updateAddress({ street: e.target.value })}
+                placeholder="Street / KN .. St"
+                aria-label="Street"
+                maxLength={120}
+              />
+              <Input
+                value={data.settings.profile.address.city}
+                onChange={(e) => updateAddress({ city: e.target.value })}
+                placeholder="City (e.g. Kigali)"
+                aria-label="City"
+                maxLength={120}
+              />
+              <Input
+                value={data.settings.profile.address.district}
+                onChange={(e) => updateAddress({ district: e.target.value })}
+                placeholder="District (e.g. Gasabo)"
+                aria-label="District"
+                maxLength={120}
+              />
+              <Input
+                value={data.settings.profile.address.country}
+                onChange={(e) => updateAddress({ country: e.target.value })}
+                placeholder="Country"
+                aria-label="Country"
+                maxLength={120}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>Social links</Label>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <Input
+                value={data.settings.profile.socialLinks.instagram}
+                onChange={(e) => updateSocial({ instagram: e.target.value })}
+                placeholder="Instagram URL"
+                aria-label="Instagram"
+                maxLength={300}
+              />
+              <Input
+                value={data.settings.profile.socialLinks.facebook}
+                onChange={(e) => updateSocial({ facebook: e.target.value })}
+                placeholder="Facebook URL"
+                aria-label="Facebook"
+                maxLength={300}
+              />
+              <Input
+                value={data.settings.profile.socialLinks.tiktok}
+                onChange={(e) => updateSocial({ tiktok: e.target.value })}
+                placeholder="TikTok URL"
+                aria-label="TikTok"
+                maxLength={300}
+              />
+              <Input
+                value={data.settings.profile.socialLinks.whatsapp}
+                onChange={(e) => updateSocial({ whatsapp: e.target.value })}
+                placeholder="WhatsApp number"
+                aria-label="WhatsApp"
+                maxLength={120}
+              />
+            </div>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="salon-tin">TIN (Tax ID)</Label>
+              <Input
+                id="salon-tin"
+                value={data.settings.profile.tinNumber}
+                onChange={(e) => updateProfile({ tinNumber: e.target.value })}
+                maxLength={120}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="salon-license">Business license no.</Label>
+              <Input
+                id="salon-license"
+                value={data.settings.profile.licenseNumber}
+                onChange={(e) => updateProfile({ licenseNumber: e.target.value })}
+                maxLength={120}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Business hours */}
       <Card>
         <CardHeader>
@@ -234,6 +411,77 @@ export default function SalonSettingsTab() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Booking rules */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Booking rules</CardTitle>
+          <CardDescription>
+            Limits applied to customer online bookings. They don&apos;t affect bookings you make at the front desk.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label htmlFor="lead-time">Minimum notice (hours)</Label>
+            <Input
+              id="lead-time"
+              type="number"
+              min={0}
+              max={720}
+              value={data.settings.bookingRules.minLeadTimeHours}
+              onChange={(e) =>
+                updateBookingRules({ minLeadTimeHours: Math.max(0, parseInt(e.target.value, 10) || 0) })
+              }
+            />
+            <p className="text-xs text-muted-foreground">How far ahead a customer must book. 0 = any open slot.</p>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="advance-days">Bookable window (days)</Label>
+            <Input
+              id="advance-days"
+              type="number"
+              min={1}
+              max={365}
+              value={data.settings.bookingRules.maxAdvanceDays}
+              onChange={(e) =>
+                updateBookingRules({ maxAdvanceDays: Math.max(1, parseInt(e.target.value, 10) || 1) })
+              }
+            />
+            <p className="text-xs text-muted-foreground">Furthest into the future a customer can book.</p>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="buffer-before">Buffer before (minutes)</Label>
+            <Input
+              id="buffer-before"
+              type="number"
+              min={0}
+              max={120}
+              value={data.settings.bookingRules.bufferBeforeMinutes}
+              onChange={(e) =>
+                updateBookingRules({ bufferBeforeMinutes: Math.max(0, parseInt(e.target.value, 10) || 0) })
+              }
+            />
+            <p className="text-xs text-muted-foreground">Gap kept free before each appointment.</p>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="buffer-after">Buffer after (minutes)</Label>
+            <Input
+              id="buffer-after"
+              type="number"
+              min={0}
+              max={120}
+              value={data.settings.bookingRules.bufferAfterMinutes}
+              onChange={(e) =>
+                updateBookingRules({ bufferAfterMinutes: Math.max(0, parseInt(e.target.value, 10) || 0) })
+              }
+            />
+            <p className="text-xs text-muted-foreground">Gap kept free after each appointment.</p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Closures & days off */}
+      <SalonClosures />
 
       {/* Currency */}
       <Card>

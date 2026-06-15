@@ -3,6 +3,7 @@ import { db } from '@/lib/db'
 import { headers } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { parseSalonSettings } from '@/lib/salon-settings'
+import { parseUserSettings } from '@/lib/user-settings'
 import { SALON_SUBDOMAIN_HEADER } from '@/lib/subdomain'
 
 // Logged-out / not-a-member both look identical to the client (no existence leak).
@@ -39,7 +40,7 @@ export async function GET() {
     if (subject.kind === 'owner') {
       const link = await db.ownerSalon.findUnique({
         where: { ownerId_salonId: { ownerId: subject.id, salonId: salon.id } },
-        select: { owner: { select: { name: true, email: true } } },
+        select: { owner: { select: { name: true, email: true, settings: true } } },
       })
       if (!link) return loggedOut()
 
@@ -53,6 +54,7 @@ export async function GET() {
           staffId: null,
           salonId: salon.id,
           tourCompleted: true,
+          settings: parseUserSettings(link.owner.settings),
         },
         permissions: ROLE_PERMISSIONS.admin,
         salon: salonInfo,
@@ -62,7 +64,7 @@ export async function GET() {
     // Staff: membership against the resolved salon; fresh role + tour flag.
     const member = await db.user.findFirst({
       where: { id: subject.id, salonId: salon.id, active: true },
-      select: { id: true, name: true, role: true, staffId: true, tourCompleted: true, mustResetPassword: true },
+      select: { id: true, name: true, role: true, staffId: true, tourCompleted: true, mustResetPassword: true, settings: true },
     })
     if (!member) return loggedOut()
 
@@ -78,6 +80,7 @@ export async function GET() {
         salonId: salon.id,
         tourCompleted: member.tourCompleted,
         mustResetPassword: member.mustResetPassword,
+        settings: parseUserSettings(member.settings),
       },
       permissions,
       salon: salonInfo,
