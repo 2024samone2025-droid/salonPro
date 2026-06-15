@@ -100,10 +100,32 @@ export async function PATCH(
     }
   }
 
-  const updated = await db.user.update({
-    where: { id },
-    data,
-    include: { staff: { select: { id: true, name: true } } },
+  // If this edit turns the user into a stylist with no roster slot, provision one —
+  // same guarantee as onboarding: every stylist is bookable and sees their own
+  // appointments. Wrapped in a transaction so we never half-create.
+  const effectiveRole = (data.role as string | undefined) ?? target.role
+  const effectiveStaffId =
+    data.staffId !== undefined ? (data.staffId as string | null) : target.staffId
+
+  const updated = await db.$transaction(async (tx) => {
+    if (effectiveRole === 'stylist' && !effectiveStaffId) {
+      const slot = await tx.staff.create({
+        data: {
+          salonId: auth.salonId,
+          name: (data.name as string | undefined) ?? target.name,
+          phone: '',
+          role: 'stylist',
+          active: (data.active as boolean | undefined) ?? target.active,
+        },
+        select: { id: true },
+      })
+      data.staffId = slot.id
+    }
+    return tx.user.update({
+      where: { id },
+      data,
+      include: { staff: { select: { id: true, name: true } } },
+    })
   })
 
   // Describe the most meaningful change for the feed (deactivation / reactivation /
