@@ -36,9 +36,19 @@ export interface SalonProfile {
   licenseNumber: string
 }
 
+// Customer-facing online-booking rules. Applied to the public booking surface
+// (slot generation + public booking POST), NOT the internal front-desk route.
+export interface BookingRules {
+  minLeadTimeHours: number // earliest a customer can book, relative to now
+  maxAdvanceDays: number // furthest into the future a customer can book
+  bufferBeforeMinutes: number // required free gap before each appointment
+  bufferAfterMinutes: number // required free gap after each appointment
+}
+
 export interface SalonSettings {
   profile: SalonProfile
   businessHours: BusinessHours
+  bookingRules: BookingRules
   slotIntervalMinutes: 15 | 30 | 60
   publicBookingEnabled: boolean
   currency: SupportedCurrency
@@ -75,6 +85,14 @@ export const DEFAULT_PROFILE: SalonProfile = {
   licenseNumber: '',
 }
 
+// Defaults preserve current behaviour: no lead-time/buffers, a generous advance window.
+export const DEFAULT_BOOKING_RULES: BookingRules = {
+  minLeadTimeHours: 0,
+  maxAdvanceDays: 365,
+  bufferBeforeMinutes: 0,
+  bufferAfterMinutes: 0,
+}
+
 export const DEFAULT_SETTINGS: SalonSettings = {
   profile: {
     ...DEFAULT_PROFILE,
@@ -90,10 +108,19 @@ export const DEFAULT_SETTINGS: SalonSettings = {
     '5': { ...DEFAULT_DAY },
     '6': { ...DEFAULT_DAY },
   },
+  bookingRules: { ...DEFAULT_BOOKING_RULES },
   slotIntervalMinutes: 30,
   publicBookingEnabled: true,
   currency: 'RWF',
 }
+
+// Booking-rule field bounds (shared by parse-clamp and write-time validation).
+export const BOOKING_RULE_BOUNDS = {
+  minLeadTimeHours: { min: 0, max: 720 }, // up to 30 days
+  maxAdvanceDays: { min: 1, max: 365 },
+  bufferBeforeMinutes: { min: 0, max: 120 },
+  bufferAfterMinutes: { min: 0, max: 120 },
+} as const
 
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/
 
@@ -148,6 +175,24 @@ function parseProfile(raw: unknown): SalonProfile {
   }
 }
 
+// Coerce a value to an integer within [min, max], falling back to a default.
+function clampInt(v: unknown, min: number, max: number, fallback: number): number {
+  const n = typeof v === 'number' ? v : Number(v)
+  if (!Number.isFinite(n)) return fallback
+  return Math.min(max, Math.max(min, Math.round(n)))
+}
+
+function parseBookingRules(raw: unknown): BookingRules {
+  const r = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>
+  const b = BOOKING_RULE_BOUNDS
+  return {
+    minLeadTimeHours: clampInt(r.minLeadTimeHours, b.minLeadTimeHours.min, b.minLeadTimeHours.max, DEFAULT_BOOKING_RULES.minLeadTimeHours),
+    maxAdvanceDays: clampInt(r.maxAdvanceDays, b.maxAdvanceDays.min, b.maxAdvanceDays.max, DEFAULT_BOOKING_RULES.maxAdvanceDays),
+    bufferBeforeMinutes: clampInt(r.bufferBeforeMinutes, b.bufferBeforeMinutes.min, b.bufferBeforeMinutes.max, DEFAULT_BOOKING_RULES.bufferBeforeMinutes),
+    bufferAfterMinutes: clampInt(r.bufferAfterMinutes, b.bufferAfterMinutes.min, b.bufferAfterMinutes.max, DEFAULT_BOOKING_RULES.bufferAfterMinutes),
+  }
+}
+
 function isValidDay(d: unknown): d is DayHours {
   if (!d || typeof d !== 'object') return false
   const day = d as Record<string, unknown>
@@ -166,11 +211,13 @@ export function parseSalonSettings(raw: unknown): SalonSettings {
     ...DEFAULT_SETTINGS,
     profile: parseProfile(null),
     businessHours: { ...DEFAULT_SETTINGS.businessHours },
+    bookingRules: { ...DEFAULT_BOOKING_RULES },
   }
   if (!raw || typeof raw !== 'object') return out
   const s = raw as Record<string, unknown>
 
   out.profile = parseProfile(s.profile)
+  out.bookingRules = parseBookingRules(s.bookingRules)
 
   if (s.businessHours && typeof s.businessHours === 'object') {
     for (let i = 0; i <= 6; i++) {
@@ -231,6 +278,24 @@ export function validateSettingsPatch(patch: Partial<SalonSettings>): string | n
       if (!isValidDay(day)) return `Invalid hours for ${DAY_LABELS[i]}`
       if (!day.closed && day.open >= day.close) {
         return `${DAY_LABELS[i]}: opening time must be before closing time`
+      }
+    }
+  }
+  if (patch.bookingRules) {
+    const r = patch.bookingRules
+    const checks: [string, number | undefined, { min: number; max: number }][] = [
+      ['Minimum lead time (hours)', r.minLeadTimeHours, BOOKING_RULE_BOUNDS.minLeadTimeHours],
+      ['Maximum advance (days)', r.maxAdvanceDays, BOOKING_RULE_BOUNDS.maxAdvanceDays],
+      ['Buffer before (minutes)', r.bufferBeforeMinutes, BOOKING_RULE_BOUNDS.bufferBeforeMinutes],
+      ['Buffer after (minutes)', r.bufferAfterMinutes, BOOKING_RULE_BOUNDS.bufferAfterMinutes],
+    ]
+    for (const [label, value, bound] of checks) {
+      if (value === undefined) continue
+      if (!Number.isFinite(value) || !Number.isInteger(value)) {
+        return `${label} must be a whole number`
+      }
+      if (value < bound.min || value > bound.max) {
+        return `${label} must be between ${bound.min} and ${bound.max}`
       }
     }
   }

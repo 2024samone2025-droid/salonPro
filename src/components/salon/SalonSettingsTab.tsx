@@ -93,6 +93,14 @@ export default function SalonSettingsTab() {
     )
   }
 
+  const updateBookingRules = (patch: Partial<SalonSettings['bookingRules']>) => {
+    setData((d) =>
+      d
+        ? { ...d, settings: { ...d.settings, bookingRules: { ...d.settings.bookingRules, ...patch } } }
+        : d
+    )
+  }
+
   const updateDay = (day: number, patch: Partial<SalonSettings['businessHours'][string]>) => {
     setData((d) => {
       if (!d) return d
@@ -399,6 +407,74 @@ export default function SalonSettingsTab() {
                 <SelectItem value="60">Every hour</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Booking rules */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Booking rules</CardTitle>
+          <CardDescription>
+            Limits applied to customer online bookings. They don&apos;t affect bookings you make at the front desk.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label htmlFor="lead-time">Minimum notice (hours)</Label>
+            <Input
+              id="lead-time"
+              type="number"
+              min={0}
+              max={720}
+              value={data.settings.bookingRules.minLeadTimeHours}
+              onChange={(e) =>
+                updateBookingRules({ minLeadTimeHours: Math.max(0, parseInt(e.target.value, 10) || 0) })
+              }
+            />
+            <p className="text-xs text-muted-foreground">How far ahead a customer must book. 0 = any open slot.</p>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="advance-days">Bookable window (days)</Label>
+            <Input
+              id="advance-days"
+              type="number"
+              min={1}
+              max={365}
+              value={data.settings.bookingRules.maxAdvanceDays}
+              onChange={(e) =>
+                updateBookingRules({ maxAdvanceDays: Math.max(1, parseInt(e.target.value, 10) || 1) })
+              }
+            />
+            <p className="text-xs text-muted-foreground">Furthest into the future a customer can book.</p>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="buffer-before">Buffer before (minutes)</Label>
+            <Input
+              id="buffer-before"
+              type="number"
+              min={0}
+              max={120}
+              value={data.settings.bookingRules.bufferBeforeMinutes}
+              onChange={(e) =>
+                updateBookingRules({ bufferBeforeMinutes: Math.max(0, parseInt(e.target.value, 10) || 0) })
+              }
+            />
+            <p className="text-xs text-muted-foreground">Gap kept free before each appointment.</p>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="buffer-after">Buffer after (minutes)</Label>
+            <Input
+              id="buffer-after"
+              type="number"
+              min={0}
+              max={120}
+              value={data.settings.bookingRules.bufferAfterMinutes}
+              onChange={(e) =>
+                updateBookingRules({ bufferAfterMinutes: Math.max(0, parseInt(e.target.value, 10) || 0) })
+              }
+            />
+            <p className="text-xs text-muted-foreground">Gap kept free after each appointment.</p>
           </div>
         </CardContent>
       </Card>
