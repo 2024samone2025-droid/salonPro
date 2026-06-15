@@ -149,6 +149,8 @@ model User {
   tourCompleted Boolean @default(true)
   staffId   String?  // optional link to Staff record
   staff     Staff?   @relation(fields: [staffId], references: [id], onDelete: SetNull)
+  // Per-user personal settings (UserSettings JSON) — read via parseUserSettings()
+  settings  Json?
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
 
@@ -176,6 +178,8 @@ model Owner {
   // Set by the backfill script; ENFORCEMENT is a deferred follow-up (the flag is
   // currently an unenforced marker — login still works with the temp password).
   mustResetPassword Boolean @default(false)
+  // Per-user personal settings (UserSettings JSON) — read via parseUserSettings()
+  settings  Json?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

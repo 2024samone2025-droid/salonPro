@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode, useRef } from 'react'
 import type { SalonSettings } from '@/lib/salon-settings'
+import type { UserSettings } from '@/lib/user-settings'
 import { formatMoney } from '@/lib/utils'
 
 export type UserRole = 'admin' | 'receptionist' | 'stylist'
@@ -37,6 +38,8 @@ export interface SessionUser {
   tourCompleted?: boolean
   /** staff only: admin set a temp password → must choose their own before using the app */
   mustResetPassword?: boolean
+  /** per-user personal settings (profile + app preferences); populated by /api/auth/me */
+  settings?: UserSettings
 }
 
 export interface SalonInfo {
@@ -97,6 +100,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     refreshSession()
   }, [refreshSession])
+
+  // Server theme is the source of truth; localStorage is only the pre-auth paint
+  // cache. Once we know the user's stored theme, sync it into both so the choice
+  // follows them across devices and the bootstrap script paints it next load.
+  const theme = user?.settings?.appPreferences?.theme
+  useEffect(() => {
+    if (!theme) return
+    try {
+      localStorage.setItem('theme', theme)
+    } catch {}
+    const dark =
+      theme === 'dark' ||
+      (theme === 'system' &&
+        typeof window !== 'undefined' &&
+        window.matchMedia('(prefers-color-scheme: dark)').matches)
+    if (dark) {
+      document.documentElement.setAttribute('data-theme', 'dark')
+    } else {
+      document.documentElement.removeAttribute('data-theme')
+    }
+  }, [theme])
 
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     try {

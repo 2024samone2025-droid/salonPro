@@ -35,6 +35,13 @@ export default function ThemeToggle() {
       localStorage.setItem('theme', next)
     } catch {}
     setTheme(next)
+    // Persist to the server so the choice follows the user across devices.
+    // Fire-and-forget: on unauthenticated surfaces this 401s harmlessly.
+    fetch('/api/me/settings', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ settings: { appPreferences: { theme: next } } }),
+    }).catch(() => {})
   }
 
   const label = theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'

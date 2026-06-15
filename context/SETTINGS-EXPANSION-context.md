@@ -54,8 +54,11 @@ Extends the existing salon settings blob; admin-only via existing `/api/salon/se
 4. Schema: add `settings Json?` to `User` and `Owner`; `npm run db:push`; `db:generate`.
 5. New `lib/user-settings.ts`: `UserSettings` type + `parseUserSettings()` + `validateUserSettingsPatch()`.
    - profile: `jobTitle`, `bio`, `photoUrl`
-   - appPreferences: `theme`, `defaultLandingView`, `calendarDefaultView`, `timeFormat`, `firstDayOfWeek`
+   - appPreferences (honored now): `theme`, `calendarDefaultView`
    - `displayName` maps to the real `name` column, NOT the blob.
+   - **DEFERRED from appPreferences** (no clean read-site → would be dead toggles):
+     `defaultLandingView` (login hardcodes `/dashboard`; pref unknown until /me resolves),
+     `timeFormat`, `firstDayOfWeek` (broad cross-app formatting wiring). Revisit when wired.
 6. New `app/api/me/settings/route.ts` (GET/PATCH) branching on `auth.kind` — staff → `User`,
    owner → `Owner` — mirroring `/api/auth/me`. Updates `name` + `settings`.
 7. New `(app)/account/page.tsx` + `components/salon/AccountView.tsx`, **ungated** (all roles + owners).
