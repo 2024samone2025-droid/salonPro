@@ -26,6 +26,7 @@ model Salon {
   payments      Payment[]
   users         User[]
   owners        OwnerSalon[]
+  activityLogs  ActivityLog[]
 }
 
 model Customer {
@@ -227,4 +228,30 @@ model StaffInvite {
   createdAt   DateTime  @default(now())
 
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Append-only "who did what, when" feed for owner transparency (Phase 2). Written
+// best-effort from inside mutation routes via lib/activity.ts — NEVER in the same
+// transaction as the action it records (a logging failure must not roll one back).
+// The actor is a denormalized SNAPSHOT (type + id + name + role at write-time), not
+// an FK: the actor may be a staff User OR an Owner (no User row), and the trail must
+// survive renames/deletes. The human-readable `summary` is built at write-time so the
+// feed renders with no joins and stays correct after a target record is deleted.
+model ActivityLog {
+  id         String   @id @default(cuid())
+  actorType  String   // 'staff' | 'owner'
+  actorId    String   // User.id or Owner.id — intentionally NOT a foreign key
+  actorName  String   // snapshot at write-time
+  actorRole  String   // snapshot: admin | receptionist | stylist | owner
+  action     String   // e.g. 'appointment.confirmed' — see ACTIVITY_ACTIONS
+  targetType String?  // 'appointment' | 'payment' | 'user' | 'staff'
+  targetId   String?
+  summary    String   // human-readable sentence, built at write-time
+  metadata   Json?    // optional details: { from, to } | { amount, method } | ...
+  createdAt  DateTime @default(now())
+
+  salonId String
+  salon   Salon @relation(fields: [salonId], references: [id], onDelete: Cascade)
+
+  @@index([salonId, createdAt])
 }
