@@ -2,6 +2,7 @@ import { db } from '@/lib/db'
 import { createSessionToken, ROLE_PERMISSIONS, type UserRole } from '@/lib/auth'
 import { verifyPassword } from '@/lib/password'
 import { parseSalonSettings } from '@/lib/salon-settings'
+import { parseUserSettings } from '@/lib/user-settings'
 import { SALON_SUBDOMAIN_HEADER } from '@/lib/subdomain'
 import { NextRequest, NextResponse } from 'next/server'
 
@@ -53,6 +54,7 @@ export async function POST(req: NextRequest) {
         staffId: user.staffId,
         salonId: salon.id,
         mustResetPassword: user.mustResetPassword,
+        settings: parseUserSettings(user.settings),
       },
       permissions,
       salon: {
