@@ -19,10 +19,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Check, Copy, Loader2 } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuth } from '@/lib/auth-context'
 import { ROLE_LABELS, type UserRole } from '@/lib/permissions'
+import InviteLinkPanel from './InviteLinkPanel'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -48,7 +49,6 @@ export default function InviteStaffDialog({ open, onOpenChange, canGrantAdmin, o
   const [role, setRole] = useState<UserRole>('receptionist')
   const [submitting, setSubmitting] = useState(false)
   const [acceptUrl, setAcceptUrl] = useState<string | null>(null)
-  const [copied, setCopied] = useState(false)
 
   const reset = () => {
     setName('')
@@ -56,7 +56,6 @@ export default function InviteStaffDialog({ open, onOpenChange, canGrantAdmin, o
     setEmail('')
     setRole('receptionist')
     setAcceptUrl(null)
-    setCopied(false)
   }
 
   const close = (next: boolean) => {
@@ -103,18 +102,6 @@ export default function InviteStaffDialog({ open, onOpenChange, canGrantAdmin, o
     }
   }
 
-  const copy = async () => {
-    if (!acceptUrl) return
-    try {
-      await navigator.clipboard.writeText(acceptUrl)
-      setCopied(true)
-      toast.success('Invite link copied')
-      setTimeout(() => setCopied(false), 2000)
-    } catch {
-      toast.error('Could not copy — select and copy the link manually')
-    }
-  }
-
   const roles: UserRole[] = canGrantAdmin
     ? (Object.keys(ROLE_LABELS) as UserRole[])
     : (Object.keys(ROLE_LABELS) as UserRole[]).filter((r) => r !== 'admin')
@@ -132,12 +119,7 @@ export default function InviteStaffDialog({ open, onOpenChange, canGrantAdmin, o
                 72 hours. You won&apos;t be able to see it again — if it&apos;s lost, rotate the invite.
               </DialogDescription>
             </DialogHeader>
-            <div className="flex items-center gap-2">
-              <Input readOnly value={acceptUrl} className="font-mono text-xs" aria-label="Invite link" />
-              <Button type="button" variant="outline" size="icon" onClick={copy} aria-label="Copy invite link">
-                {copied ? <Check className="size-4 text-success" /> : <Copy className="size-4" />}
-              </Button>
-            </div>
+            <InviteLinkPanel url={acceptUrl} />
             <DialogFooter>
               <Button onClick={() => close(false)}>Done</Button>
             </DialogFooter>
