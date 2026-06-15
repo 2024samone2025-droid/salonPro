@@ -39,16 +39,16 @@ function Shell({ title, description, children }: { title: string; description: s
             <Triangle className="size-5 sm:size-6 text-background fill-background" />
           </div>
           <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">SalonPro</h1>
-          <p className="text-[13px] sm:text-sm text-muted-foreground mt-0.5">Sign in</p>
+          <p className="text-body sm:text-sm text-muted-foreground mt-0.5">Sign in</p>
         </div>
         <Card className="border shadow-sm">
           <CardHeader className="text-center pb-2 pt-4 sm:pt-5 px-4 sm:px-6">
-            <CardTitle className="text-[15px] sm:text-base font-medium">{title}</CardTitle>
-            <CardDescription className="text-[13px] sm:text-sm">{description}</CardDescription>
+            <CardTitle className="text-subtitle sm:text-base font-medium">{title}</CardTitle>
+            <CardDescription className="text-body sm:text-sm">{description}</CardDescription>
           </CardHeader>
           <CardContent className="pt-2 pb-4 sm:pb-5 px-4 sm:px-6">{children}</CardContent>
         </Card>
-        <p className="text-center text-[11px] text-muted-foreground/30 mt-4 sm:mt-6 font-mono">
+        <p className="text-center text-caption text-muted-foreground/30 mt-4 sm:mt-6 font-mono">
           © {new Date().getFullYear()} SalonPro
         </p>
       </div>
@@ -220,11 +220,11 @@ export default function UnifiedLogin({ subdomain }: { subdomain: string | null }
         {error && (
           <Alert variant="destructive" className="py-2 mb-3">
             <AlertCircle className="size-3.5" />
-            <AlertDescription className="text-[13px]">{error}</AlertDescription>
+            <AlertDescription className="text-body">{error}</AlertDescription>
           </Alert>
         )}
         {salons.length === 0 ? (
-          <p className="text-[13px] text-muted-foreground text-center py-4">
+          <p className="text-body text-muted-foreground text-center py-4">
             No salons are linked to this account yet.
           </p>
         ) : (
@@ -240,8 +240,8 @@ export default function UnifiedLogin({ subdomain }: { subdomain: string | null }
                 <span className="flex items-center gap-2.5">
                   <Building2 className="size-4 text-muted-foreground" />
                   <span>
-                    <span className="block text-[13px] sm:text-sm font-medium leading-tight">{salon.name}</span>
-                    <span className="block text-[11px] sm:text-xs text-muted-foreground leading-tight font-mono">
+                    <span className="block text-body sm:text-sm font-medium leading-tight">{salon.name}</span>
+                    <span className="block text-caption sm:text-xs text-muted-foreground leading-tight font-mono">
                       {salon.subdomain}
                     </span>
                   </span>
@@ -261,7 +261,7 @@ export default function UnifiedLogin({ subdomain }: { subdomain: string | null }
       <Shell title="Sign in to your salon" description="Team members sign in from their salon's web address">
         <form onSubmit={handleStaffRedirect} className="space-y-3">
           <div className="space-y-1.5">
-            <Label htmlFor="salon" className="text-[13px] sm:text-sm">Your salon&apos;s address</Label>
+            <Label htmlFor="salon" className="text-body sm:text-sm">Your salon&apos;s address</Label>
             <div className="flex items-center gap-1.5">
               <Input
                 id="salon"
@@ -271,21 +271,21 @@ export default function UnifiedLogin({ subdomain }: { subdomain: string | null }
                 onChange={(e) => setSalonInput(e.target.value)}
                 autoFocus
                 required
-                className="h-9 sm:h-10 text-[13px] sm:text-sm"
+                className="h-9 sm:h-10 text-body sm:text-sm"
               />
-              <span className="text-[13px] text-muted-foreground font-mono whitespace-nowrap">
+              <span className="text-body text-muted-foreground font-mono whitespace-nowrap">
                 .{typeof window !== 'undefined' ? window.location.host : ''}
               </span>
             </div>
           </div>
-          <Button type="submit" className="w-full h-9 sm:h-10 text-[13px] sm:text-sm font-medium" disabled={!salonInput.trim()}>
+          <Button type="submit" className="w-full h-9 sm:h-10 text-body sm:text-sm font-medium" disabled={!salonInput.trim()}>
             Continue
           </Button>
         </form>
         <Button
           type="button"
           variant="ghost"
-          className="mt-2 w-full h-8 text-[13px] text-muted-foreground hover:text-foreground font-normal"
+          className="mt-2 w-full h-8 text-body text-muted-foreground hover:text-foreground font-normal"
           onClick={() => { setMode('login'); setError('') }}
         >
           <ChevronLeft className="size-3.5 mr-1" /> Back to owner sign in
@@ -299,7 +299,7 @@ export default function UnifiedLogin({ subdomain }: { subdomain: string | null }
     <Shell title="Sign in to your account" description="Enter your email and password">
       <form onSubmit={handlePasswordSubmit} className="space-y-3">
         <div className="space-y-1.5">
-          <Label htmlFor="email" className="text-[13px] sm:text-sm">Email</Label>
+          <Label htmlFor="email" className="text-body sm:text-sm">Email</Label>
           <Input
             id="email"
             type="email"
@@ -309,12 +309,12 @@ export default function UnifiedLogin({ subdomain }: { subdomain: string | null }
             autoComplete="username"
             autoFocus
             required
-            className="h-9 sm:h-10 text-[13px] sm:text-sm"
+            className="h-9 sm:h-10 text-body sm:text-sm"
           />
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="password" className="text-[13px] sm:text-sm">Password</Label>
+          <Label htmlFor="password" className="text-body sm:text-sm">Password</Label>
           <div className="relative">
             <Input
               id="password"
@@ -322,7 +322,7 @@ export default function UnifiedLogin({ subdomain }: { subdomain: string | null }
               placeholder="Enter your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="pr-9 h-9 sm:h-10 text-[13px] sm:text-sm"
+              className="pr-9 h-9 sm:h-10 text-body sm:text-sm"
               autoComplete="current-password"
               required
             />
@@ -343,13 +343,13 @@ export default function UnifiedLogin({ subdomain }: { subdomain: string | null }
         {error && (
           <Alert variant="destructive" className="py-2">
             <AlertCircle className="size-3.5" />
-            <AlertDescription className="text-[13px]">{error}</AlertDescription>
+            <AlertDescription className="text-body">{error}</AlertDescription>
           </Alert>
         )}
 
         <Button
           type="submit"
-          className="w-full h-9 sm:h-10 text-[13px] sm:text-sm font-medium"
+          className="w-full h-9 sm:h-10 text-body sm:text-sm font-medium"
           disabled={loading || !email.trim() || !password}
         >
           {loading ? 'Signing in…' : 'Sign In'}
@@ -361,7 +361,7 @@ export default function UnifiedLogin({ subdomain }: { subdomain: string | null }
         <Button
           type="button"
           variant="ghost"
-          className="mt-3 w-full h-9 text-[13px] sm:text-sm text-muted-foreground hover:text-foreground font-normal"
+          className="mt-3 w-full h-9 text-body sm:text-sm text-muted-foreground hover:text-foreground font-normal"
           onClick={() => { setError(''); setMode('salon-redirect') }}
         >
           <Users className="size-3.5 mr-1.5" /> Team member? Go to your salon

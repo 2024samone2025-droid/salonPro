@@ -79,7 +79,7 @@ export default function ChangePasswordForm({ forced = false, onSuccess }: Change
           onChange={(e) => setNext(e.target.value)}
           required
         />
-        <p className="text-[11px] text-muted-foreground">At least {MIN_PASSWORD_LENGTH} characters.</p>
+        <p className="text-caption text-muted-foreground">At least {MIN_PASSWORD_LENGTH} characters.</p>
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="confirm-password">Confirm new password</Label>

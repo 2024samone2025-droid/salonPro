@@ -338,7 +338,7 @@ export default function QuickBookingForm({ selectedDate, onBookingCreated }: Qui
               </SelectContent>
             </Select>
             {selectedService && (
-              <p className="text-[11px] text-muted-foreground mt-1">
+              <p className="text-caption text-muted-foreground mt-1">
                 {selectedService.duration} min
               </p>
             )}
@@ -373,7 +373,7 @@ export default function QuickBookingForm({ selectedDate, onBookingCreated }: Qui
               className="h-9 text-sm"
             />
             {selectedService && startTime && (
-              <p className="text-[11px] text-muted-foreground mt-1">
+              <p className="text-caption text-muted-foreground mt-1">
                 Until {getEndTime()}
               </p>
             )}

@@ -211,7 +211,7 @@ export default function CustomersView() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 justify-between">
         <div>
-          <h2 className="text-[22px] font-medium tracking-tight">Customers</h2>
+          <h2 className="text-title font-medium tracking-tight">Customers</h2>
           <p className="text-muted-foreground text-sm">
             {customers.length} customer{customers.length !== 1 ? 's' : ''} on record
           </p>

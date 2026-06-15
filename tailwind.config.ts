@@ -14,6 +14,18 @@ const config: Config = {
         sans: ["var(--font-sans)", "system-ui", "sans-serif"],
         mono: ["var(--font-geist-mono)", "monospace"],
       },
+      // Canonical type scale — the single source of truth for text sizing.
+      // Named roles map to the sizes already in use, so adopting them is a
+      // ZERO visual change. Arbitrary `text-[Npx]` is banned (npm run lint:design);
+      // use a role below, or a Tailwind step (xs 12 / sm 14 / base 16 / lg 18 /
+      // xl 20 / 2xl 24) which remain valid scale steps. See DESIGN_SYSTEM.md.
+      fontSize: {
+        micro: ["10px", { lineHeight: "14px" }], // dense metadata, footnotes
+        caption: ["11px", { lineHeight: "16px" }], // captions, badges, chips
+        body: ["13px", { lineHeight: "18px" }], // default body / table text
+        subtitle: ["15px", { lineHeight: "22px" }], // card titles, emphasized body
+        title: ["22px", { lineHeight: "28px" }], // page / section headings
+      },
       borderWidth: {
         hairline: "0.5px",
       },

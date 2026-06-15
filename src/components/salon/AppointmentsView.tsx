@@ -135,14 +135,14 @@ function DraggableAppointmentCard({
       <div className="flex items-center gap-1.5">
         <span className="text-xs font-semibold truncate">{apt.customer?.name}</span>
       </div>
-      <p className="text-[11px] truncate opacity-80">{apt.service?.name}</p>
+      <p className="text-caption truncate opacity-80">{apt.service?.name}</p>
       {height > 40 && (
         <div className="flex items-center justify-between mt-0.5">
-          <p className="text-[10px] opacity-70 flex items-center gap-0.5">
+          <p className="text-micro opacity-70 flex items-center gap-0.5">
             <Clock className="size-2.5" aria-hidden="true" />
             {apt.startTime} - {apt.endTime}
           </p>
-          <p className="text-[10px] font-medium opacity-80">
+          <p className="text-micro font-medium opacity-80">
             {formatRWF(apt.service?.price)}
           </p>
         </div>
@@ -212,7 +212,7 @@ function DayView({
         <div className="space-y-0">
           {timeSlots.map((time) => (
             <div key={time} className="h-14 flex items-start justify-end pr-2 pt-0">
-              <span className="text-[10px] sm:text-[11px] text-muted-foreground font-medium -mt-2">{time}</span>
+              <span className="text-micro sm:text-caption text-muted-foreground font-medium -mt-2">{time}</span>
             </div>
           ))}
         </div>
@@ -309,7 +309,7 @@ function WeekView({ weekDays, selectedDate, appointments, onDaySelect, onAppoint
                 {dayApts.length > 0 && (
                   <Badge
                     variant="secondary"
-                    className={`text-[10px] px-1.5 py-0 mt-0.5 ${
+                    className={`text-micro px-1.5 py-0 mt-0.5 ${
                       isSelected
                         ? 'bg-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/20'
                         : 'bg-muted text-muted-foreground hover:bg-muted'
@@ -350,7 +350,7 @@ function WeekView({ weekDays, selectedDate, appointments, onDaySelect, onAppoint
                         <div className="flex items-center gap-1">
                           <span className="font-medium truncate">{apt.customer?.name}</span>
                         </div>
-                        <p className="truncate text-[10px] opacity-80">{apt.startTime} {apt.service?.name}</p>
+                        <p className="truncate text-micro opacity-80">{apt.startTime} {apt.service?.name}</p>
                       </div>
                     )
                   })

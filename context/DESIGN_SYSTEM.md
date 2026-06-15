@@ -39,6 +39,27 @@ shadcn aliases (`--background`, `--foreground`, `--card`, `--primary`, `--muted`
 - **Mono:** Geist Mono via `--font-geist-mono` (`font-mono`) — RWF amounts, IDs, tabular numbers.
 - Sentence case for all labels and buttons (not Title Case).
 
+### Type scale (single source of truth)
+**Never write an arbitrary font size (`text-[13px]`, `text-[0.8rem]`, …).** Enforced by
+`npm run lint:design`. Use a **named role** (defined in `tailwind.config.ts`) or a
+**Tailwind step**. Named roles carry their own line-height.
+
+| Class | Size / line-height | Use for |
+|---|---|---|
+| `text-micro` | 10 / 14 | dense metadata, footnotes |
+| `text-caption` | 11 / 16 | captions, badges, chips |
+| `text-xs` | 12 / 16 | secondary helper text |
+| `text-body` | 13 / 18 | **default** body & table text |
+| `text-sm` | 14 / 20 | standard body in roomier contexts |
+| `text-subtitle` | 15 / 22 | card titles, emphasized body |
+| `text-base` | 16 / 24 | prominent body |
+| `text-lg` `text-xl` | 18 / 20 | sub-headings |
+| `text-title` | 22 / 28 | page / section headings (`<h2>`) |
+| `text-2xl`+ | 24+ | hero / marketing only |
+
+Roles are the canonical names; the Tailwind steps (`xs/sm/base/lg/xl/2xl`) are the
+permitted in-between scale stops. Anything outside this set fails the design lint.
+
 ## Shape, spacing, elevation
 - **Radius**: `--radius: 0.75rem`. Tailwind `rounded-lg` = 12px (cards), `rounded-md` = 10px, `rounded-sm` = 8px (buttons/inputs). Pills/avatars/badges = `rounded-full`.
 - **Borders**: 0.5px hairlines — use `border-hairline` (custom width) with `border-border` / `border-line-strong`.

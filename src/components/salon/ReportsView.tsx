@@ -432,7 +432,6 @@ export default function ReportsView() {
                           border: '1px solid hsl(var(--border))',
                           backgroundColor: 'hsl(var(--popover))',
                           color: 'hsl(var(--foreground))',
-                          boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
                         }}
                       />
                       <Bar dataKey="revenue" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} />
@@ -631,7 +630,7 @@ export default function ReportsView() {
                                 <p className="text-xs text-muted-foreground">{s.count} booking{s.count !== 1 ? 's' : ''}</p>
                               </div>
                             </div>
-                            <span className="font-mono text-[13px] font-semibold text-foreground shrink-0 ml-2">
+                            <span className="font-mono text-body font-semibold text-foreground shrink-0 ml-2">
                               {formatRWF(s.revenue)}
                             </span>
                           </div>
@@ -688,7 +687,7 @@ export default function ReportsView() {
                                 <p className="text-xs text-muted-foreground">{c.visits} visit{c.visits !== 1 ? 's' : ''}</p>
                               </div>
                             </div>
-                            <span className="font-mono text-[13px] font-semibold text-foreground shrink-0 ml-2">
+                            <span className="font-mono text-body font-semibold text-foreground shrink-0 ml-2">
                               {formatRWF(c.spent)}
                             </span>
                           </div>

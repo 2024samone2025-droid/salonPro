@@ -55,7 +55,7 @@ export default function MobileTabBar() {
                 aria-current={isActive ? 'page' : undefined}
                 data-tour={`m-nav${item.href.replace('/', '-')}`}
                 className={cn(
-                  'flex flex-col items-center justify-center gap-0.5 h-14 text-[10px] font-medium transition-colors',
+                  'flex flex-col items-center justify-center gap-0.5 h-14 text-micro font-medium transition-colors',
                   isActive
                     ? 'text-primary'
                     : 'text-sidebar-foreground/50 hover:text-sidebar-foreground/80'
@@ -72,7 +72,7 @@ export default function MobileTabBar() {
             aria-expanded={moreOpen}
             data-tour="nav-more"
             className={cn(
-              'flex h-14 flex-col items-center justify-center gap-0.5 rounded-none px-0 text-[10px] font-medium hover:bg-transparent',
+              'flex h-14 flex-col items-center justify-center gap-0.5 rounded-none px-0 text-micro font-medium hover:bg-transparent',
               moreActive
                 ? 'text-primary hover:text-primary'
                 : 'text-sidebar-foreground/50 hover:text-sidebar-foreground/80'
@@ -87,7 +87,7 @@ export default function MobileTabBar() {
       <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
         <SheetContent side="bottom" className="md:hidden rounded-t-xl pb-[max(env(safe-area-inset-bottom),1rem)]">
           <SheetHeader className="pb-0">
-            <SheetTitle className="text-[13px] text-muted-foreground font-medium uppercase tracking-widest">
+            <SheetTitle className="text-body text-muted-foreground font-medium uppercase tracking-widest">
               More
             </SheetTitle>
           </SheetHeader>
@@ -117,13 +117,13 @@ export default function MobileTabBar() {
           <Separator />
           <div className="px-4 flex items-center gap-3">
             <Avatar className="size-8 border border-border">
-              <AvatarFallback className="bg-muted text-foreground/70 text-[11px] font-medium">
+              <AvatarFallback className="bg-muted text-foreground/70 text-caption font-medium">
                 {user.name ? getInitials(user.name) : '??'}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium truncate leading-tight">{user.name}</p>
-              <p className="text-[11px] text-muted-foreground leading-tight">
+              <p className="text-caption text-muted-foreground leading-tight">
                 {roleLabels[user.role as UserRole] || user.role}
               </p>
             </div>

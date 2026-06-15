@@ -167,10 +167,10 @@ export default function DashboardView() {
       {/* Header: title + date left, actions right */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
         <div>
-          <h2 className="text-[22px] font-medium tracking-tight">
+          <h2 className="text-title font-medium tracking-tight">
             {isStylist ? 'My dashboard' : 'Dashboard'}
           </h2>
-          <p className="mt-1 flex items-center gap-1.5 text-[13px] text-muted-foreground">
+          <p className="mt-1 flex items-center gap-1.5 text-body text-muted-foreground">
             <CalendarDays className="size-3.5" aria-hidden="true" />
             {today}
           </p>
@@ -230,7 +230,7 @@ export default function DashboardView() {
         {/* Today's schedule */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-[15px] font-medium">
+            <CardTitle className="text-subtitle font-medium">
               {isStylist ? 'My schedule today' : "Today's schedule"}
             </CardTitle>
             <CardDescription className="text-xs">
@@ -262,7 +262,7 @@ export default function DashboardView() {
                         {apt.startTime} – {apt.endTime}
                       </span>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-[13px] text-foreground">{apt.customer.name}</p>
+                        <p className="truncate text-body text-foreground">{apt.customer.name}</p>
                         <p className="truncate text-xs text-ink-faint">
                           {apt.service.name} · {apt.staff.name}
                         </p>
@@ -280,7 +280,7 @@ export default function DashboardView() {
         <div className="flex flex-col gap-3">
           <Card>
             <CardHeader>
-              <CardTitle className="text-[15px] font-medium">
+              <CardTitle className="text-subtitle font-medium">
                 {isStylist ? 'My workload' : 'Staff workload'}
               </CardTitle>
               <CardDescription className="text-xs">Share of an 8-hour day booked</CardDescription>
@@ -302,7 +302,7 @@ export default function DashboardView() {
                     return (
                       <div key={s.id}>
                         <div className="mb-1.5 flex items-center justify-between">
-                          <span className="text-[13px] text-foreground">{s.name}</span>
+                          <span className="text-body text-foreground">{s.name}</span>
                           <span className="text-xs text-muted-foreground tabular-nums">
                             {totalHours > 0 ? `${totalHours}h` : ''}{totalMins > 0 ? ` ${totalMins}m` : totalHours === 0 ? '0m' : ''} · {Math.round(percentage)}%
                           </span>
@@ -318,7 +318,7 @@ export default function DashboardView() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-[15px] font-medium">Status breakdown</CardTitle>
+              <CardTitle className="text-subtitle font-medium">Status breakdown</CardTitle>
               <CardDescription className="text-xs">Today&apos;s appointments by status</CardDescription>
             </CardHeader>
             <CardContent>
@@ -362,7 +362,7 @@ export default function DashboardView() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-[15px] font-medium">Pending payments</CardTitle>
+                <CardTitle className="text-subtitle font-medium">Pending payments</CardTitle>
                 <CardDescription className="text-xs">Outstanding balances</CardDescription>
               </div>
               <Button
@@ -389,7 +389,7 @@ export default function DashboardView() {
                       className="flex items-center justify-between rounded-sm border-hairline border-border bg-surface p-3"
                     >
                       <div className="flex-1 min-w-0">
-                        <p className="truncate text-[13px] text-foreground">{p.appointment.customer.name}</p>
+                        <p className="truncate text-body text-foreground">{p.appointment.customer.name}</p>
                         <p className="truncate text-xs text-ink-faint">{p.appointment.service.name}</p>
                         {p.amount > 0 && (
                           <div className="mt-1.5 max-w-44">
@@ -398,7 +398,7 @@ export default function DashboardView() {
                         )}
                       </div>
                       <div className="ml-3 shrink-0 text-right">
-                        <p className="text-[13px] font-medium text-foreground tabular-nums">{formatRWF(remaining)}</p>
+                        <p className="text-body font-medium text-foreground tabular-nums">{formatRWF(remaining)}</p>
                         <p className="text-xs text-ink-faint tabular-nums">of {formatRWF(p.appointment.service.price)}</p>
                       </div>
                     </div>

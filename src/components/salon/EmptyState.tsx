@@ -25,7 +25,7 @@ export default function EmptyState({
       )}
     >
       <Icon className="mx-auto size-[22px] text-ink-faint" aria-hidden="true" />
-      <p className="mt-2 text-[13px] text-muted-foreground">{message}</p>
+      <p className="mt-2 text-body text-muted-foreground">{message}</p>
       {actionLabel && onAction && (
         <Button
           variant="ghost"

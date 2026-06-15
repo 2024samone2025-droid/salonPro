@@ -88,8 +88,8 @@ export default function SalonSidebar() {
             <Triangle className="size-4 text-sidebar-primary-foreground fill-sidebar-primary-foreground" aria-hidden="true" />
           </div>
           <div className="flex items-center gap-1">
-            <span className="text-[13px] font-semibold text-sidebar-foreground leading-none">SalonPro</span>
-            <span className="text-[10px] text-sidebar-foreground/40 leading-none">Rwanda</span>
+            <span className="text-body font-semibold text-sidebar-foreground leading-none">SalonPro</span>
+            <span className="text-micro text-sidebar-foreground/40 leading-none">Rwanda</span>
           </div>
         </div>
       </SidebarHeader>
@@ -99,12 +99,12 @@ export default function SalonSidebar() {
         <Button
           variant="outline"
           onClick={() => setCommandOpen(true)}
-          className="h-auto w-full justify-start gap-2 rounded-md border-sidebar-border bg-sidebar-accent px-2.5 py-1.5 text-[13px] font-normal text-sidebar-foreground/50 shadow-none hover:border-sidebar-foreground/20 hover:bg-sidebar-accent/80 hover:text-sidebar-foreground/70 dark:border-sidebar-border dark:bg-sidebar-accent dark:hover:bg-sidebar-accent/80"
+          className="h-auto w-full justify-start gap-2 rounded-md border-sidebar-border bg-sidebar-accent px-2.5 py-1.5 text-body font-normal text-sidebar-foreground/50 shadow-none hover:border-sidebar-foreground/20 hover:bg-sidebar-accent/80 hover:text-sidebar-foreground/70 dark:border-sidebar-border dark:bg-sidebar-accent dark:hover:bg-sidebar-accent/80"
           aria-label="Open search command (⌘K)"
         >
           <Search className="size-3.5" aria-hidden="true" />
           <span className="flex-1 text-left">Search...</span>
-          <kbd className="text-[10px] text-sidebar-foreground/30 px-1.5 py-0.5 rounded border border-sidebar-border font-mono" aria-hidden="true">
+          <kbd className="text-micro text-sidebar-foreground/30 px-1.5 py-0.5 rounded border border-sidebar-border font-mono" aria-hidden="true">
             ⌘K
           </kbd>
         </Button>
@@ -113,7 +113,7 @@ export default function SalonSidebar() {
       {/* Navigation */}
       <SidebarContent className="px-2 pt-1">
         <SidebarGroup>
-          <SidebarGroupLabel className="text-sidebar-foreground/40 text-[11px] font-medium uppercase tracking-widest px-2">
+          <SidebarGroupLabel className="text-sidebar-foreground/40 text-caption font-medium uppercase tracking-widest px-2">
             Menu
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -127,7 +127,7 @@ export default function SalonSidebar() {
                       asChild
                       isActive={isActive}
                       className={cn(
-                        "group relative flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-[13px] transition-colors duration-150",
+                        "group relative flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-body transition-colors duration-150",
                         isActive
                           ? 'bg-sidebar-accent text-sidebar-primary font-medium'
                           : 'text-sidebar-foreground/60 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground/90'
@@ -143,7 +143,7 @@ export default function SalonSidebar() {
                         />
                         <span>{item.label}</span>
                         {item.href === '/appointments' && todayCount !== null && (
-                          <SidebarMenuBadge className="bg-sidebar-primary text-sidebar-primary-foreground border-0 text-[10px] min-w-[18px] h-[18px] justify-center font-medium">
+                          <SidebarMenuBadge className="bg-sidebar-primary text-sidebar-primary-foreground border-0 text-micro min-w-[18px] h-[18px] justify-center font-medium">
                             {todayCount}
                           </SidebarMenuBadge>
                         )}
@@ -162,15 +162,15 @@ export default function SalonSidebar() {
         <div className="border-t border-sidebar-border pt-3">
           <div className="flex items-center gap-2.5 px-1 mb-2">
             <Avatar className="size-7 border border-sidebar-border">
-              <AvatarFallback className="bg-sidebar-accent text-sidebar-foreground/70 text-[11px] font-medium">
+              <AvatarFallback className="bg-sidebar-accent text-sidebar-foreground/70 text-caption font-medium">
                 {user?.name ? getInitials(user.name) : '??'}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
-              <p className="text-[13px] font-medium text-sidebar-foreground truncate leading-tight">
+              <p className="text-body font-medium text-sidebar-foreground truncate leading-tight">
                 {user?.name || 'User'}
               </p>
-              <p className="text-[11px] text-sidebar-foreground/40 leading-tight">
+              <p className="text-caption text-sidebar-foreground/40 leading-tight">
                 {roleLabels[user?.role as UserRole] || user?.role}
               </p>
             </div>
@@ -179,7 +179,7 @@ export default function SalonSidebar() {
             <Button
               variant="plain"
               size="sm"
-              className="w-full justify-start text-sidebar-foreground/40 hover:text-sidebar-foreground hover:bg-sidebar-accent/60 transition-colors text-[13px] h-8"
+              className="w-full justify-start text-sidebar-foreground/40 hover:text-sidebar-foreground hover:bg-sidebar-accent/60 transition-colors text-body h-8"
               onClick={() => setPasswordOpen(true)}
               aria-label="Change password"
             >
@@ -190,7 +190,7 @@ export default function SalonSidebar() {
           <Button
             variant="plain"
             size="sm"
-            className="w-full justify-start text-sidebar-foreground/40 hover:text-destructive hover:bg-destructive/10 transition-colors text-[13px] h-8"
+            className="w-full justify-start text-sidebar-foreground/40 hover:text-destructive hover:bg-destructive/10 transition-colors text-body h-8"
             onClick={handleLogout}
             aria-label="Sign out"
           >
@@ -203,7 +203,7 @@ export default function SalonSidebar() {
                 asChild
                 variant="plain"
                 size="sm"
-                className="w-full justify-start text-sidebar-foreground/40 hover:text-sidebar-foreground hover:bg-sidebar-accent/60 transition-colors text-[13px] h-8"
+                className="w-full justify-start text-sidebar-foreground/40 hover:text-sidebar-foreground hover:bg-sidebar-accent/60 transition-colors text-body h-8"
               >
                 <Link href="/settings" aria-label="Settings">
                   <Settings className="size-3.5 mr-2" aria-hidden="true" />
@@ -214,7 +214,7 @@ export default function SalonSidebar() {
                 asChild
                 variant="plain"
                 size="sm"
-                className="w-full justify-start text-sidebar-foreground/40 hover:text-sidebar-foreground hover:bg-sidebar-accent/60 transition-colors text-[13px] h-8"
+                className="w-full justify-start text-sidebar-foreground/40 hover:text-sidebar-foreground hover:bg-sidebar-accent/60 transition-colors text-body h-8"
               >
                 <Link href="/billing" aria-label="Billing">
                   <CreditCard className="size-3.5 mr-2" aria-hidden="true" />
@@ -223,7 +223,7 @@ export default function SalonSidebar() {
               </Button>
             </>
           )}
-          <p className="text-[10px] text-sidebar-foreground/20 text-center mt-1.5 font-mono">
+          <p className="text-micro text-sidebar-foreground/20 text-center mt-1.5 font-mono">
             v1.3.0
           </p>
         </div>

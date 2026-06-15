@@ -87,7 +87,7 @@ function AppFrame({ children }: { children: React.ReactNode }) {
           <Separator orientation="vertical" className="h-4 hidden md:block" />
           <div className="flex items-center gap-1">
             <Triangle className="size-3 fill-foreground text-foreground" />
-            <span className="text-[13px] font-medium text-muted-foreground">
+            <span className="text-body font-medium text-muted-foreground">
               {salon?.name || 'SalonPro'}
             </span>
           </div>
@@ -108,7 +108,7 @@ function AppFrame({ children }: { children: React.ReactNode }) {
           <div className="mx-auto w-full max-w-7xl">{children}</div>
         </div>
         <footer className="border-t py-2 px-4 text-center mt-auto">
-          <p className="text-[11px] text-muted-foreground font-mono">
+          <p className="text-caption text-muted-foreground font-mono">
             © {new Date().getFullYear()} {salon?.name || 'SalonPro'}
           </p>
         </footer>

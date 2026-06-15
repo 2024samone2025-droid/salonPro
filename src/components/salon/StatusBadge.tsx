@@ -7,7 +7,7 @@ import {
 } from '@/lib/constants'
 
 const pillClasses =
-  'inline-flex items-center whitespace-nowrap rounded-full px-2 py-[3px] text-[11px] leading-none'
+  'inline-flex items-center whitespace-nowrap rounded-full px-2 py-[3px] text-caption leading-none'
 
 export default function StatusBadge({
   status,
