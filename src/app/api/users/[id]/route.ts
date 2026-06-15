@@ -107,6 +107,8 @@ export async function PATCH(
   const effectiveStaffId =
     data.staffId !== undefined ? (data.staffId as string | null) : target.staffId
 
+  const nameChanged = data.name !== undefined && data.name !== target.name
+
   const updated = await db.$transaction(async (tx) => {
     if (effectiveRole === 'stylist' && !effectiveStaffId) {
       const slot = await tx.staff.create({
@@ -120,6 +122,14 @@ export async function PATCH(
         select: { id: true },
       })
       data.staffId = slot.id
+    } else if (effectiveStaffId && nameChanged) {
+      // Mirror the rename to the linked roster slot so the name shown on the
+      // calendar and in reports stays in sync with the account. The slot is the
+      // user's own (target.staffId) or a body-supplied id already validated above.
+      await tx.staff.update({
+        where: { id: effectiveStaffId },
+        data: { name: data.name as string },
+      })
     }
     return tx.user.update({
       where: { id },
