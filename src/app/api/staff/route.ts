@@ -1,11 +1,7 @@
 import { db } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth-guard'
-
-const FREE_PLAN_LIMITS = {
-  maxCustomers: 100,
-  maxStaff: 5,
-}
+import { logActivity } from '@/lib/activity'
 
 export async function GET(req: NextRequest) {
   const auth = await requireAuth(req)
@@ -21,31 +17,11 @@ export async function GET(req: NextRequest) {
   return NextResponse.json(staff)
 }
 
-export async function POST(req: NextRequest) {
-  const auth = await requireAuth(req, 'canManageStaff')
-  if (!auth.authorized) return auth.error
-
-  const salonId = auth.salonId
-  const salon = await db.salon.findUnique({ where: { id: salonId } })
-  if (salon?.plan === 'free') {
-    const staffCount = await db.staff.count({ where: { salonId } })
-    if (staffCount >= FREE_PLAN_LIMITS.maxStaff) {
-      return NextResponse.json({ error: `Free plan limited to ${FREE_PLAN_LIMITS.maxStaff} staff members. Upgrade to Pro.` }, { status: 403 })
-    }
-  }
-
-  const body = await req.json()
-  const staff = await db.staff.create({
-    data: {
-      name: body.name,
-      phone: body.phone || '',
-      role: body.role || 'stylist',
-      active: body.active !== undefined ? body.active : true,
-      salonId,
-    },
-  })
-  return NextResponse.json(staff, { status: 201 })
-}
+// No POST: staff are NOT created directly. The only way a roster slot comes into
+// existence is the owner-provisioned onboarding flow (api/users), which creates +
+// links a Staff slot for stylists inside its transaction. This keeps the rule that
+// nobody is on the booking calendar without being a provisioned worker — no "ghost"
+// roster entries. See context/ACTIVITY-LOG-context.md / the staff onboarding model.
 
 export async function PUT(req: NextRequest) {
   const auth = await requireAuth(req, 'canManageStaff')
@@ -55,6 +31,13 @@ export async function PUT(req: NextRequest) {
   const { id, ...data } = body
   if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 })
   const staff = await db.staff.update({ where: { id }, data: { ...data, salonId: auth.salonId } })
+  await logActivity(auth, {
+    action: 'staff.updated',
+    targetType: 'staff',
+    targetId: staff.id,
+    summary: `Updated roster entry for ${staff.name}`,
+    metadata: { name: staff.name, role: staff.role, active: staff.active },
+  })
   return NextResponse.json(staff)
 }
 
@@ -64,6 +47,19 @@ export async function DELETE(req: NextRequest) {
 
   const id = req.nextUrl.searchParams.get('id')
   if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 })
+
+  const existing = await db.staff.findFirst({ where: { id, salonId: auth.salonId }, select: { name: true, role: true } })
   await db.staff.delete({ where: { id } })
+
+  if (existing) {
+    await logActivity(auth, {
+      action: 'staff.removed',
+      targetType: 'staff',
+      targetId: id,
+      summary: `Removed ${existing.name} from the roster`,
+      metadata: { name: existing.name, role: existing.role },
+    })
+  }
+
   return NextResponse.json({ success: true })
 }

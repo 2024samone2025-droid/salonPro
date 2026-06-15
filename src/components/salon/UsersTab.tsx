@@ -57,18 +57,12 @@ interface UserRow {
   staff: { id: string; name: string } | null
 }
 
-interface StaffOption {
-  id: string
-  name: string
-}
-
 interface FormState {
   id: string | null
   name: string
   email: string
   password: string
   role: UserRole
-  staffId: string
   active: boolean
 }
 
@@ -78,7 +72,6 @@ const EMPTY_FORM: FormState = {
   email: '',
   password: '',
   role: 'receptionist',
-  staffId: '',
   active: true,
 }
 
@@ -95,7 +88,6 @@ function accessLabel(value: string | boolean): React.ReactNode {
 export default function UsersTab() {
   const { authFetch, user: currentUser } = useAuth()
   const [users, setUsers] = useState<UserRow[]>([])
-  const [staff, setStaff] = useState<StaffOption[]>([])
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
@@ -103,13 +95,9 @@ export default function UsersTab() {
 
   const load = useCallback(async () => {
     try {
-      const [usersRes, staffRes] = await Promise.all([
-        authFetch('/api/users'),
-        authFetch('/api/staff'),
-      ])
+      const usersRes = await authFetch('/api/users')
       if (!usersRes.ok) throw new Error()
       setUsers(await usersRes.json())
-      setStaff(staffRes.ok ? await staffRes.json() : [])
     } catch {
       toast.error('Failed to load users')
     } finally {
@@ -133,7 +121,6 @@ export default function UsersTab() {
       email: u.email,
       password: '',
       role: u.role,
-      staffId: u.staffId || '',
       active: u.active,
     })
     setDialogOpen(true)
@@ -162,7 +149,6 @@ export default function UsersTab() {
         name: form.name.trim(),
         email: form.email.trim().toLowerCase(),
         role: form.role,
-        staffId: form.staffId || null,
         active: form.active,
       }
       if (form.password) payload.password = form.password
@@ -381,28 +367,12 @@ export default function UsersTab() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-1.5">
-              <Label>Linked staff member</Label>
-              <Select
-                value={form.staffId || 'none'}
-                onValueChange={(v) => setForm({ ...form, staffId: v === 'none' ? '' : v })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="None" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
-                  {staff.map((s) => (
-                    <SelectItem key={s.id} value={s.id}>
-                      {s.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            {form.role === 'stylist' && (
               <p className="text-xs text-muted-foreground">
-                Stylists must be linked to a staff member to see their own appointments.
+                A staff member is created automatically for stylists so they appear on the
+                booking calendar and see their own appointments.
               </p>
-            </div>
+            )}
             <div className="flex items-center justify-between gap-4">
               <div>
                 <p className="text-sm font-medium">Active</p>
