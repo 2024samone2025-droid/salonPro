@@ -68,9 +68,19 @@ Extends the existing salon settings blob; admin-only via existing `/api/salon/se
 9. Nav entry in `nav-items.ts` (display-only). Honor `defaultLandingView` / `calendarDefaultView` /
    `timeFormat` / `firstDayOfWeek` at their read-sites. Commit per change.
 
-## Phase 3 — Booking rules
-10. Extend `SalonSettings`: `minBookingLeadTimeHours`, `maxBookingAdvanceDays`, `bufferBeforeMinutes`,
-    `bufferAfterMinutes` (+ `cancellationWindowHours` only if a cancel path exists). Update parser/validators.
-11. Wire into the engine: lead-time + advance-window filter generated slots in
-    `api/public/booking/[subdomain]/slots`; buffers extend the effective span in appointment conflict detection.
-12. Add a "Booking rules" section to `SalonSettingsTab.tsx`. Commit.
+## Phase 3 — Booking rules — DONE
+Scope: **public/customer-facing online booking only** — NOT the internal front-desk
+appointments route (applying buffers/lead-time there would block deliberate back-to-back
+booking, surprising staff). `cancellationWindowHours` **deferred** (no public cancel path).
+10. `SalonSettings.bookingRules` sub-object: `minLeadTimeHours`, `maxAdvanceDays`,
+    `bufferBeforeMinutes`, `bufferAfterMinutes`. Defaults preserve current behaviour
+    (0 lead / 0 buffers / 365-day window). Parsed with clamp; validated at write time
+    against `BOOKING_RULE_BOUNDS`. Deep-merged in the settings PATCH.
+11. Wired into both public surfaces:
+    - `slots` route: advance-window caps the date; lead-time filters each candidate by
+      real timestamp; buffers widen the candidate span ([start−before, end+after]) when
+      testing overlap against existing appointments.
+    - public booking `POST`: same lead-time + advance-window guards (server-side, since a
+      client could POST directly); buffers widen the conflict query window via `toClock()`.
+12. "Booking rules" card added to `SalonSettingsTab.tsx` (4 numeric inputs, copy notes it
+    only affects online bookings).

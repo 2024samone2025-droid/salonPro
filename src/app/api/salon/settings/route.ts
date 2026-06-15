@@ -82,6 +82,10 @@ export async function PATCH(req: NextRequest) {
           }
         : current.profile,
       businessHours: body.settings.businessHours ?? current.businessHours,
+      // Deep-merge booking rules so a partial patch never wipes sibling fields.
+      bookingRules: body.settings.bookingRules
+        ? { ...current.bookingRules, ...body.settings.bookingRules }
+        : current.bookingRules,
     }
     const validationError = validateSettingsPatch(merged)
     if (validationError) {
