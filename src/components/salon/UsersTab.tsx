@@ -31,9 +31,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Check, Loader2, Minus, Plus, Pencil } from 'lucide-react'
+import { Check, Loader2, Minus, Plus, Pencil, UserPlus } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuth } from '@/lib/auth-context'
+import InviteStaffDialog from './InviteStaffDialog'
 import {
   PERMISSION_MATRIX_ROWS,
   ROLE_LABELS,
@@ -92,6 +93,7 @@ export default function UsersTab() {
   const [staff, setStaff] = useState<StaffOption[]>([])
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [inviteOpen, setInviteOpen] = useState(false)
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
 
@@ -206,10 +208,16 @@ export default function UsersTab() {
               <CardTitle className="text-base">User accounts</CardTitle>
               <CardDescription>People who can sign in to this salon.</CardDescription>
             </div>
-            <Button onClick={openCreate}>
-              <Plus className="size-4" />
-              Add User
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" onClick={() => setInviteOpen(true)}>
+                <UserPlus className="size-4" />
+                Invite staff
+              </Button>
+              <Button onClick={openCreate}>
+                <Plus className="size-4" />
+                Add User
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -304,6 +312,14 @@ export default function UsersTab() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Invite staff (one-time link) dialog */}
+      <InviteStaffDialog
+        open={inviteOpen}
+        onOpenChange={setInviteOpen}
+        canGrantAdmin={currentUser?.role === 'admin'}
+        onInvited={load}
+      />
 
       {/* Create / edit dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
