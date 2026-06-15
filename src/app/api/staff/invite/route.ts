@@ -50,9 +50,11 @@ export async function POST(req: NextRequest) {
   const rawToken = generateInviteToken()
 
   // Roster roles (stylist/receptionist) also get a linked Staff record so the new
-  // team member shows on /staff immediately and appointments can reference them.
-  // Admins are management, not roster, so they get no Staff entry. Name/phone are
-  // safe to copy now: accept() only confirms them, it never changes them.
+  // team member appears on /staff once they accept. It is created INACTIVE and is
+  // flipped active in the accept transaction — mirroring the User's active state,
+  // so you can't book against someone who hasn't onboarded yet. Admins are
+  // management, not roster, so they get no Staff entry. Name/phone are safe to
+  // copy now: accept() only confirms them, it never changes them.
   const makesRoster = role !== 'admin'
 
   // Inactive, password-less User + its single invite (+ optional Staff), created
@@ -63,7 +65,7 @@ export async function POST(req: NextRequest) {
     let staffId: string | null = null
     if (makesRoster) {
       const staff = await tx.staff.create({
-        data: { salonId: auth.salonId, name, phone, role, active: true },
+        data: { salonId: auth.salonId, name, phone, role, active: false },
         select: { id: true },
       })
       staffId = staff.id
