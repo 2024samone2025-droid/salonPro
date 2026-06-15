@@ -76,14 +76,16 @@ export default function UnifiedLogin({ subdomain }: { subdomain: string | null }
   const [salonInput, setSalonInput] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const [salons, setSalons] = useState<SalonOption[] | null>(null) // non-null = owner authenticated (apex picker)
+  const [salons, setSalons] = useState<SalonOption[] | null>(null) // non-null = authenticated (apex picker)
+  const [pickerKind, setPickerKind] = useState<'owner' | 'staff'>('owner') // which select endpoint to use
   const [redirecting, setRedirecting] = useState(false)
 
-  const goToSalon = async (salonId: string) => {
+  const goToSalon = async (salonId: string, kind: 'owner' | 'staff') => {
     setRedirecting(true)
     setError('')
     try {
-      const res = await fetch('/api/owner/select', {
+      const endpoint = kind === 'staff' ? '/api/staff/select' : '/api/owner/select'
+      const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ salonId }),
@@ -100,9 +102,10 @@ export default function UnifiedLogin({ subdomain }: { subdomain: string | null }
     setRedirecting(false)
   }
 
-  const handleSalons = (list: SalonOption[]) => {
+  const handleSalons = (list: SalonOption[], kind: 'owner' | 'staff') => {
     setSalons(list)
-    if (list.length === 1) goToSalon(list[0].id) // single salon → straight in
+    setPickerKind(kind)
+    if (list.length === 1) goToSalon(list[0].id, kind) // single salon → straight in
   }
 
   // Already-authenticated staff hitting /login on their host → straight to the app.
@@ -113,17 +116,32 @@ export default function UnifiedLogin({ subdomain }: { subdomain: string | null }
     }
   }, [user, authLoading, router])
 
-  // Apex only: restore an existing owner session (e.g. on reload) without re-auth.
+  // Apex only: restore an existing picker session (e.g. on reload) without re-auth.
+  // Check owner first, then staff (an email is never both).
   useEffect(() => {
     if (onTenantHost) return
     let active = true
-    fetch('/api/owner/me')
-      .then(async (res) => {
-        if (!active || !res.ok) return
-        const data = await res.json()
-        if (data.salons?.length) handleSalons(data.salons)
-      })
-      .catch(() => {})
+    ;(async () => {
+      try {
+        const ownerRes = await fetch('/api/owner/me')
+        if (!active) return
+        if (ownerRes.ok) {
+          const data = await ownerRes.json()
+          if (data.salons?.length) {
+            handleSalons(data.salons, 'owner')
+            return
+          }
+        }
+        const staffRes = await fetch('/api/staff/me')
+        if (!active) return
+        if (staffRes.ok) {
+          const data = await staffRes.json()
+          if (data.salons?.length) handleSalons(data.salons, 'staff')
+        }
+      } catch {
+        // ignore — fall through to the login form
+      }
+    })()
     return () => {
       active = false
     }
@@ -140,16 +158,35 @@ export default function UnifiedLogin({ subdomain }: { subdomain: string | null }
       setLoading(false)
       return
     }
-    // Apex: owner login → picker / handoff.
+    // Apex: try owner login first, then fall back to staff login (an email is
+    // never both). Either way → picker / cross-domain handoff.
     try {
-      const res = await fetch('/api/owner/login', {
+      const ownerRes = await fetch('/api/owner/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       })
-      const data = await res.json()
-      if (res.ok) handleSalons(data.salons || [])
-      else setError(data.error || 'Invalid credentials')
+      if (ownerRes.ok) {
+        const data = await ownerRes.json()
+        handleSalons(data.salons || [], 'owner')
+        setLoading(false)
+        return
+      }
+
+      const staffRes = await fetch('/api/staff/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
+      if (staffRes.ok) {
+        const data = await staffRes.json()
+        handleSalons(data.salons || [], 'staff')
+        setLoading(false)
+        return
+      }
+
+      const errData = await staffRes.json().catch(() => null)
+      setError(errData?.error || 'Invalid credentials')
     } catch {
       setError('Network error')
     }
@@ -198,7 +235,7 @@ export default function UnifiedLogin({ subdomain }: { subdomain: string | null }
                 type="button"
                 variant="outline"
                 className="h-auto min-h-[48px] w-full justify-between px-3 py-2 text-left font-normal"
-                onClick={() => goToSalon(salon.id)}
+                onClick={() => goToSalon(salon.id, pickerKind)}
               >
                 <span className="flex items-center gap-2.5">
                   <Building2 className="size-4 text-muted-foreground" />
