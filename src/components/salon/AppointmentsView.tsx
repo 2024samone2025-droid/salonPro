@@ -626,8 +626,15 @@ export default function AppointmentsView() {
             <EmptyState
               icon={CalendarDays}
               message="No appointments for this day"
-              actionLabel="+ Book one now"
-              onAction={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              // Only roles that can actually create see the booking CTA — the
+              // QuickBookingForm above is hidden for stylists, so this would
+              // otherwise scroll to nothing.
+              actionLabel={permissions?.canCreateAppointment ? '+ Book one now' : undefined}
+              onAction={
+                permissions?.canCreateAppointment
+                  ? () => window.scrollTo({ top: 0, behavior: 'smooth' })
+                  : undefined
+              }
               className="border-0 bg-transparent py-12"
             />
           ) : viewMode === 'day' ? (
