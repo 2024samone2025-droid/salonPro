@@ -25,9 +25,10 @@ interface SalonOption {
   subdomain: string
 }
 
-// 'email' → 'password' is the shared two-step credential entry. 'salon-redirect'
-// is the apex-only helper that sends a team member to their salon's login.
-type Mode = 'email' | 'password' | 'salon-redirect'
+// 'login' is the single combined email+password form (shared on every host).
+// 'salon-redirect' is the apex-only helper that sends a team member to their
+// salon's login.
+type Mode = 'login' | 'salon-redirect'
 
 function Shell({ title, description, children }: { title: string; description: string; children: React.ReactNode }) {
   return (
@@ -68,7 +69,7 @@ export default function UnifiedLogin({ subdomain }: { subdomain: string | null }
   const router = useRouter()
   const onTenantHost = !!subdomain
 
-  const [mode, setMode] = useState<Mode>('email')
+  const [mode, setMode] = useState<Mode>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -248,7 +249,7 @@ export default function UnifiedLogin({ subdomain }: { subdomain: string | null }
           type="button"
           variant="ghost"
           className="mt-2 w-full h-8 text-[13px] text-muted-foreground hover:text-foreground font-normal"
-          onClick={() => { setMode('email'); setError('') }}
+          onClick={() => { setMode('login'); setError('') }}
         >
           <ChevronLeft className="size-3.5 mr-1" /> Back to owner sign in
         </Button>
@@ -256,78 +257,10 @@ export default function UnifiedLogin({ subdomain }: { subdomain: string | null }
     )
   }
 
-  // ── Password step ──────────────────────────────────────────────────────────
-  if (mode === 'password') {
-    return (
-      <Shell title="Enter your password" description={email}>
-        <form onSubmit={handlePasswordSubmit} className="space-y-3">
-          <div className="space-y-1.5">
-            <Label htmlFor="password" className="text-[13px] sm:text-sm">Password</Label>
-            <div className="relative">
-              <Input
-                id="password"
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="pr-9 h-9 sm:h-10 text-[13px] sm:text-sm"
-                autoComplete="current-password"
-                autoFocus
-                required
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="absolute right-0.5 top-1/2 -translate-y-1/2 size-7 sm:size-8 text-muted-foreground hover:text-foreground"
-                onClick={() => setShowPassword(!showPassword)}
-                tabIndex={-1}
-              >
-                {showPassword ? <EyeOff className="size-3.5 sm:size-4" /> : <Eye className="size-3.5 sm:size-4" />}
-                <span className="sr-only">{showPassword ? 'Hide password' : 'Show password'}</span>
-              </Button>
-            </div>
-          </div>
-
-          {error && (
-            <Alert variant="destructive" className="py-2">
-              <AlertCircle className="size-3.5" />
-              <AlertDescription className="text-[13px]">{error}</AlertDescription>
-            </Alert>
-          )}
-
-          <Button
-            type="submit"
-            className="w-full h-9 sm:h-10 text-[13px] sm:text-sm font-medium"
-            disabled={loading || !password}
-          >
-            {loading ? 'Signing in…' : 'Sign In'}
-          </Button>
-        </form>
-        <Button
-          type="button"
-          variant="ghost"
-          className="mt-2 w-full h-8 text-[13px] text-muted-foreground hover:text-foreground font-normal"
-          onClick={() => { setMode('email'); setPassword(''); setError('') }}
-        >
-          <ChevronLeft className="size-3.5 mr-1" /> Change email
-        </Button>
-      </Shell>
-    )
-  }
-
-  // ── Email step (default front door) ────────────────────────────────────────
+  // ── Combined login step (email + password in one form) ─────────────────────
   return (
-    <Shell title="Sign in to your account" description="Enter your email to continue">
-      <form
-        onSubmit={(e) => {
-          e.preventDefault()
-          if (!email.trim()) return
-          setError('')
-          setMode('password')
-        }}
-        className="space-y-3"
-      >
+    <Shell title="Sign in to your account" description="Enter your email and password">
+      <form onSubmit={handlePasswordSubmit} className="space-y-3">
         <div className="space-y-1.5">
           <Label htmlFor="email" className="text-[13px] sm:text-sm">Email</Label>
           <Input
@@ -342,8 +275,47 @@ export default function UnifiedLogin({ subdomain }: { subdomain: string | null }
             className="h-9 sm:h-10 text-[13px] sm:text-sm"
           />
         </div>
-        <Button type="submit" className="w-full h-9 sm:h-10 text-[13px] sm:text-sm font-medium" disabled={!email.trim()}>
-          Continue
+
+        <div className="space-y-1.5">
+          <Label htmlFor="password" className="text-[13px] sm:text-sm">Password</Label>
+          <div className="relative">
+            <Input
+              id="password"
+              type={showPassword ? 'text' : 'password'}
+              placeholder="Enter your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="pr-9 h-9 sm:h-10 text-[13px] sm:text-sm"
+              autoComplete="current-password"
+              required
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="absolute right-0.5 top-1/2 -translate-y-1/2 size-7 sm:size-8 text-muted-foreground hover:text-foreground"
+              onClick={() => setShowPassword(!showPassword)}
+              tabIndex={-1}
+            >
+              {showPassword ? <EyeOff className="size-3.5 sm:size-4" /> : <Eye className="size-3.5 sm:size-4" />}
+              <span className="sr-only">{showPassword ? 'Hide password' : 'Show password'}</span>
+            </Button>
+          </div>
+        </div>
+
+        {error && (
+          <Alert variant="destructive" className="py-2">
+            <AlertCircle className="size-3.5" />
+            <AlertDescription className="text-[13px]">{error}</AlertDescription>
+          </Alert>
+        )}
+
+        <Button
+          type="submit"
+          className="w-full h-9 sm:h-10 text-[13px] sm:text-sm font-medium"
+          disabled={loading || !email.trim() || !password}
+        >
+          {loading ? 'Signing in…' : 'Sign In'}
         </Button>
       </form>
 
