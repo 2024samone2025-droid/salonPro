@@ -4,6 +4,7 @@ import { notFound, redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { SALON_SUBDOMAIN_HEADER } from '@/lib/subdomain'
 import AppShell from './AppShell'
+import SuspendedNotice from '@/components/salon/SuspendedNotice'
 
 // Server layer: resolve the tenant from the Host BEFORE any auth, so the client
 // shell only ever renders for a real salon. Two distinct outcomes:
@@ -16,8 +17,13 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const subdomain = (await headers()).get(SALON_SUBDOMAIN_HEADER)
   if (!subdomain) redirect('/login')
 
-  const salon = await db.salon.findUnique({ where: { subdomain }, select: { id: true } })
+  const salon = await db.salon.findUnique({ where: { subdomain }, select: { id: true, name: true, status: true } })
   if (!salon) notFound()
+
+  // Suspended tenants get the notice in place of the app shell — the page-load
+  // counterpart to requireAuth's 403 for API calls. Caught here, before AppShell
+  // (and its data fetches) ever mount.
+  if (salon.status === 'SUSPENDED') return <SuspendedNotice salonName={salon.name} />
 
   return <AppShell>{children}</AppShell>
 }
