@@ -7,6 +7,16 @@ const VALID_ROLES = ['admin', 'receptionist', 'stylist']
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const MIN_PASSWORD_LENGTH = 8
 
+// 'pending'  — a usable one-time invite is outstanding (not yet accepted/revoked)
+// 'expired'  — an unaccepted invite whose 72h window has lapsed (rotate to renew)
+// null       — no invite, or it was already accepted/revoked
+type InviteStatus = 'pending' | 'expired' | null
+
+function inviteStatusOf(invite?: { expiresAt: Date; consumedAt: Date | null } | null): InviteStatus {
+  if (!invite || invite.consumedAt) return null
+  return invite.expiresAt.getTime() > Date.now() ? 'pending' : 'expired'
+}
+
 function sanitize(user: {
   id: string
   name: string
@@ -16,6 +26,7 @@ function sanitize(user: {
   staffId: string | null
   createdAt: Date
   staff?: { id: string; name: string } | null
+  invite?: { expiresAt: Date; consumedAt: Date | null } | null
 }) {
   return {
     id: user.id,
@@ -25,6 +36,7 @@ function sanitize(user: {
     active: user.active,
     staffId: user.staffId,
     staff: user.staff ?? null,
+    inviteStatus: inviteStatusOf(user.invite),
     createdAt: user.createdAt,
   }
 }
@@ -38,7 +50,10 @@ export async function GET(req: NextRequest) {
 
   const users = await db.user.findMany({
     where: { salonId: auth.salonId },
-    include: { staff: { select: { id: true, name: true } } },
+    include: {
+      staff: { select: { id: true, name: true } },
+      invite: { select: { expiresAt: true, consumedAt: true } },
+    },
     orderBy: { createdAt: 'asc' },
   })
   return NextResponse.json(users.map(sanitize))
