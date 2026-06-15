@@ -136,6 +136,7 @@ model Payment {
 model User {
   id        String   @id @default(cuid())
   name      String
+  phone        String? // E.164, set via staff-invite onboarding
   email        String // stored lowercased; unique per salon (see @@unique below)
   passwordHash String // scrypt (salt$hash) via lib/password — same scheme as Owner
   // true = admin set a temporary password; the staff member is forced to choose
@@ -152,6 +153,8 @@ model User {
 
   salonId String
   salon   Salon @relation(fields: [salonId], references: [id], onDelete: Cascade)
+
+  invite  StaffInvite? // pending onboarding invite, if any
 
   // Staff log in scoped to their salon (the Host), so email is unique per-salon —
   // the same email may be staff at more than one salon.
@@ -207,4 +210,21 @@ model OneTimeToken {
   createdAt  DateTime  @default(now())
 
   @@index([expiresAt])
+}
+
+// One-time, single-use staff onboarding invite. The raw token lives ONLY in the
+// link we hand the admin; we store just its sha256 (tokenHash). Name+phone is a
+// rate-limited confirmation layer (attempts/lockedUntil) — NOT the boundary.
+model StaffInvite {
+  id          String    @id @default(cuid())
+  userId      String    @unique
+  salonId     String
+  tokenHash   String    @unique // sha256 hex of the raw token; @unique already indexes it
+  expiresAt   DateTime
+  consumedAt  DateTime? // single-use; null until accepted (or revoked)
+  attempts    Int       @default(0)
+  lockedUntil DateTime?
+  createdAt   DateTime  @default(now())
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
