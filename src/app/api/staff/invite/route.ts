@@ -49,28 +49,46 @@ export async function POST(req: NextRequest) {
 
   const rawToken = generateInviteToken()
 
-  // Inactive, password-less User + its single invite, created together. salonId
-  // comes from the HOST (auth.salonId), never the body. passwordHash '' is a
-  // sentinel: verifyPassword('', '') === false, so no login is possible until accept.
-  const user = await db.user.create({
-    data: {
-      salonId: auth.salonId,
-      name,
-      email,
-      phone,
-      role,
-      passwordHash: '',
-      active: false,
-      tourCompleted: false,
-      invite: {
-        create: {
-          salonId: auth.salonId,
-          tokenHash: hashInviteToken(rawToken),
-          expiresAt: new Date(Date.now() + INVITE_TTL_MS),
+  // Roster roles (stylist/receptionist) also get a linked Staff record so the new
+  // team member shows on /staff immediately and appointments can reference them.
+  // Admins are management, not roster, so they get no Staff entry. Name/phone are
+  // safe to copy now: accept() only confirms them, it never changes them.
+  const makesRoster = role !== 'admin'
+
+  // Inactive, password-less User + its single invite (+ optional Staff), created
+  // together in one transaction. salonId comes from the HOST (auth.salonId), never
+  // the body. passwordHash '' is a sentinel: verifyPassword('', '') === false, so
+  // no login is possible until accept.
+  const user = await db.$transaction(async (tx) => {
+    let staffId: string | null = null
+    if (makesRoster) {
+      const staff = await tx.staff.create({
+        data: { salonId: auth.salonId, name, phone, role, active: true },
+        select: { id: true },
+      })
+      staffId = staff.id
+    }
+    return tx.user.create({
+      data: {
+        salonId: auth.salonId,
+        name,
+        email,
+        phone,
+        role,
+        staffId,
+        passwordHash: '',
+        active: false,
+        tourCompleted: false,
+        invite: {
+          create: {
+            salonId: auth.salonId,
+            tokenHash: hashInviteToken(rawToken),
+            expiresAt: new Date(Date.now() + INVITE_TTL_MS),
+          },
         },
       },
-    },
-    select: { id: true },
+      select: { id: true },
+    })
   })
 
   const subdomain = req.headers.get(SALON_SUBDOMAIN_HEADER) as string
