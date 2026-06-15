@@ -29,15 +29,12 @@ import {
   Phone,
   UserCog,
   Loader2,
-  ShieldCheck,
   Scissors,
   Headset,
-  UserPlus,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuth } from '@/lib/auth-context'
 import EmptyState from '@/components/salon/EmptyState'
-import InviteStaffDialog from '@/components/salon/InviteStaffDialog'
 
 interface StaffMember {
   id: string
@@ -88,10 +85,9 @@ export default function StaffView() {
   const [showDialog, setShowDialog] = useState(false)
   const [editing, setEditing] = useState<StaffMember | null>(null)
   const [saving, setSaving] = useState(false)
-  const [inviteOpen, setInviteOpen] = useState(false)
   const isInitialMount = useRef(true)
 
-  const { user, permissions, authFetch } = useAuth()
+  const { permissions, authFetch } = useAuth()
   const canManage = permissions?.canManageStaff ?? false
   const isViewOnly = permissions?.staff === 'view'
 
@@ -194,13 +190,9 @@ export default function StaffView() {
           </p>
         </div>
         {canManage && (
-          <Button
-            onClick={() => setInviteOpen(true)}
-            className="h-10 gap-2 shadow-sm w-full sm:w-auto shrink-0"
-          >
-            <UserPlus className="size-4" />
-            Invite staff
-          </Button>
+          <p className="text-xs text-muted-foreground sm:text-right max-w-xs">
+            Add team members in Settings → Users. Stylists appear here automatically.
+          </p>
         )}
       </div>
 
@@ -226,9 +218,11 @@ export default function StaffView() {
         /* Empty state */
         <EmptyState
           icon={UserCog}
-          message="No staff members yet"
-          actionLabel={canManage ? '+ Invite your first staff member' : undefined}
-          onAction={canManage ? () => setInviteOpen(true) : undefined}
+          message={
+            canManage
+              ? 'No staff yet — add a stylist in Settings → Users and they’ll show up here.'
+              : 'No staff members yet'
+          }
           className="py-10"
         />
       ) : (
@@ -426,15 +420,6 @@ export default function StaffView() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Invite staff (one-time link) dialog — creates a login User, surfaced in
-          Settings → Users, not in this Staff roster list. */}
-      <InviteStaffDialog
-        open={inviteOpen}
-        onOpenChange={setInviteOpen}
-        canGrantAdmin={user?.role === 'admin'}
-        onInvited={() => {}}
-      />
     </div>
   )
 }
