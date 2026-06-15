@@ -21,6 +21,7 @@ export const ACTIVITY_ACTIONS = {
   'appointment.created': 'Appointment created',
   'appointment.status_changed': 'Appointment status changed',
   'appointment.updated': 'Appointment updated',
+  'appointment.reassigned': 'Appointment provider changed',
   'appointment.deleted': 'Appointment deleted',
   'payment.recorded': 'Payment recorded',
   'payment.updated': 'Payment updated',
