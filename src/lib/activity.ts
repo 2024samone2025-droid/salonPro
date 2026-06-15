@@ -29,11 +29,13 @@ export const ACTIVITY_ACTIONS = {
   'staff.added': 'Staff added',
   'staff.updated': 'Staff updated',
   'staff.removed': 'Staff removed',
+  'day_off.added': 'Closure / day off added',
+  'day_off.removed': 'Closure / day off removed',
 } as const
 
 export type ActivityAction = keyof typeof ACTIVITY_ACTIONS
 
-export type ActivityTargetType = 'appointment' | 'payment' | 'user' | 'staff'
+export type ActivityTargetType = 'appointment' | 'payment' | 'user' | 'staff' | 'day_off'
 
 interface LogActivityInput {
   action: ActivityAction
