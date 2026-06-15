@@ -7,16 +7,6 @@ const VALID_ROLES = ['admin', 'receptionist', 'stylist']
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const MIN_PASSWORD_LENGTH = 8
 
-// 'pending'  — a usable one-time invite is outstanding (not yet accepted/revoked)
-// 'expired'  — an unaccepted invite whose 72h window has lapsed (rotate to renew)
-// null       — no invite, or it was already accepted/revoked
-type InviteStatus = 'pending' | 'expired' | null
-
-function inviteStatusOf(invite?: { expiresAt: Date; consumedAt: Date | null } | null): InviteStatus {
-  if (!invite || invite.consumedAt) return null
-  return invite.expiresAt.getTime() > Date.now() ? 'pending' : 'expired'
-}
-
 function sanitize(user: {
   id: string
   name: string
@@ -26,7 +16,6 @@ function sanitize(user: {
   staffId: string | null
   createdAt: Date
   staff?: { id: string; name: string } | null
-  invite?: { expiresAt: Date; consumedAt: Date | null } | null
 }) {
   return {
     id: user.id,
@@ -36,7 +25,6 @@ function sanitize(user: {
     active: user.active,
     staffId: user.staffId,
     staff: user.staff ?? null,
-    inviteStatus: inviteStatusOf(user.invite),
     createdAt: user.createdAt,
   }
 }
@@ -52,7 +40,6 @@ export async function GET(req: NextRequest) {
     where: { salonId: auth.salonId },
     include: {
       staff: { select: { id: true, name: true } },
-      invite: { select: { expiresAt: true, consumedAt: true } },
     },
     orderBy: { createdAt: 'asc' },
   })
@@ -99,21 +86,39 @@ export async function POST(req: NextRequest) {
     if (!staff) return NextResponse.json({ error: 'Staff member not found' }, { status: 400 })
   }
 
-  const user = await db.user.create({
-    data: {
-      name,
-      email,
-      passwordHash: await hashPassword(password),
-      // Admin sets a temporary password here; the staff member must choose their
-      // own on first login (cleared by /api/auth/change-password).
-      mustResetPassword: true,
-      role,
-      staffId,
-      active: body.active !== undefined ? Boolean(body.active) : true,
-      tourCompleted: false,
-      salonId: auth.salonId,
-    },
-    include: { staff: { select: { id: true, name: true } } },
+  // Hash before the transaction so the tx stays short.
+  const passwordHash = await hashPassword(password)
+  const active = body.active !== undefined ? Boolean(body.active) : true
+
+  // A stylist must be tied to a roster slot to be bookable and to see their own
+  // appointments. If the owner didn't link an existing one, auto-create it here so
+  // every stylist account is bookable the moment it's provisioned — no anonymous
+  // roster entries and no separate "add staff" step.
+  const user = await db.$transaction(async (tx) => {
+    let linkedStaffId = staffId
+    if (role === 'stylist' && !linkedStaffId) {
+      const slot = await tx.staff.create({
+        data: { salonId: auth.salonId, name, phone: '', role: 'stylist', active },
+        select: { id: true },
+      })
+      linkedStaffId = slot.id
+    }
+    return tx.user.create({
+      data: {
+        name,
+        email,
+        passwordHash,
+        // Admin sets a temporary password here; the staff member must choose their
+        // own on first login (cleared by /api/auth/change-password).
+        mustResetPassword: true,
+        role,
+        staffId: linkedStaffId,
+        active,
+        tourCompleted: false,
+        salonId: auth.salonId,
+      },
+      include: { staff: { select: { id: true, name: true } } },
+    })
   })
   return NextResponse.json(sanitize(user), { status: 201 })
 }
