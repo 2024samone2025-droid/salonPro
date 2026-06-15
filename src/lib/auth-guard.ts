@@ -34,6 +34,18 @@ const unauthorized = (): AuthResult => ({
   error: NextResponse.json({ error: 'Authentication required' }, { status: 401 }),
 })
 
+// A valid tenant whose status is SUSPENDED. Distinct from notFound/unauthorized
+// on purpose: this is the authenticated-app surface, where the salon's own staff
+// are entitled to know access is paused (and be routed toward billing). 403, not
+// the public 404 — the public booking surface masks suspension separately.
+const suspended = (): AuthResult => ({
+  authorized: false,
+  user: null,
+  permissions: null,
+  salonId: '',
+  error: NextResponse.json({ error: 'Salon suspended' }, { status: 403 }),
+})
+
 /**
  * Read the session subject from the cookie only (cookie-only auth — the Bearer/
  * localStorage channel has been retired).
@@ -63,8 +75,13 @@ export async function requireAuth(req?: NextRequest, requiredPermission?: keyof 
   const subdomain = await getResolvedSubdomain(req)
   if (!subdomain) return notFound()
 
-  const salon = await db.salon.findUnique({ where: { subdomain }, select: { id: true } })
+  const salon = await db.salon.findUnique({ where: { subdomain }, select: { id: true, status: true } })
   if (!salon) return notFound()
+
+  // 1b. Status gate: a SUSPENDED salon cannot transact at all. Checked before the
+  //     subject is identified — the lifecycle gate is a property of the tenant, not
+  //     of who is asking. Without this the status column is inert.
+  if (salon.status === 'SUSPENDED') return suspended()
 
   // 2. Identify the subject from the session cookie.
   const subject = req ? getSessionFromRequest(req) : await getSession()
