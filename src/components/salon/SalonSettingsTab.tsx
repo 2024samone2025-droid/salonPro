@@ -19,6 +19,7 @@ import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 import { startTour } from '@/lib/tour'
+import SalonClosures from './SalonClosures'
 import {
   DAY_LABELS,
   SUPPORTED_CURRENCIES,
@@ -478,6 +479,9 @@ export default function SalonSettingsTab() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Closures & days off */}
+      <SalonClosures />
 
       {/* Currency */}
       <Card>
