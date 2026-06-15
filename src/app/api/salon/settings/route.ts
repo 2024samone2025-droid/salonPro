@@ -71,6 +71,7 @@ export async function PATCH(req: NextRequest) {
     const merged: SalonSettings = {
       ...current,
       ...body.settings,
+      profile: body.settings.profile ?? current.profile,
       businessHours: body.settings.businessHours ?? current.businessHours,
     }
     const validationError = validateSettingsPatch(merged)

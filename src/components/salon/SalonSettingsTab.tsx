@@ -59,6 +59,40 @@ export default function SalonSettingsTab() {
     setData((d) => (d ? { ...d, settings: { ...d.settings, ...patch } } : d))
   }
 
+  const updateProfile = (patch: Partial<SalonSettings['profile']>) => {
+    setData((d) =>
+      d ? { ...d, settings: { ...d.settings, profile: { ...d.settings.profile, ...patch } } } : d
+    )
+  }
+
+  const updateAddress = (patch: Partial<SalonSettings['profile']['address']>) => {
+    setData((d) =>
+      d
+        ? {
+            ...d,
+            settings: {
+              ...d.settings,
+              profile: { ...d.settings.profile, address: { ...d.settings.profile.address, ...patch } },
+            },
+          }
+        : d
+    )
+  }
+
+  const updateSocial = (patch: Partial<SalonSettings['profile']['socialLinks']>) => {
+    setData((d) =>
+      d
+        ? {
+            ...d,
+            settings: {
+              ...d.settings,
+              profile: { ...d.settings.profile, socialLinks: { ...d.settings.profile.socialLinks, ...patch } },
+            },
+          }
+        : d
+    )
+  }
+
   const updateDay = (day: number, patch: Partial<SalonSettings['businessHours'][string]>) => {
     setData((d) => {
       if (!d) return d
@@ -144,6 +178,140 @@ export default function SalonSettingsTab() {
               <TriangleAlert className="size-3.5 shrink-0" />
               Changing the subdomain breaks booking links you have already shared.
             </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Business details */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Business details</CardTitle>
+          <CardDescription>
+            Contact info and links shown to customers. All fields are optional.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="salon-phone">Phone</Label>
+              <Input
+                id="salon-phone"
+                value={data.settings.profile.phone}
+                onChange={(e) => updateProfile({ phone: e.target.value })}
+                placeholder="+250 7.. ... ..."
+                maxLength={120}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="salon-website">Website</Label>
+              <Input
+                id="salon-website"
+                value={data.settings.profile.websiteUrl}
+                onChange={(e) => updateProfile({ websiteUrl: e.target.value })}
+                placeholder="https://example.com"
+                maxLength={300}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="salon-logo">Logo URL</Label>
+            <Input
+              id="salon-logo"
+              value={data.settings.profile.logoUrl}
+              onChange={(e) => updateProfile({ logoUrl: e.target.value })}
+              placeholder="https://.../logo.png"
+              maxLength={300}
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>Address</Label>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <Input
+                value={data.settings.profile.address.street}
+                onChange={(e) => updateAddress({ street: e.target.value })}
+                placeholder="Street / KN .. St"
+                aria-label="Street"
+                maxLength={120}
+              />
+              <Input
+                value={data.settings.profile.address.city}
+                onChange={(e) => updateAddress({ city: e.target.value })}
+                placeholder="City (e.g. Kigali)"
+                aria-label="City"
+                maxLength={120}
+              />
+              <Input
+                value={data.settings.profile.address.district}
+                onChange={(e) => updateAddress({ district: e.target.value })}
+                placeholder="District (e.g. Gasabo)"
+                aria-label="District"
+                maxLength={120}
+              />
+              <Input
+                value={data.settings.profile.address.country}
+                onChange={(e) => updateAddress({ country: e.target.value })}
+                placeholder="Country"
+                aria-label="Country"
+                maxLength={120}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>Social links</Label>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <Input
+                value={data.settings.profile.socialLinks.instagram}
+                onChange={(e) => updateSocial({ instagram: e.target.value })}
+                placeholder="Instagram URL"
+                aria-label="Instagram"
+                maxLength={300}
+              />
+              <Input
+                value={data.settings.profile.socialLinks.facebook}
+                onChange={(e) => updateSocial({ facebook: e.target.value })}
+                placeholder="Facebook URL"
+                aria-label="Facebook"
+                maxLength={300}
+              />
+              <Input
+                value={data.settings.profile.socialLinks.tiktok}
+                onChange={(e) => updateSocial({ tiktok: e.target.value })}
+                placeholder="TikTok URL"
+                aria-label="TikTok"
+                maxLength={300}
+              />
+              <Input
+                value={data.settings.profile.socialLinks.whatsapp}
+                onChange={(e) => updateSocial({ whatsapp: e.target.value })}
+                placeholder="WhatsApp number"
+                aria-label="WhatsApp"
+                maxLength={120}
+              />
+            </div>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="salon-tin">TIN (Tax ID)</Label>
+              <Input
+                id="salon-tin"
+                value={data.settings.profile.tinNumber}
+                onChange={(e) => updateProfile({ tinNumber: e.target.value })}
+                maxLength={120}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="salon-license">Business license no.</Label>
+              <Input
+                id="salon-license"
+                value={data.settings.profile.licenseNumber}
+                onChange={(e) => updateProfile({ licenseNumber: e.target.value })}
+                maxLength={120}
+              />
+            </div>
           </div>
         </CardContent>
       </Card>
