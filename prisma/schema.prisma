@@ -8,11 +8,22 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+// Provider-level lifecycle gate, SEPARATE from `plan`. `plan` = what they pay for
+// (free/pro); `status` = whether they can use the product at all. SUSPENDED is
+// enforced everywhere a tenant can transact: requireAuth (authenticated app) and the
+// public booking surface (status-first, returns the generic 404). Set only by the
+// operator console; never derived from client input. NEVER a delete (Salon cascades).
+enum SalonStatus {
+  ACTIVE
+  SUSPENDED
+}
+
 model Salon {
   id                String   @id @default(cuid())
   name              String
   subdomain         String   @unique
   plan              String   @default("free") // free, pro
+  status            SalonStatus @default(ACTIVE)
   stripeCustomerId  String?
   stripeSubscriptionId String?
   settings          Json?    // SalonSettings: businessHours, slotIntervalMinutes, publicBookingEnabled, currency
