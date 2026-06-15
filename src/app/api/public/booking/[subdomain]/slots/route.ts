@@ -1,6 +1,7 @@
 import { db } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
 import { parseSalonSettings } from '@/lib/salon-settings'
+import { parseStaffAvailability } from '@/lib/staff-availability'
 
 const NON_BLOCKING_STATUSES = ['cancelled', 'no_show']
 
@@ -60,20 +61,39 @@ export async function GET(
   if (!dayHours || dayHours.closed) {
     return NextResponse.json({ slots: [] })
   }
-  const openMinutes = toMinutes(dayHours.open)
-  const closeMinutes = toMinutes(dayHours.close)
   const slotStep = settings.slotIntervalMinutes
 
   const service = await db.service.findFirst({
-    where: { id: serviceId, salonId: salon.id, active: true },
+    where: { id: serviceId, salonId: salon.id, active: true, onlineBookable: true },
     select: { duration: true },
   })
   const staff = await db.staff.findFirst({
     where: { id: staffId, salonId: salon.id, active: true },
-    select: { id: true },
+    select: { id: true, availability: true },
   })
   if (!service || !staff) {
     return NextResponse.json({ slots: [] })
+  }
+
+  // Day off: salon-wide (staffId null) or this stylist → no slots that date.
+  const dayOff = await db.dayOff.findFirst({
+    where: { salonId: salon.id, date, OR: [{ staffId: null }, { staffId }] },
+    select: { id: true },
+  })
+  if (dayOff) {
+    return NextResponse.json({ slots: [] })
+  }
+
+  // Effective hours = salon business hours ∩ this stylist's availability.
+  // Unset availability (null) means the stylist follows salon hours.
+  let openMinutes = toMinutes(dayHours.open)
+  let closeMinutes = toMinutes(dayHours.close)
+  const staffAvail = parseStaffAvailability(staff.availability)
+  if (staffAvail) {
+    const sd = staffAvail[String(weekday)]
+    if (sd.closed) return NextResponse.json({ slots: [] })
+    openMinutes = Math.max(openMinutes, toMinutes(sd.open))
+    closeMinutes = Math.min(closeMinutes, toMinutes(sd.close))
   }
 
   const existing = await db.appointment.findMany({
@@ -97,8 +117,10 @@ export async function GET(
     const end = start + duration
     // Lead-time: the slot's start must be at or after the cutoff.
     if (new Date(`${date}T${toTime(start)}:00`).getTime() < leadCutoffMs) continue
-    // Buffers: the slot plus its required gaps must clear every existing appointment.
-    const overlaps = busy.some((b) => start - before < b.end && end + after > b.start)
+    // Buffers protect each EXISTING appointment's reserved zone [start-before, end+after]:
+    // the candidate conflicts if it intrudes on that zone (so a configured gap is kept
+    // regardless of which booking came first).
+    const overlaps = busy.some((b) => start < b.end + after && end > b.start - before)
     if (!overlaps) slots.push(toTime(start))
   }
 
