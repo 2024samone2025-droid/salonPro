@@ -126,24 +126,24 @@ export default function StaffView() {
     setShowDialog(true)
   }
 
+  // Edit-only: staff are never created here. New workers join exclusively through
+  // owner-provisioned onboarding (Settings → Users), which auto-creates their roster
+  // slot. This dialog only edits an existing entry.
   const handleSave = async () => {
+    if (!editing) return
     if (!name.trim()) {
       toast.error('Staff name is required')
       return
     }
     setSaving(true)
     try {
-      const method = editing ? 'PUT' : 'POST'
-      const body = editing
-        ? { id: editing.id, name: name.trim(), phone: phone.trim(), role }
-        : { name: name.trim(), phone: phone.trim(), role }
       const res = await authFetch('/api/staff', {
-        method,
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+        body: JSON.stringify({ id: editing.id, name: name.trim(), phone: phone.trim(), role }),
       })
       if (res.ok) {
-        toast.success(editing ? 'Staff member updated' : 'Staff member added')
+        toast.success('Staff member updated')
         setShowDialog(false)
         fetchStaff()
       } else {
@@ -353,16 +353,12 @@ export default function StaffView() {
         </>
       )}
 
-      {/* Add/Edit Dialog - only for admin */}
+      {/* Edit Dialog - only for admin (new staff join via onboarding, not here) */}
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editing ? 'Edit staff member' : 'Add staff member'}</DialogTitle>
-            <DialogDescription>
-              {editing
-                ? 'Update the staff member details below.'
-                : 'Fill in the details to add a new staff member.'}
-            </DialogDescription>
+            <DialogTitle>Edit staff member</DialogTitle>
+            <DialogDescription>Update the staff member details below.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
@@ -415,7 +411,7 @@ export default function StaffView() {
               disabled={saving}
             >
               {saving && <Loader2 className="size-4 mr-1.5 animate-spin" />}
-              {editing ? 'Save changes' : 'Add staff member'}
+              Save changes
             </Button>
           </DialogFooter>
         </DialogContent>

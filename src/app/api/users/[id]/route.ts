@@ -2,6 +2,7 @@ import { db } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth-guard'
 import { hashPassword } from '@/lib/password'
+import { logActivity } from '@/lib/activity'
 
 const VALID_ROLES = ['admin', 'receptionist', 'stylist']
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -99,10 +100,65 @@ export async function PATCH(
     }
   }
 
-  const updated = await db.user.update({
-    where: { id },
-    data,
-    include: { staff: { select: { id: true, name: true } } },
+  // If this edit turns the user into a stylist with no roster slot, provision one —
+  // same guarantee as onboarding: every stylist is bookable and sees their own
+  // appointments. Wrapped in a transaction so we never half-create.
+  const effectiveRole = (data.role as string | undefined) ?? target.role
+  const effectiveStaffId =
+    data.staffId !== undefined ? (data.staffId as string | null) : target.staffId
+
+  const nameChanged = data.name !== undefined && data.name !== target.name
+
+  const updated = await db.$transaction(async (tx) => {
+    if (effectiveRole === 'stylist' && !effectiveStaffId) {
+      const slot = await tx.staff.create({
+        data: {
+          salonId: auth.salonId,
+          name: (data.name as string | undefined) ?? target.name,
+          phone: '',
+          role: 'stylist',
+          active: (data.active as boolean | undefined) ?? target.active,
+        },
+        select: { id: true },
+      })
+      data.staffId = slot.id
+    } else if (effectiveStaffId && nameChanged) {
+      // Mirror the rename to the linked roster slot so the name shown on the
+      // calendar and in reports stays in sync with the account. The slot is the
+      // user's own (target.staffId) or a body-supplied id already validated above.
+      await tx.staff.update({
+        where: { id: effectiveStaffId },
+        data: { name: data.name as string },
+      })
+    }
+    return tx.user.update({
+      where: { id },
+      data,
+      include: { staff: { select: { id: true, name: true } } },
+    })
+  })
+
+  // Describe the most meaningful change for the feed (deactivation / reactivation /
+  // role change take priority over a generic edit).
+  let summary: string
+  const meta: Record<string, unknown> = { name: updated.name }
+  if (data.active === false && target.active) {
+    summary = `Deactivated ${updated.name}`
+  } else if (data.active === true && !target.active) {
+    summary = `Reactivated ${updated.name}`
+  } else if (data.role !== undefined && data.role !== target.role) {
+    summary = `Changed ${updated.name}'s role from ${target.role} to ${updated.role}`
+    meta.from = target.role
+    meta.to = updated.role
+  } else {
+    summary = `Updated ${updated.name}'s account`
+  }
+  await logActivity(auth, {
+    action: 'user.updated',
+    targetType: 'user',
+    targetId: updated.id,
+    summary,
+    metadata: meta,
   })
 
   return NextResponse.json({
