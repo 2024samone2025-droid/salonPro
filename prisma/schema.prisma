@@ -27,6 +27,7 @@ model Salon {
   users         User[]
   owners        OwnerSalon[]
   activityLogs  ActivityLog[]
+  daysOff       DayOff[]
 }
 
 model Customer {
@@ -53,6 +54,9 @@ model Staff {
   phone     String   @default("")
   role      String   @default("stylist") // stylist, receptionist
   active    Boolean  @default(true)
+  // Optional weekly working-hours template (StaffAvailability JSON, read via
+  // parseStaffAvailability). null = follows salon business hours (no override).
+  availability Json?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -61,19 +65,42 @@ model Staff {
 
   appointments Appointment[]
   users        User[]
+  daysOff      DayOff[]
 
   @@index([role])
   @@index([salonId])
 }
 
-model Service {
+// Admin-recorded whole-day closure that blocks online booking and is written to the
+// activity log. staffId null = the whole salon is off (e.g. a public holiday); set =
+// just that stylist is off while the rest of the salon books normally. One date per row.
+model DayOff {
   id        String   @id @default(cuid())
-  name      String
-  price     Float    // in RWF
-  duration  Int      // in minutes
-  active    Boolean  @default(true)
+  date      String   // YYYY-MM-DD (matches Appointment.date)
+  reason    String   @default("")
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+
+  salonId String
+  salon   Salon @relation(fields: [salonId], references: [id], onDelete: Cascade)
+
+  staffId String?
+  staff   Staff? @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@index([salonId, date])
+  @@index([staffId])
+}
+
+model Service {
+  id          String   @id @default(cuid())
+  name        String
+  price       Float    // in RWF
+  duration    Int      // in minutes
+  active      Boolean  @default(true)
+  category    String   @default("") // groups the catalog (e.g. "Hair", "Nails")
+  description String   @default("") // client-facing; shown on the public booking page
+  onlineBookable Boolean @default(true) // false = front-desk only (hidden from online booking)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   salonId String
   salon   Salon @relation(fields: [salonId], references: [id], onDelete: Cascade)
@@ -149,6 +176,8 @@ model User {
   tourCompleted Boolean @default(true)
   staffId   String?  // optional link to Staff record
   staff     Staff?   @relation(fields: [staffId], references: [id], onDelete: SetNull)
+  // Per-user personal settings (UserSettings JSON) — read via parseUserSettings()
+  settings  Json?
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
 
@@ -176,6 +205,8 @@ model Owner {
   // Set by the backfill script; ENFORCEMENT is a deferred follow-up (the flag is
   // currently an unenforced marker — login still works with the temp password).
   mustResetPassword Boolean @default(false)
+  // Per-user personal settings (UserSettings JSON) — read via parseUserSettings()
+  settings  Json?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
