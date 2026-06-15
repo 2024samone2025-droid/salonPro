@@ -68,10 +68,24 @@ export async function PATCH(req: NextRequest) {
 
   if (body.settings !== undefined) {
     const current = parseSalonSettings(salon.settings)
+    const patchProfile = body.settings.profile
     const merged: SalonSettings = {
       ...current,
       ...body.settings,
+      // Deep-merge profile so a partial patch never wipes sibling fields.
+      profile: patchProfile
+        ? {
+            ...current.profile,
+            ...patchProfile,
+            address: { ...current.profile.address, ...(patchProfile.address ?? {}) },
+            socialLinks: { ...current.profile.socialLinks, ...(patchProfile.socialLinks ?? {}) },
+          }
+        : current.profile,
       businessHours: body.settings.businessHours ?? current.businessHours,
+      // Deep-merge booking rules so a partial patch never wipes sibling fields.
+      bookingRules: body.settings.bookingRules
+        ? { ...current.bookingRules, ...body.settings.bookingRules }
+        : current.bookingRules,
     }
     const validationError = validateSettingsPatch(merged)
     if (validationError) {

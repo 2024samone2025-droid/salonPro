@@ -10,6 +10,7 @@ import {
   Activity,
   CreditCard,
   Settings,
+  CircleUser,
 } from 'lucide-react'
 
 export type NavItem = {
@@ -44,6 +45,14 @@ export const settingsNavItem: NavItem = {
   label: 'Settings',
   icon: Settings,
   roles: ['admin'],
+}
+
+// Personal account — available to every role (and owners, who resolve to admin).
+export const accountNavItem: NavItem = {
+  href: '/account',
+  label: 'My account',
+  icon: CircleUser,
+  roles: ['admin', 'receptionist', 'stylist'],
 }
 
 export function navItemsForRole(items: NavItem[], role: UserRole | undefined): NavItem[] {

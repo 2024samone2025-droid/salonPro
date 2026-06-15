@@ -366,10 +366,14 @@ function WeekView({ weekDays, selectedDate, appointments, onDaySelect, onAppoint
 
 export default function AppointmentsView() {
   const { selectedDate, setSelectedDate } = useSalonStore()
-  const { permissions, authFetch, salon } = useAuth()
+  const { permissions, authFetch, salon, user } = useAuth()
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [loading, setLoading] = useState(true)
-  const [viewMode, setViewMode] = useState<'day' | 'week'>('day')
+  // Initial view follows the user's saved preference (AppShell guarantees the
+  // session — and thus settings — is resolved before this view mounts).
+  const [viewMode, setViewMode] = useState<'day' | 'week'>(
+    user?.settings?.appPreferences?.calendarDefaultView ?? 'day'
+  )
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [currentTime, setCurrentTime] = useState(new Date())

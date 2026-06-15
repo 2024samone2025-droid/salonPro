@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import { Moon, Sun } from 'lucide-react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { useAuth } from '@/lib/auth-context'
 import {
   Tooltip,
   TooltipContent,
@@ -10,31 +12,27 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 
-type Theme = 'light' | 'dark'
+type DisplayTheme = 'light' | 'dark'
 
-function getTheme(): Theme {
+function currentDisplayTheme(): DisplayTheme {
   return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light'
 }
 
 export default function ThemeToggle() {
+  const { setTheme } = useAuth()
   // null until mounted so SSR markup never disagrees with the client
-  const [theme, setTheme] = useState<Theme | null>(null)
+  const [theme, setLocalTheme] = useState<DisplayTheme | null>(null)
 
   useEffect(() => {
-    setTheme(getTheme())
+    setLocalTheme(currentDisplayTheme())
   }, [])
 
-  const toggle = () => {
-    const next: Theme = getTheme() === 'dark' ? 'light' : 'dark'
-    if (next === 'dark') {
-      document.documentElement.setAttribute('data-theme', 'dark')
-    } else {
-      document.documentElement.removeAttribute('data-theme')
-    }
-    try {
-      localStorage.setItem('theme', next)
-    } catch {}
-    setTheme(next)
+  const toggle = async () => {
+    const next: DisplayTheme = currentDisplayTheme() === 'dark' ? 'light' : 'dark'
+    setLocalTheme(next)
+    // Context owns the change: applies to the DOM, updates state, and persists.
+    const saved = await setTheme(next)
+    if (!saved) toast.error("Couldn't save your theme preference")
   }
 
   const label = theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'
