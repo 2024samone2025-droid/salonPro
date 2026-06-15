@@ -10,6 +10,7 @@ import {
 } from '@/lib/auth'
 import { validateSubdomain } from '@/lib/constants'
 import { buildExchangeUrl } from '@/lib/handoff'
+import { createDefaultSubscription } from '@/lib/billing'
 import { Prisma } from '@prisma/client'
 import { NextRequest, NextResponse } from 'next/server'
 
@@ -94,6 +95,7 @@ export async function POST(req: NextRequest) {
         const salon = await db.$transaction(async (tx) => {
           const s = await tx.salon.create({ data: { name: salonName, subdomain: cleanSubdomain, plan: 'free' } })
           await tx.ownerSalon.create({ data: { ownerId, salonId: s.id } })
+          await createDefaultSubscription(tx, s.id) // every salon must have a subscription
           return s
         })
         const redirect = await buildOwnerHandoff(req, ownerId, salon.subdomain, salon.id)
@@ -132,6 +134,7 @@ export async function POST(req: NextRequest) {
         const owner = await tx.owner.create({ data: { name: ownerName, email: normalizedEmail, passwordHash } })
         const salon = await tx.salon.create({ data: { name: salonName, subdomain: cleanSubdomain, plan: 'free' } })
         await tx.ownerSalon.create({ data: { ownerId: owner.id, salonId: salon.id } })
+        await createDefaultSubscription(tx, salon.id) // every salon must have a subscription
         return { owner, salon }
       })
 

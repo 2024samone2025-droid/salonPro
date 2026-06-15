@@ -201,6 +201,26 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json(appointment)
     }
 
+    // Reassigning the provider (changing staffId) is a front-desk action gated by
+    // canReassignAppointment (admin/receptionist). Stylists never reach here. We
+    // capture the previous provider's name so the activity feed can log from→to.
+    let reassignFromName: string | null = null
+    if (data.staffId !== undefined) {
+      const current = await db.appointment.findFirst({
+        where: { id, salonId: auth.salonId },
+        select: { staffId: true, staff: { select: { name: true } } },
+      })
+      if (current && current.staffId !== data.staffId) {
+        if (!auth.permissions?.canReassignAppointment) {
+          return NextResponse.json(
+            { error: 'You do not have permission to change the provider' },
+            { status: 403 }
+          )
+        }
+        reassignFromName = current.staff.name
+      }
+    }
+
     // When a reschedule touches timing/staff/date, re-check for conflicts.
     const touchesSlot =
       data.date !== undefined ||
@@ -271,6 +291,16 @@ export async function PUT(req: NextRequest) {
         targetId: appointment.id,
         summary: `Changed ${appointment.customer.name}'s appointment from ${priorStatus} to ${appointment.status}`,
         metadata: { from: priorStatus, to: appointment.status },
+      })
+    }
+
+    if (reassignFromName) {
+      await logActivity(auth, {
+        action: 'appointment.reassigned',
+        targetType: 'appointment',
+        targetId: appointment.id,
+        summary: `Reassigned ${appointment.customer.name}'s ${appointment.service.name} from ${reassignFromName} to ${appointment.staff.name}`,
+        metadata: { from: reassignFromName, to: appointment.staff.name },
       })
     }
 
