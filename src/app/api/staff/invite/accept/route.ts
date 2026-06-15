@@ -101,6 +101,14 @@ export async function POST(req: NextRequest) {
         where: { id: invite.user.id },
         data: { passwordHash, active: true }, // BOTH set together
       })
+      // Activate the linked roster record (created inactive at invite time) so the
+      // stylist/receptionist becomes bookable only once they've onboarded.
+      if (invite.user.staffId) {
+        await tx.staff.update({
+          where: { id: invite.user.staffId },
+          data: { active: true },
+        })
+      }
     })
   } catch (e) {
     if (e instanceof Error && e.message === 'CONSUMED') return invalid()
