@@ -5,10 +5,11 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(req: NextRequest) {
   try {
-    const user = await requireAuth(req)
+    const auth = await requireAuth(req)
+    if (!auth.authorized) return auth.error
 
     const salon = await db.salon.findUnique({
-      where: { id: user.salonId }
+      where: { id: auth.salonId }
     })
 
     if (!salon) {

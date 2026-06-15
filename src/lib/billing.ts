@@ -1,5 +1,5 @@
 import { db } from '@/lib/db'
-import type { SubscriptionStatus } from '@prisma/client'
+import type { Prisma, SubscriptionStatus } from '@prisma/client'
 
 // ============================================================================
 //  THE SEAM — shared subscription functions
@@ -7,6 +7,25 @@ import type { SubscriptionStatus } from '@prisma/client'
 //  functions LATER, unchanged. Put NO business logic in route handlers — they
 //  only call these. Everything here is written to be idempotent (safe to re-run).
 // ============================================================================
+
+// A Prisma client OR a transaction client — so callers can create the row inside
+// the same transaction that creates the salon.
+type DbClient = Prisma.TransactionClient | typeof db
+
+/**
+ * Every salon MUST have exactly one Subscription — the entitlements layer treats
+ * "no subscription" as locked out (limit 0). So one is created the moment a salon
+ * is created (default: free / ACTIVE). Idempotent: if a subscription already
+ * exists for the salon, this is a no-op. Accepts a tx client so it can run inside
+ * the salon-creation transaction.
+ */
+export function createDefaultSubscription(client: DbClient, salonId: string, planId = 'free') {
+  return client.subscription.upsert({
+    where: { salonId },
+    update: {}, // already has one -> leave it untouched
+    create: { salonId, planId, status: 'ACTIVE' },
+  })
+}
 
 type RecordPaymentInput = {
   amount: number
@@ -23,12 +42,18 @@ type RecordPaymentInput = {
  * double-typed ref or a webhook firing twice never double-records.
  */
 export async function recordPayment(salonId: string, input: RecordPaymentInput) {
+  // Link the payment to the salon's subscription when the caller didn't pass an
+  // id, so BillingPayment.subscriptionId isn't left null.
+  const subscriptionId =
+    input.subscriptionId ??
+    (await db.subscription.findUnique({ where: { salonId }, select: { id: true } }))?.id
+
   return db.billingPayment.upsert({
     where: { salonId_reference: { salonId, reference: input.reference } },
     update: {}, // already recorded -> do nothing
     create: {
       salonId,
-      subscriptionId: input.subscriptionId,
+      subscriptionId,
       amount: input.amount,
       currency: input.currency ?? 'RWF',
       method: input.method,

@@ -111,6 +111,27 @@ export default function AppointmentDialog({ appointment, open, onClose, onUpdate
   const canUpdateStatus = permissions?.canUpdateAppointmentStatus ?? false
   const canManagePayments = permissions?.canManagePayments ?? false
   const canDelete = permissions?.canDeleteRecords ?? false
+  // Front-desk only: change who provides the service (e.g. booked X, but Y is free).
+  const canReassign = permissions?.canReassignAppointment ?? false
+  const isFinal = appointment?.status === 'completed' || appointment?.status === 'no_show'
+
+  const [staffList, setStaffList] = useState<{ id: string; name: string }[]>([])
+  const [reassigning, setReassigning] = useState(false)
+
+  // Load active staff for the provider picker only when it can actually be shown.
+  useEffect(() => {
+    if (!open || !canReassign) return
+    let active = true
+    authFetch('/api/staff?active=true')
+      .then((r) => (r.ok ? r.json() : []))
+      .then((list) => {
+        if (active) setStaffList(Array.isArray(list) ? list : [])
+      })
+      .catch(() => {})
+    return () => {
+      active = false
+    }
+  }, [open, canReassign, authFetch])
 
   // Remove the sync useEffect as we now use keys for remounting
   /*
@@ -127,6 +148,32 @@ export default function AppointmentDialog({ appointment, open, onClose, onUpdate
   */
 
   if (!appointment) return null
+
+  const handleReassign = async (newStaffId: string) => {
+    if (newStaffId === appointment.staff.id) return
+    setReassigning(true)
+    try {
+      const res = await authFetch('/api/appointments', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: appointment.id, staffId: newStaffId }),
+      })
+      const data = await res.json().catch(() => null)
+      if (res.ok) {
+        const name = staffList.find((s) => s.id === newStaffId)?.name ?? 'the new provider'
+        toast.success(`Provider changed to ${name}`)
+        onUpdate?.()
+      } else if (data?.error === 'double_booking') {
+        toast.error(data.message || 'That stylist is already booked at this time.')
+      } else {
+        toast.error(data?.error || 'Failed to change provider')
+      }
+    } catch {
+      toast.error('Failed to change provider')
+    } finally {
+      setReassigning(false)
+    }
+  }
 
   const handleStatusChange = async (newStatus: string) => {
     setUpdating(true)
@@ -275,11 +322,30 @@ export default function AppointmentDialog({ appointment, open, onClose, onUpdate
                   {getInitials(appointment.staff.name)}
                 </AvatarFallback>
               </Avatar>
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <p className="text-xs text-muted-foreground flex items-center gap-1">
                   <Scissors className="size-3" /> Stylist
                 </p>
-                <p className="font-medium text-sm truncate">{appointment.staff.name}</p>
+                {canReassign && !isFinal ? (
+                  <Select
+                    value={appointment.staff.id}
+                    onValueChange={handleReassign}
+                    disabled={reassigning}
+                  >
+                    <SelectTrigger className="h-8 text-sm mt-0.5">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {staffList.map((s) => (
+                        <SelectItem key={s.id} value={s.id}>
+                          {s.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <p className="font-medium text-sm truncate">{appointment.staff.name}</p>
+                )}
               </div>
             </div>
           </div>

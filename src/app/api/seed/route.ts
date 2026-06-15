@@ -1,5 +1,6 @@
 import { db } from '@/lib/db'
 import { hashPassword } from '@/lib/password'
+import { createDefaultSubscription } from '@/lib/billing'
 import { NextResponse } from 'next/server'
 
 const DEMO_PASSWORD = 'demo1234'
@@ -18,6 +19,9 @@ export async function POST() {
     const salon = await db.salon.create({
       data: { name: 'Demo Salon', subdomain: 'demo', plan: 'pro' },
     })
+    // Demo salon is on pro — give it a matching subscription (the entitlements
+    // layer treats a salon with no subscription as locked out).
+    await createDefaultSubscription(db, salon.id, 'pro')
 
     // Create services (Rwandan-style names and prices)
     const services = await Promise.all([
