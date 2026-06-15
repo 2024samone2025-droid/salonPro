@@ -1,6 +1,7 @@
 import { db } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth-guard'
+import { logActivity } from '@/lib/activity'
 
 export async function GET(req: NextRequest) {
   const auth = await requireAuth(req)
@@ -40,8 +41,15 @@ export async function POST(req: NextRequest) {
       salonId,
     },
     include: {
-      appointment: true,
+      appointment: { include: { customer: true } },
     },
+  })
+  await logActivity(auth, {
+    action: 'payment.recorded',
+    targetType: 'payment',
+    targetId: payment.id,
+    summary: `Recorded a ${payment.status} payment of ${payment.amount} (${payment.method}) for ${payment.appointment.customer.name}`,
+    metadata: { amount: payment.amount, method: payment.method, status: payment.status },
   })
   return NextResponse.json(payment, { status: 201 })
 }
@@ -58,8 +66,15 @@ export async function PUT(req: NextRequest) {
     where: { id },
     data: { ...data, salonId },
     include: {
-      appointment: true,
+      appointment: { include: { customer: true } },
     },
+  })
+  await logActivity(auth, {
+    action: 'payment.updated',
+    targetType: 'payment',
+    targetId: payment.id,
+    summary: `Updated payment for ${payment.appointment.customer.name} to ${payment.status} — ${payment.amount} (${payment.method})`,
+    metadata: { amount: payment.amount, method: payment.method, status: payment.status },
   })
   return NextResponse.json(payment)
 }

@@ -1,6 +1,7 @@
 import { db } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth, canModifyAppointment } from '@/lib/auth-guard'
+import { logActivity } from '@/lib/activity'
 
 // Statuses that no longer occupy the staff member's time and therefore
 // should not block a new booking in the same slot.
@@ -146,6 +147,14 @@ export async function POST(req: NextRequest) {
       },
     })
 
+    await logActivity(auth, {
+      action: 'appointment.created',
+      targetType: 'appointment',
+      targetId: appointment.id,
+      summary: `Booked ${fullAppointment?.customer.name ?? 'a customer'} with ${fullAppointment?.staff.name ?? 'staff'} for ${fullAppointment?.service.name ?? 'a service'} on ${appointment.date} at ${appointment.startTime}`,
+      metadata: { date: appointment.date, startTime: appointment.startTime, status: appointment.status },
+    })
+
     return NextResponse.json(fullAppointment, { status: 201 })
   } catch (error) {
     console.error('POST /api/appointments error:', error)
@@ -180,6 +189,15 @@ export async function PUT(req: NextRequest) {
           payment: true,
         },
       })
+      if (data.status !== undefined && data.status !== existing.status) {
+        await logActivity(auth, {
+          action: 'appointment.status_changed',
+          targetType: 'appointment',
+          targetId: appointment.id,
+          summary: `Changed ${appointment.customer.name}'s appointment from ${existing.status} to ${appointment.status}`,
+          metadata: { from: existing.status, to: appointment.status },
+        })
+      }
       return NextResponse.json(appointment)
     }
 
@@ -229,6 +247,12 @@ export async function PUT(req: NextRequest) {
       }
     }
 
+    // Capture the prior status before the write so we can log a status change.
+    const priorStatus =
+      data.status !== undefined
+        ? (await db.appointment.findUnique({ where: { id }, select: { status: true } }))?.status
+        : undefined
+
     const appointment = await db.appointment.update({
       where: { id },
       data: { ...data, salonId: auth.salonId },
@@ -239,6 +263,17 @@ export async function PUT(req: NextRequest) {
         payment: true,
       },
     })
+
+    if (priorStatus !== undefined && data.status !== priorStatus) {
+      await logActivity(auth, {
+        action: 'appointment.status_changed',
+        targetType: 'appointment',
+        targetId: appointment.id,
+        summary: `Changed ${appointment.customer.name}'s appointment from ${priorStatus} to ${appointment.status}`,
+        metadata: { from: priorStatus, to: appointment.status },
+      })
+    }
+
     return NextResponse.json(appointment)
   } catch (error) {
     console.error('PUT /api/appointments error:', error)
@@ -252,6 +287,24 @@ export async function DELETE(req: NextRequest) {
 
   const id = req.nextUrl.searchParams.get('id')
   if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 })
+
+  // Load (scoped) before deleting so the activity summary survives the row.
+  const existing = await db.appointment.findFirst({
+    where: { id, salonId: auth.salonId },
+    include: { customer: true, staff: true },
+  })
+
   await db.appointment.delete({ where: { id } })
+
+  if (existing) {
+    await logActivity(auth, {
+      action: 'appointment.deleted',
+      targetType: 'appointment',
+      targetId: id,
+      summary: `Deleted ${existing.customer.name}'s appointment with ${existing.staff.name} on ${existing.date} at ${existing.startTime}`,
+      metadata: { date: existing.date, startTime: existing.startTime, status: existing.status },
+    })
+  }
+
   return NextResponse.json({ success: true })
 }

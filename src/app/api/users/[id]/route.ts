@@ -2,6 +2,7 @@ import { db } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth-guard'
 import { hashPassword } from '@/lib/password'
+import { logActivity } from '@/lib/activity'
 
 const VALID_ROLES = ['admin', 'receptionist', 'stylist']
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -103,6 +104,29 @@ export async function PATCH(
     where: { id },
     data,
     include: { staff: { select: { id: true, name: true } } },
+  })
+
+  // Describe the most meaningful change for the feed (deactivation / reactivation /
+  // role change take priority over a generic edit).
+  let summary: string
+  const meta: Record<string, unknown> = { name: updated.name }
+  if (data.active === false && target.active) {
+    summary = `Deactivated ${updated.name}`
+  } else if (data.active === true && !target.active) {
+    summary = `Reactivated ${updated.name}`
+  } else if (data.role !== undefined && data.role !== target.role) {
+    summary = `Changed ${updated.name}'s role from ${target.role} to ${updated.role}`
+    meta.from = target.role
+    meta.to = updated.role
+  } else {
+    summary = `Updated ${updated.name}'s account`
+  }
+  await logActivity(auth, {
+    action: 'user.updated',
+    targetType: 'user',
+    targetId: updated.id,
+    summary,
+    metadata: meta,
   })
 
   return NextResponse.json({

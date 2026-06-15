@@ -1,6 +1,7 @@
 import { db } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth-guard'
+import { logActivity } from '@/lib/activity'
 
 const FREE_PLAN_LIMITS = {
   maxCustomers: 100,
@@ -44,6 +45,13 @@ export async function POST(req: NextRequest) {
       salonId,
     },
   })
+  await logActivity(auth, {
+    action: 'staff.added',
+    targetType: 'staff',
+    targetId: staff.id,
+    summary: `Added ${staff.name} to the roster as ${staff.role}`,
+    metadata: { name: staff.name, role: staff.role },
+  })
   return NextResponse.json(staff, { status: 201 })
 }
 
@@ -55,6 +63,13 @@ export async function PUT(req: NextRequest) {
   const { id, ...data } = body
   if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 })
   const staff = await db.staff.update({ where: { id }, data: { ...data, salonId: auth.salonId } })
+  await logActivity(auth, {
+    action: 'staff.updated',
+    targetType: 'staff',
+    targetId: staff.id,
+    summary: `Updated roster entry for ${staff.name}`,
+    metadata: { name: staff.name, role: staff.role, active: staff.active },
+  })
   return NextResponse.json(staff)
 }
 
@@ -64,6 +79,19 @@ export async function DELETE(req: NextRequest) {
 
   const id = req.nextUrl.searchParams.get('id')
   if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 })
+
+  const existing = await db.staff.findFirst({ where: { id, salonId: auth.salonId }, select: { name: true, role: true } })
   await db.staff.delete({ where: { id } })
+
+  if (existing) {
+    await logActivity(auth, {
+      action: 'staff.removed',
+      targetType: 'staff',
+      targetId: id,
+      summary: `Removed ${existing.name} from the roster`,
+      metadata: { name: existing.name, role: existing.role },
+    })
+  }
+
   return NextResponse.json({ success: true })
 }
