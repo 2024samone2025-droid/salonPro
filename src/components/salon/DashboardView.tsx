@@ -15,10 +15,10 @@ import { Skeleton } from '@/components/ui/skeleton'
 import StatCard from '@/components/salon/StatCard'
 import StatusBadge from '@/components/salon/StatusBadge'
 import EmptyState from '@/components/salon/EmptyState'
+import ErrorState from '@/components/salon/ErrorState'
 import {
   CalendarDays,
   Banknote,
-  AlertCircle,
   Clock,
   Plus,
   UserPlus,
@@ -84,26 +84,41 @@ export default function DashboardView() {
     setError(null)
 
     const controller = new AbortController()
+    let timedOut = false
+    const timer = setTimeout(() => {
+      timedOut = true
+      controller.abort()
+    }, 10_000)
 
     authFetch('/api/dashboard', { signal: controller.signal })
       .then((r) => {
-        if (!r.ok) throw new Error(`Failed to fetch (${r.status})`)
+        if (!r.ok) throw new Error('request-failed')
         return r.json()
       })
       .then((d) => {
+        clearTimeout(timer)
         setData(d)
         setLoading(false)
         setError(null)
       })
       .catch((err) => {
-        if (err.name === 'AbortError') return
+        clearTimeout(timer)
+        // A bare abort (navigation / unmount) is expected — stay quiet.
+        if (err.name === 'AbortError' && !timedOut) return
         console.error('Dashboard fetch error:', err)
-        setError(err.message || 'Failed to load dashboard data')
+        setError(
+          timedOut
+            ? "This is taking longer than usual. Check your connection and try again."
+            : "We couldn't load your dashboard. Please try again."
+        )
         setData(null)
         setLoading(false)
       })
 
-    return () => controller.abort()
+    return () => {
+      clearTimeout(timer)
+      controller.abort()
+    }
   }, [authFetch])
 
   useEffect(() => {
@@ -137,13 +152,10 @@ export default function DashboardView() {
   }
 
   if (!data) return (
-    <div className="flex flex-col items-center justify-center py-16">
-      <AlertCircle className="size-10 text-ink-faint mb-3" />
-      <p className="text-muted-foreground text-sm mb-3">{error || 'Failed to load dashboard data.'}</p>
-      <Button variant="ghost" size="sm" onClick={() => fetchDashboard()}>
-        Retry
-      </Button>
-    </div>
+    <ErrorState
+      message={error || "We couldn't load your dashboard. Please try again."}
+      onRetry={() => fetchDashboard()}
+    />
   )
 
   const today = format(new Date(), 'EEEE, MMMM d, yyyy')
@@ -263,7 +275,7 @@ export default function DashboardView() {
                       </span>
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-[13px] text-foreground">{apt.customer.name}</p>
-                        <p className="truncate text-xs text-ink-faint">
+                        <p className="truncate text-xs text-muted-foreground">
                           {apt.service.name} · {apt.staff.name}
                         </p>
                       </div>
@@ -390,7 +402,7 @@ export default function DashboardView() {
                     >
                       <div className="flex-1 min-w-0">
                         <p className="truncate text-[13px] text-foreground">{p.appointment.customer.name}</p>
-                        <p className="truncate text-xs text-ink-faint">{p.appointment.service.name}</p>
+                        <p className="truncate text-xs text-muted-foreground">{p.appointment.service.name}</p>
                         {p.amount > 0 && (
                           <div className="mt-1.5 max-w-44">
                             <Progress value={paidPercent} className="h-1" />
@@ -399,7 +411,7 @@ export default function DashboardView() {
                       </div>
                       <div className="ml-3 shrink-0 text-right">
                         <p className="text-[13px] font-medium text-foreground tabular-nums">{formatRWF(remaining)}</p>
-                        <p className="text-xs text-ink-faint tabular-nums">of {formatRWF(p.appointment.service.price)}</p>
+                        <p className="text-xs text-muted-foreground tabular-nums">of {formatRWF(p.appointment.service.price)}</p>
                       </div>
                     </div>
                   )

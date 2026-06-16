@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useSalonStore } from '@/lib/salon-store'
 import { useAuth, type UserRole } from '@/lib/auth-context'
-import { cn } from '@/lib/utils'
+import { cn, getInitials } from '@/lib/utils'
 import {
   Sidebar,
   SidebarContent,
@@ -20,7 +20,7 @@ import {
   SidebarSeparator,
   SidebarMenuBadge,
 } from '@/components/ui/sidebar'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -65,15 +65,6 @@ export default function SalonSidebar() {
 
   const handleLogout = async () => {
     await logout()
-  }
-
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2)
   }
 
   return (
@@ -162,6 +153,7 @@ export default function SalonSidebar() {
         <div className="border-t border-sidebar-border pt-3">
           <div className="flex items-center gap-2.5 px-1 mb-2">
             <Avatar className="size-7 border border-sidebar-border">
+              <AvatarImage src={user?.settings?.profile?.photoUrl} alt="" className="object-cover" />
               <AvatarFallback className="bg-sidebar-accent text-sidebar-foreground/70 text-[11px] font-medium">
                 {user?.name ? getInitials(user.name) : '??'}
               </AvatarFallback>

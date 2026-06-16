@@ -15,6 +15,8 @@ import {
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Loader2 } from 'lucide-react'
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
+import { getInitials } from '@/lib/utils'
 import { toast } from 'sonner'
 import { useAuth } from '@/lib/auth-context'
 import ChangePasswordForm from './ChangePasswordForm'
@@ -156,13 +158,29 @@ export default function AccountView() {
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="photo-url">Photo URL</Label>
-              <Input
-                id="photo-url"
-                value={data.settings.profile.photoUrl}
-                onChange={(e) => updateProfile({ photoUrl: e.target.value })}
-                placeholder="https://.../photo.jpg"
-                maxLength={300}
-              />
+              <div className="flex items-center gap-3">
+                <Avatar className="size-10 border border-border">
+                  <AvatarImage
+                    src={data.settings.profile.photoUrl}
+                    alt=""
+                    className="object-cover"
+                  />
+                  <AvatarFallback className="bg-muted text-foreground/70 text-[11px] font-medium">
+                    {data.displayName ? getInitials(data.displayName) : '??'}
+                  </AvatarFallback>
+                </Avatar>
+                <Input
+                  id="photo-url"
+                  value={data.settings.profile.photoUrl}
+                  onChange={(e) => updateProfile({ photoUrl: e.target.value })}
+                  placeholder="https://.../photo.jpg"
+                  maxLength={300}
+                  className="flex-1"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Shown as your avatar in the sidebar and menus.
+              </p>
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="bio">Bio</Label>
