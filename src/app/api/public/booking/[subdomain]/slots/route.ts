@@ -37,7 +37,9 @@ export async function GET(
   }
 
   const salon = await db.salon.findUnique({ where: { subdomain } })
-  if (!salon) {
+  // Status-first: a SUSPENDED salon reads as not-found to the public (same 404 as
+  // an unknown subdomain), before settings/publicBookingEnabled are considered.
+  if (!salon || salon.status === 'SUSPENDED') {
     return NextResponse.json({ error: 'Salon not found' }, { status: 404 })
   }
 
