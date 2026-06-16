@@ -8,11 +8,22 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+// Provider-level lifecycle gate, SEPARATE from `plan`. `plan` = what they pay for
+// (free/pro); `status` = whether they can use the product at all. SUSPENDED is
+// enforced everywhere a tenant can transact: requireAuth (authenticated app) and the
+// public booking surface (status-first, returns the generic 404). Set only by the
+// operator console; never derived from client input. NEVER a delete (Salon cascades).
+enum SalonStatus {
+  ACTIVE
+  SUSPENDED
+}
+
 model Salon {
   id                String   @id @default(cuid())
   name              String
   subdomain         String   @unique
   plan              String   @default("free") // free, pro
+  status            SalonStatus @default(ACTIVE)
   stripeCustomerId  String?
   stripeSubscriptionId String?
   settings          Json?    // SalonSettings: businessHours, slotIntervalMinutes, publicBookingEnabled, currency
@@ -289,4 +300,31 @@ model ActivityLog {
   salon   Salon @relation(fields: [salonId], references: [id], onDelete: Cascade)
 
   @@index([salonId, createdAt])
+}
+
+// Operator (platform-staff) actions, CROSS-tenant. Deliberately NOT ActivityLog:
+// that table is per-salon, scoped by salonId for owner transparency; operator
+// actions span tenants and must never be written there. Append-only, never updated
+// or deleted. Both actor and target are plain strings, NOT foreign keys: there is
+// no Operator table in v1 (the actor is an SSO email from an allowlist), and the
+// trail must outlive the tenant row it references (Salon cascades hard-delete all
+// children — the audit must survive even that). Written via lib/operator-audit.ts.
+enum OperatorAction {
+  SUSPEND
+  REACTIVATE
+  REVEAL_PII
+  VIEW_TENANT
+}
+
+model OperatorAuditLog {
+  id            String         @id @default(cuid())
+  operatorEmail String         // SSO actor; snapshot, intentionally NOT a foreign key
+  action        OperatorAction
+  targetSalonId String         // the salon acted on; plain string, NOT a foreign key
+  reason        String?        // required (enforced in the writer) for state changes; optional for reveals/views
+  metadata      Json?          // before/after where relevant
+  createdAt     DateTime       @default(now())
+
+  @@index([targetSalonId, createdAt])
+  @@index([createdAt])
 }

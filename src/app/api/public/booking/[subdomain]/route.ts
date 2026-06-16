@@ -24,7 +24,13 @@ function badSubdomain(subdomain: string) {
 
 async function resolveSalon(subdomain: string) {
   if (badSubdomain(subdomain)) return null
-  return db.salon.findUnique({ where: { subdomain } })
+  const salon = await db.salon.findUnique({ where: { subdomain } })
+  // Status-first masking: a SUSPENDED salon reads to the public as simply
+  // not-found. Resolving to null here means every caller (GET, POST) returns the
+  // generic 404 below — BEFORE publicBookingEnabled or any other branch — so the
+  // public surface never leaks that a salon exists-but-is-suspended.
+  if (!salon || salon.status === 'SUSPENDED') return null
+  return salon
 }
 
 // Public salon profile: name + active services + active stylists.
