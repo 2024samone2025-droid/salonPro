@@ -68,8 +68,8 @@ export async function recordPayment(salonId: string, input: RecordPaymentInput) 
  * scheduled downgrade once it's due). Idempotent: setting planId to the same
  * value twice changes nothing. Keeps the legacy Salon.plan string in sync.
  */
-export async function applyPlanChange(salonId: string, newPlanId: string) {
-  const plan = await db.plan.findUnique({ where: { id: newPlanId } })
+export async function applyPlanChange(salonId: string, newPlanId: string, client: DbClient = db) {
+  const plan = await client.plan.findUnique({ where: { id: newPlanId } })
   if (!plan) throw new Error(`applyPlanChange: unknown plan "${newPlanId}"`)
 
   // --- OVERFLOW HOOK (§6/§7) -------------------------------------------------
@@ -78,7 +78,7 @@ export async function applyPlanChange(salonId: string, newPlanId: string) {
   // NEVER delete data. Left as an explicit extension point for now.
   // --------------------------------------------------------------------------
 
-  return db.subscription.update({
+  return client.subscription.update({
     where: { salonId },
     data: {
       // All-relation form: Prisma forbids mixing scalar FKs (planId/pendingPlanId)
@@ -89,6 +89,73 @@ export async function applyPlanChange(salonId: string, newPlanId: string) {
       salon: { update: { plan: newPlanId } }, // keep denormalized cache in sync
     },
   })
+}
+
+/** Add one billing interval to a date (monthly = +1 month, annual = +1 year). */
+function addInterval(from: Date, interval: string): Date {
+  const d = new Date(from)
+  if (interval === 'annual') d.setFullYear(d.getFullYear() + 1)
+  else d.setMonth(d.getMonth() + 1)
+  return d
+}
+
+/**
+ * The operator's "salon paid me" action, as ONE atomic step. Logs the payment,
+ * puts the salon on the paid plan (default pro), extends the paid period by the
+ * plan's interval — stacked from max(now, current periodEnd) so renewals add
+ * time — sets status ACTIVE, and schedules the auto-downgrade to free at period
+ * end (applied lazily by applyDuePlanChange). Runs inside the caller's tx so the
+ * operator audit row commits with it.
+ */
+export async function recordManualPayment(
+  client: DbClient,
+  salonId: string,
+  input: RecordPaymentInput & { planId?: string },
+) {
+  const planId = input.planId ?? 'pro'
+  const plan = await client.plan.findUnique({ where: { id: planId } })
+  if (!plan) throw new Error(`recordManualPayment: unknown plan "${planId}"`)
+
+  const sub = await client.subscription.findUnique({
+    where: { salonId },
+    select: { id: true, periodEnd: true },
+  })
+  if (!sub) throw new Error(`recordManualPayment: no subscription for salon "${salonId}"`)
+
+  const now = input.paidAt ?? new Date()
+  const base = sub.periodEnd && sub.periodEnd > now ? sub.periodEnd : now
+  const newPeriodEnd = addInterval(base, plan.interval)
+
+  // 1. Log the payment (idempotent on (salonId, reference)).
+  await client.billingPayment.upsert({
+    where: { salonId_reference: { salonId, reference: input.reference } },
+    update: {},
+    create: {
+      salonId,
+      subscriptionId: sub.id,
+      amount: input.amount,
+      currency: input.currency ?? 'RWF',
+      method: input.method,
+      reference: input.reference,
+      paidAt: now,
+    },
+  })
+
+  // 2. Plan + pending-downgrade + period + status + cache, in one update.
+  await client.subscription.update({
+    where: { salonId },
+    data: {
+      plan: { connect: { id: planId } },
+      // A paid plan auto-downgrades to free at period end; paying for free itself
+      // (shouldn't happen) just clears any pending change.
+      pendingPlan: planId === 'free' ? { disconnect: true } : { connect: { id: 'free' } },
+      periodEnd: newPeriodEnd,
+      status: 'ACTIVE',
+      salon: { update: { plan: planId } },
+    },
+  })
+
+  return { newPeriodEnd, planId }
 }
 
 /**
@@ -132,6 +199,6 @@ export async function applyDuePlanChange(salonId: string) {
  * PAST_DUE -> SUSPENDED after your grace window). Access changes flow from this
  * via the entitlements layer — they're never wired directly to "payment failed".
  */
-export async function setStatus(salonId: string, status: SubscriptionStatus) {
-  return db.subscription.update({ where: { salonId }, data: { status } })
+export async function setStatus(salonId: string, status: SubscriptionStatus, client: DbClient = db) {
+  return client.subscription.update({ where: { salonId }, data: { status } })
 }
