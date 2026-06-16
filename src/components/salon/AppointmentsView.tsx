@@ -331,7 +331,7 @@ function WeekView({ weekDays, selectedDate, appointments, onDaySelect, onAppoint
             return (
               <div key={dayStr} className="min-h-48 space-y-1 p-1.5 border rounded-lg bg-card/50">
                 {dayApts.length === 0 ? (
-                  <p className="text-xs text-ink-faint text-center pt-8">No appointments</p>
+                  <p className="text-xs text-muted-foreground text-center pt-8">No appointments</p>
                 ) : (
                   dayApts.map((apt) => {
                     const config = STATUS_CONFIG[apt.status as AppointmentStatus]
