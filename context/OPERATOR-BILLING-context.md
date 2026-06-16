@@ -85,26 +85,29 @@ incoherent. But it touches tenant UI, so confirm. **Not yet decided.**
 
 ---
 
-## Build steps (commit per step — TOMORROW)
+## Build steps — ✅ ALL DONE (branch `feat/operator-billing`, off `fix/subscription-invariant`)
 
-- [ ] 1. **Branch** off `fix/subscription-invariant` (or `main` if #37 merged). This tracker already exists.
-- [ ] 2. **Schema:** add `RECORD_PAYMENT`, `CHANGE_PLAN`, `SET_SUB_STATUS` to `OperatorAction`; `db push`.
-- [ ] 3. **Seam (`src/lib/billing.ts`):** add optional tx-client param to the billing fns used by
+> tsc 0 / eslint clean. Open question resolved as (B): tenant self-upgrade disabled.
+> Decision (B) chosen for the tenant-side. `BILLING_WEBHOOK_SECRET` note unrelated here.
+
+- [x] 1. **Branch** off `fix/subscription-invariant` (or `main` if #37 merged). This tracker already exists.
+- [x] 2. **Schema:** add `RECORD_PAYMENT`, `CHANGE_PLAN`, `SET_SUB_STATUS` to `OperatorAction`; `db push`.
+- [x] 3. **Seam (`src/lib/billing.ts`):** add optional tx-client param to the billing fns used by
       operator actions; add the compound "record manual payment" logic (atomic: log payment +
       ensure pro + extend by plan interval + schedule free downgrade + status ACTIVE).
-- [ ] 4. **Lazy downgrade:** in `src/lib/auth-guard.ts` `requireAuth`, after the salon is resolved,
+- [x] 4. **Lazy downgrade:** in `src/lib/auth-guard.ts` `requireAuth`, after the salon is resolved,
       `applyDuePlanChange(salon.id)` wrapped best-effort (try/catch; never blocks auth).
-- [ ] 5. **Operator server actions** (`src/app/operator/[salonId]/actions.ts`):
+- [x] 5. **Operator server actions** (`src/app/operator/[salonId]/actions.ts`):
       `recordBillingPayment`, `changeSalonPlan`, `setSubscriptionStatus` — each `requireOperator()`
       + transactional audit (RECORD_PAYMENT / CHANGE_PLAN / SET_SUB_STATUS).
-- [ ] 6. **Billing panel** (`src/app/operator/[salonId]/page.tsx`): replace the Stripe stub with the
+- [x] 6. **Billing panel** (`src/app/operator/[salonId]/page.tsx`): replace the Stripe stub with the
       real summary (plan+price, status, period-end, pending-downgrade) + payment history list.
-- [ ] 7. **Billing actions client component** (`src/components/operator/BillingActions.tsx`, mirrors
+- [x] 7. **Billing actions client component** (`src/components/operator/BillingActions.tsx`, mirrors
       `StatusActions.tsx`): shadcn dialogs/forms for record-payment / change-plan / set-status; wire
       into the detail page. Use existing shadcn ui components — do not hand-roll.
-- [ ] 8. **(Open Q) Tenant-side:** if decided (B), disable the mock self-upgrade (`/billing` button +
+- [x] 8. **(Open Q) Tenant-side:** if decided (B), disable the mock self-upgrade (`/billing` button +
       `api/billing/checkout`).
-- [ ] 9. **Verify:** `tsc --noEmit` + eslint clean. Sanity: a recorded payment → pro + period +
+- [x] 9. **Verify:** `tsc --noEmit` + eslint clean. Sanity: a recorded payment → pro + period +
       pendingPlanId=free; a lapsed period → free on the salon's next authed request; audit rows written.
 
 ---
