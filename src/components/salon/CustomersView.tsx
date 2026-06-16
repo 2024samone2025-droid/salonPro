@@ -4,10 +4,12 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { PhoneInput } from '@/components/ui/phone-input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
+import ErrorState from '@/components/salon/ErrorState'
 import {
   Table,
   TableBody,
@@ -76,6 +78,7 @@ export default function CustomersView() {
   const formatRWF = useMoney()
   const [customers, setCustomers] = useState<Customer[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [showAddDialog, setShowAddDialog] = useState(false)
   const [showDetailDialog, setShowDetailDialog] = useState(false)
@@ -103,6 +106,7 @@ export default function CustomersView() {
       setLoading(true)
     }
     isInitialMount.current = false
+    setLoadError(false)
     try {
       const url = searchQuery ? `/api/customers?q=${encodeURIComponent(searchQuery)}` : '/api/customers'
       const res = await authFetch(url)
@@ -111,7 +115,7 @@ export default function CustomersView() {
       setCustomers(Array.isArray(data) ? data : [])
     } catch (err) {
       console.error(err)
-      toast.error('Failed to load customers')
+      setLoadError(true)
     } finally {
       setLoading(false)
     }
@@ -204,6 +208,15 @@ export default function CustomersView() {
     return customer.appointments
       .filter((a) => a.status === 'completed')
       .reduce((sum, a) => sum + a.service.price, 0)
+  }
+
+  if (loadError) {
+    return (
+      <ErrorState
+        message="We couldn't load your customers. Please try again."
+        onRetry={fetchCustomers}
+      />
+    )
   }
 
   return (
@@ -435,11 +448,10 @@ export default function CustomersView() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="new-phone">Phone *</Label>
-              <Input
+              <PhoneInput
                 id="new-phone"
                 value={newPhone}
-                onChange={(e) => setNewPhone(e.target.value)}
-                placeholder="+250788XXXXXX"
+                onChange={setNewPhone}
               />
             </div>
             <div className="space-y-2">
@@ -494,10 +506,10 @@ export default function CustomersView() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="edit-phone">Phone</Label>
-                  <Input
+                  <PhoneInput
                     id="edit-phone"
                     value={editPhone}
-                    onChange={(e) => canEdit && setEditPhone(e.target.value)}
+                    onChange={(v) => canEdit && setEditPhone(v)}
                     readOnly={!canEdit}
                     className={!canEdit ? 'bg-muted' : ''}
                   />

@@ -4,6 +4,7 @@ import { createContext, useContext, useState, useEffect, useCallback, ReactNode,
 import type { SalonSettings } from '@/lib/salon-settings'
 import { DEFAULT_USER_SETTINGS, type Theme, type UserSettings } from '@/lib/user-settings'
 import { formatMoney } from '@/lib/utils'
+import { fetchWithTimeout } from '@/lib/fetch-timeout'
 
 // Resolve a theme preference to the DOM. 'system' follows the OS; the bootstrap
 // script in the root layout reads the same localStorage key for first paint.
@@ -37,6 +38,7 @@ export interface Permissions {
   canDeleteRecords: boolean
   canViewAllAppointments: boolean
   canViewActivityLog: boolean
+  canReassignAppointment: boolean
 }
 
 export interface SessionUser {
@@ -208,7 +210,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Cookie-only now. Kept as a thin wrapper so existing callers don't change;
   // the httpOnly session cookie rides along automatically on same-origin requests.
   const authFetch = useCallback(async (url: string, options: RequestInit = {}): Promise<Response> => {
-    return fetch(url, options)
+    return fetchWithTimeout(url, options)
   }, [])
 
   return (
