@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { PhoneInput } from '@/components/ui/phone-input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -22,7 +23,6 @@ import {
   Clock,
   Check,
   ChevronLeft,
-  Phone,
   Loader2,
   PartyPopper,
   ArrowRight,
@@ -482,25 +482,17 @@ export default function BookingFlow({ subdomain }: { subdomain: string }) {
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="book-phone">Phone number</Label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    id="book-phone"
-                    className="pl-9"
-                    value={phone}
-                    onChange={(e) => {
-                      setPhone(e.target.value)
-                      if (phoneError) setPhoneError('')
-                    }}
-                    placeholder="07XX XXX XXX"
-                    type="tel"
-                    inputMode="tel"
-                    autoComplete="tel"
-                    required
-                    aria-invalid={!!phoneError}
-                    aria-describedby={phoneError ? 'book-phone-error' : undefined}
-                  />
-                </div>
+                <PhoneInput
+                  id="book-phone"
+                  value={phone}
+                  onChange={(v) => {
+                    setPhone(v)
+                    if (phoneError) setPhoneError('')
+                  }}
+                  required
+                  aria-invalid={!!phoneError}
+                  aria-describedby={phoneError ? 'book-phone-error' : undefined}
+                />
                 {phoneError && (
                   <p id="book-phone-error" role="alert" className="text-xs text-destructive">
                     {phoneError}
