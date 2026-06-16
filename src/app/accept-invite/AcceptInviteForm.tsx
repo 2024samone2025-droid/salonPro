@@ -126,7 +126,7 @@ export default function AcceptInviteForm({ token }: { token: string }) {
             <Input id="password" type={showPassword ? 'text' : 'password'}
                    placeholder="At least 12 characters" value={password}
                    onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" required
-                   className="pr-9 h-9 sm:h-10 sm:text-sm" />
+                   className="pr-11 md:pr-9 h-9 sm:h-10 sm:text-sm" />
             <Button type="button" variant="ghost" size="icon"
                     className="absolute right-0.5 top-1/2 -translate-y-1/2 size-7 sm:size-8 text-muted-foreground hover:text-foreground"
                     onClick={() => setShowPassword(!showPassword)} tabIndex={-1}>
