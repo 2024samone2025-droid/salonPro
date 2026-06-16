@@ -316,6 +316,9 @@ enum OperatorAction {
   REACTIVATE
   REVEAL_PII
   VIEW_TENANT
+  RECORD_PAYMENT
+  CHANGE_PLAN
+  SET_SUB_STATUS
 }
 
 model OperatorAuditLog {
