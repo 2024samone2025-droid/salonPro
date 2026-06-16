@@ -314,3 +314,56 @@ Tracked live in the session task list (TaskCreate/TaskUpdate). Order:
 7. Tenant detail screen + suspend/reactivate (transactional with audit).
 8. Final check against §8 (nothing on the do-not-build list) and §9 (definition of done),
    then **stop**.
+
+---
+
+## 12. As-built — deployment & environment (v1 complete, 2026-06-16)
+
+All eight steps above are implemented. This section is the operational record for
+running the console; `.env.example` carries the same vars (it is gitignored, so this
+tracked section is the source of truth).
+
+### Two Vercel projects, one repo, one database
+- **Tenant project** (existing): `*.salonpro.me` + apex. `OPERATOR_APP` UNSET → the
+  middleware 404s every `/operator` and `/api/operator` route, so the operator code that
+  physically ships here is inert.
+- **Operator project** (new): domain `salonpro-ops.com`, same repo, same Neon
+  `DATABASE_URL`/`DIRECT_URL`. `OPERATOR_APP=1` un-gates the operator routes. Put it behind
+  Vercel Authentication / an IP allowlist too — the infra gate and the code gate are both
+  required; neither is trusted alone.
+
+### Environment (operator project only — leave all UNSET on the tenant project)
+| Var | Purpose |
+|-----|---------|
+| `OPERATOR_APP=1` | Kill switch. Anything but `1` → operator routes 404. |
+| `OPERATOR_HOST=salonpro-ops.com` | Canonical host; `requireOperator()` rejects other hosts in production (relaxed in dev). |
+| `OPERATOR_AUTH_SECRET` | Auth.js secret. **Must differ from `AUTH_SECRET`** — the operator session is never signed with the tenant secret. |
+| `OPERATOR_ALLOWED_EMAILS` | Comma-separated operator Google emails. The entire "who is an operator" list (no `Operator` table in v1). Enforced in the `signIn` callback **and** re-checked in `requireOperator()`. |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google Workspace OIDC app. |
+
+Google OAuth **authorized redirect URI**:
+`https://salonpro-ops.com/api/operator/auth/callback/google`
+(dev: `http://localhost:3000/api/operator/auth/callback/google`).
+
+### Local development
+One dev server serves both apps. Set `OPERATOR_APP=1` + `OPERATOR_ALLOWED_EMAILS` +
+Google creds in local `.env`, then visit `http://localhost:3000/operator`. The
+`requireOperator()` Host check is relaxed when `NODE_ENV !== 'production'`, so `localhost`
+is accepted there; the OIDC session + allowlist are still enforced.
+
+### File map (as built)
+- `src/middleware.ts` — Stage-0 `OPERATOR_APP` gate (404 default-deny).
+- `src/lib/operator-auth.ts` — Auth.js (Google OIDC, own secret, allowlist `signIn` gate)
+  + `src/app/api/operator/auth/[...nextauth]/route.ts` handler.
+- `src/lib/operator-guard.ts` — `requireOperator()` (host + session + allowlist).
+- `src/lib/operator-mask.ts` — `maskName` / `maskEmail`.
+- `src/lib/operator-audit.ts` — audit writer (best-effort + transactional). *(step 4)*
+- `src/app/operator/layout.tsx`, `signin/page.tsx` — chrome + SSO entry.
+- `src/app/operator/page.tsx` + `components/operator/DirectoryList.tsx` — directory.
+- `src/app/operator/[salonId]/page.tsx` + `actions.ts` +
+  `components/operator/{OwnerContact,StatusActions}.tsx` — detail + reveal + suspend/reactivate.
+
+### §8 / §9 check
+Nothing from §8's do-not-build list was built (no RLS, RBAC, analytics, Stripe, multi-
+location, bulk client browser, impersonation). Every §9 done-criterion is met. **Stop here**
+— let the next manual DB action be the signal for what to build next.
