@@ -147,11 +147,11 @@ reversal iff `reversesId != null`.
       additive (no drop / no data-loss prompt); regenerate client. ✅ db in sync, no
       data-loss prompt; client regenerated.
 
-- [ ] **2. Seam — record now stamps the period snapshot.** In `recordManualPayment`
+- [x] **2. Seam — record now stamps the period snapshot.** In `recordManualPayment`
       (`src/lib/billing.ts`), persist `kind: 'PAYMENT'`, `periodEndBefore: sub.periodEnd`,
       `periodEndAfter: newPeriodEnd` on the created row. (Idempotent path unchanged.)
 
-- [ ] **3. Seam — `reverseManualPayment(client, salonId, paymentId, reason)`.** Atomic:
+- [x] **3. Seam — `reverseManualPayment(client, salonId, paymentId, reason)`.** Atomic:
       load original (must belong to salonId, be `kind = PAYMENT`, and not already
       reversed — else throw a typed error). Create the REVERSAL row: `kind: 'REVERSAL'`,
       `amount: -original.amount`, copy `method`/`currency`, `reference:

@@ -126,7 +126,8 @@ export async function recordManualPayment(
   const base = sub.periodEnd && sub.periodEnd > now ? sub.periodEnd : now
   const newPeriodEnd = addInterval(base, plan.interval)
 
-  // 1. Log the payment (idempotent on (salonId, reference)).
+  // 1. Log the payment (idempotent on (salonId, reference)). Stamp the period this
+  //    payment moved (before/after) so a later reversal can roll it back exactly.
   await client.billingPayment.upsert({
     where: { salonId_reference: { salonId, reference: input.reference } },
     update: {},
@@ -138,6 +139,9 @@ export async function recordManualPayment(
       method: input.method,
       reference: input.reference,
       paidAt: now,
+      kind: 'PAYMENT',
+      periodEndBefore: sub.periodEnd ?? null,
+      periodEndAfter: newPeriodEnd,
     },
   })
 
@@ -156,6 +160,92 @@ export async function recordManualPayment(
   })
 
   return { newPeriodEnd, planId }
+}
+
+/**
+ * Reverse a recorded payment — the append-only correction path. It NEVER edits or
+ * deletes the original row; it APPENDS a REVERSAL (negative amount, pointing back
+ * via reversesId) and, when safe, rolls the paid period back to what it was before
+ * that payment.
+ *
+ * Period rollback rule (no silent miscompute): restore the original's
+ * periodEndBefore ONLY if the subscription's current periodEnd still equals that
+ * payment's periodEndAfter — i.e. nothing later moved it. If a newer payment
+ * superseded it (period stacked), record the reversal but leave the period alone
+ * and return periodAdjusted=false, so the caller can tell the operator to check it
+ * by hand rather than guessing the math.
+ *
+ * After a rollback, if the restored period is now over (or cleared) and a free
+ * downgrade is pending, apply it immediately in-tx so the salon reflects reality at
+ * once (no waiting for the lazy applyDuePlanChange on its next request).
+ *
+ * A payment can only be reversed once (guarded); the reversal's derived reference
+ * keeps the @@unique([salonId, reference]) idempotency guard intact.
+ */
+export async function reverseManualPayment(
+  client: DbClient,
+  salonId: string,
+  paymentId: string,
+  reason: string,
+): Promise<{ reversalId: string; periodAdjusted: boolean }> {
+  const original = await client.billingPayment.findUnique({ where: { id: paymentId } })
+  if (!original || original.salonId !== salonId) {
+    throw new Error('reverseManualPayment: payment not found for this salon')
+  }
+  if (original.kind === 'REVERSAL') {
+    throw new Error('reverseManualPayment: cannot reverse a reversal')
+  }
+
+  // A payment can only be reversed once.
+  const existing = await client.billingPayment.findFirst({
+    where: { reversesId: paymentId },
+    select: { id: true },
+  })
+  if (existing) throw new Error('reverseManualPayment: payment already reversed')
+
+  // Append the reversal row (negative amount, derived unique reference).
+  const reversal = await client.billingPayment.create({
+    data: {
+      salonId,
+      subscriptionId: original.subscriptionId,
+      amount: -original.amount,
+      currency: original.currency,
+      method: original.method,
+      reference: `${original.reference}:reversal`,
+      paidAt: new Date(),
+      kind: 'REVERSAL',
+      reversesId: original.id,
+      voidReason: reason,
+    },
+  })
+
+  // Roll the period back only if this payment is still the one driving the period.
+  let periodAdjusted = false
+  const sub = await client.subscription.findUnique({
+    where: { salonId },
+    select: { periodEnd: true, pendingPlanId: true },
+  })
+  const stillCurrent =
+    original.periodEndAfter != null &&
+    sub?.periodEnd != null &&
+    sub.periodEnd.getTime() === original.periodEndAfter.getTime()
+
+  if (stillCurrent) {
+    await client.subscription.update({
+      where: { salonId },
+      data: { periodEnd: original.periodEndBefore },
+    })
+    periodAdjusted = true
+
+    // Restored period already over (or cleared) + a downgrade pending -> apply now.
+    const restored = original.periodEndBefore
+    const due = restored == null || restored.getTime() <= Date.now()
+    if (due && sub?.pendingPlanId) {
+      await applyPlanChange(salonId, sub.pendingPlanId, client)
+    }
+  }
+
+  return { reversalId: reversal.id, periodAdjusted }
 }
 
 /**
