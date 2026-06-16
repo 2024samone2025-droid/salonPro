@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import OwnerContact from '@/components/operator/OwnerContact'
 import StatusActions from '@/components/operator/StatusActions'
+import BillingActions from '@/components/operator/BillingActions'
 
 export const dynamic = 'force-dynamic'
 
@@ -147,6 +148,12 @@ export default async function OperatorTenantDetailPage({
                 {subscription.periodEnd.toLocaleDateString()} unless renewed.
               </p>
             )}
+
+            <BillingActions
+              salonId={salon.id}
+              currentPlan={subscription.plan.id}
+              currentStatus={subscription.status}
+            />
 
             {/* Payment history */}
             <div>
