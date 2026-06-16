@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
+import ErrorState from '@/components/salon/ErrorState'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -369,6 +370,7 @@ export default function AppointmentsView() {
   const { permissions, authFetch, salon, user } = useAuth()
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
   // Initial view follows the user's saved preference (AppShell guarantees the
   // session — and thus settings — is resolved before this view mounts).
   const [viewMode, setViewMode] = useState<'day' | 'week'>(
@@ -384,6 +386,7 @@ export default function AppointmentsView() {
       setLoading(true)
     }
     isInitialMount.current = false;
+    setLoadError(false)
     try {
       let url: string
       if (viewMode === 'week') {
@@ -399,6 +402,7 @@ export default function AppointmentsView() {
       setAppointments(data)
     } catch (error) {
       console.error('Fetch error:', error)
+      setLoadError(true)
     } finally {
       setLoading(false)
     }
@@ -542,6 +546,15 @@ export default function AppointmentsView() {
       return selectedDate
     }
   }, [selectedDate])
+
+  if (loadError) {
+    return (
+      <ErrorState
+        message="We couldn't load your appointments. Please try again."
+        onRetry={fetchAppointments}
+      />
+    )
+  }
 
   return (
     <div className="space-y-4">
