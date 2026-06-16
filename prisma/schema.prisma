@@ -19,26 +19,28 @@ enum SalonStatus {
 }
 
 model Salon {
-  id                String   @id @default(cuid())
-  name              String
-  subdomain         String   @unique
-  plan              String   @default("free") // free, pro
-  status            SalonStatus @default(ACTIVE)
-  stripeCustomerId  String?
+  id                   String      @id @default(cuid())
+  name                 String
+  subdomain            String      @unique
+  plan                 String      @default("free") // free, pro
+  status               SalonStatus @default(ACTIVE)
+  stripeCustomerId     String?
   stripeSubscriptionId String?
-  settings          Json?    // SalonSettings: businessHours, slotIntervalMinutes, publicBookingEnabled, currency
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  settings             Json? // SalonSettings: businessHours, slotIntervalMinutes, publicBookingEnabled, currency
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
 
-  customers     Customer[]
-  staff         Staff[]
-  services      Service[]
-  appointments  Appointment[]
-  payments      Payment[]
-  users         User[]
-  owners        OwnerSalon[]
-  activityLogs  ActivityLog[]
-  daysOff       DayOff[]
+  customers       Customer[]
+  staff           Staff[]
+  services        Service[]
+  appointments    Appointment[]
+  payments        Payment[]
+  users           User[]
+  owners          OwnerSalon[]
+  activityLogs    ActivityLog[]
+  daysOff         DayOff[]
+  subscription    Subscription? // SaaS subscription (one per salon)
+  billingPayments BillingPayment[] // SaaS payments (distinct from appointment `payments`)
 }
 
 model Customer {
@@ -50,7 +52,7 @@ model Customer {
   updatedAt DateTime @updatedAt
 
   salonId String
-  salon   Salon @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  salon   Salon  @relation(fields: [salonId], references: [id], onDelete: Cascade)
 
   appointments Appointment[]
 
@@ -60,19 +62,19 @@ model Customer {
 }
 
 model Staff {
-  id        String   @id @default(cuid())
-  name      String
-  phone     String   @default("")
-  role      String   @default("stylist") // stylist, receptionist
-  active    Boolean  @default(true)
+  id           String   @id @default(cuid())
+  name         String
+  phone        String   @default("")
+  role         String   @default("stylist") // stylist, receptionist
+  active       Boolean  @default(true)
   // Optional weekly working-hours template (StaffAvailability JSON, read via
   // parseStaffAvailability). null = follows salon business hours (no override).
   availability Json?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   salonId String
-  salon   Salon @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  salon   Salon  @relation(fields: [salonId], references: [id], onDelete: Cascade)
 
   appointments Appointment[]
   users        User[]
@@ -87,34 +89,34 @@ model Staff {
 // just that stylist is off while the rest of the salon books normally. One date per row.
 model DayOff {
   id        String   @id @default(cuid())
-  date      String   // YYYY-MM-DD (matches Appointment.date)
+  date      String // YYYY-MM-DD (matches Appointment.date)
   reason    String   @default("")
   createdAt DateTime @default(now())
 
   salonId String
-  salon   Salon @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  salon   Salon  @relation(fields: [salonId], references: [id], onDelete: Cascade)
 
   staffId String?
-  staff   Staff? @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  staff   Staff?  @relation(fields: [staffId], references: [id], onDelete: Cascade)
 
   @@index([salonId, date])
   @@index([staffId])
 }
 
 model Service {
-  id          String   @id @default(cuid())
-  name        String
-  price       Float    // in RWF
-  duration    Int      // in minutes
-  active      Boolean  @default(true)
-  category    String   @default("") // groups the catalog (e.g. "Hair", "Nails")
-  description String   @default("") // client-facing; shown on the public booking page
-  onlineBookable Boolean @default(true) // false = front-desk only (hidden from online booking)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id             String   @id @default(cuid())
+  name           String
+  price          Float // in RWF
+  duration       Int // in minutes
+  active         Boolean  @default(true)
+  category       String   @default("") // groups the catalog (e.g. "Hair", "Nails")
+  description    String   @default("") // client-facing; shown on the public booking page
+  onlineBookable Boolean  @default(true) // false = front-desk only (hidden from online booking)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   salonId String
-  salon   Salon @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  salon   Salon  @relation(fields: [salonId], references: [id], onDelete: Cascade)
 
   appointments Appointment[]
 
@@ -124,27 +126,27 @@ model Service {
 
 model Appointment {
   id        String   @id @default(cuid())
-  date      String   // YYYY-MM-DD format for easy querying
-  startTime String   // HH:mm format
-  endTime   String   // HH:mm format
+  date      String // YYYY-MM-DD format for easy querying
+  startTime String // HH:mm format
+  endTime   String // HH:mm format
   status    String   @default("booked") // booked, confirmed, in_progress, completed, no_show
   notes     String   @default("")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   salonId String
-  salon   Salon @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  salon   Salon  @relation(fields: [salonId], references: [id], onDelete: Cascade)
 
   customerId String
   customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
   staffId String
-  staff   Staff @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  staff   Staff  @relation(fields: [staffId], references: [id], onDelete: Cascade)
 
   serviceId String
   service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
 
-  payment    Payment?
+  payment Payment?
 
   @@index([date])
   @@index([status])
@@ -154,15 +156,15 @@ model Appointment {
 }
 
 model Payment {
-  id            String      @id @default(cuid())
-  status        String      @default("unpaid") // unpaid, partial, paid
-  method        String      @default("cash") // cash, mtn_momo, airtel_money
-  amount        Float      @default(0) // amount paid in RWF
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  id        String   @id @default(cuid())
+  status    String   @default("unpaid") // unpaid, partial, paid
+  method    String   @default("cash") // cash, mtn_momo, airtel_money
+  amount    Float    @default(0) // amount paid in RWF
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   salonId String
-  salon   Salon @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  salon   Salon  @relation(fields: [salonId], references: [id], onDelete: Cascade)
 
   appointmentId String      @unique
   appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
@@ -173,29 +175,29 @@ model Payment {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  name      String
-  phone        String? // E.164, set via staff-invite onboarding
-  email        String // stored lowercased; unique per salon (see @@unique below)
-  passwordHash String // scrypt (salt$hash) via lib/password — same scheme as Owner
+  id                String   @id @default(cuid())
+  name              String
+  phone             String? // E.164, set via staff-invite onboarding
+  email             String // stored lowercased; unique per salon (see @@unique below)
+  passwordHash      String // scrypt (salt$hash) via lib/password — same scheme as Owner
   // true = admin set a temporary password; the staff member is forced to choose
   // their own on first login (set on creation; cleared by /api/auth/change-password).
-  mustResetPassword Boolean @default(false)
-  role      String   @default("receptionist") // admin, receptionist, stylist
-  active    Boolean  @default(true)
+  mustResetPassword Boolean  @default(false)
+  role              String   @default("receptionist") // admin, receptionist, stylist
+  active            Boolean  @default(true)
   // default(true) so existing rows skip the tour; user-creation routes set false explicitly
-  tourCompleted Boolean @default(true)
-  staffId   String?  // optional link to Staff record
-  staff     Staff?   @relation(fields: [staffId], references: [id], onDelete: SetNull)
+  tourCompleted     Boolean  @default(true)
+  staffId           String? // optional link to Staff record
+  staff             Staff?   @relation(fields: [staffId], references: [id], onDelete: SetNull)
   // Per-user personal settings (UserSettings JSON) — read via parseUserSettings()
-  settings  Json?
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  settings          Json?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   salonId String
-  salon   Salon @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  salon   Salon  @relation(fields: [salonId], references: [id], onDelete: Cascade)
 
-  invite  StaffInvite? // pending onboarding invite, if any
+  invite StaffInvite? // pending onboarding invite, if any
 
   // Staff log in scoped to their salon (the Host), so email is unique per-salon —
   // the same email may be staff at more than one salon.
@@ -208,18 +210,18 @@ model User {
 // at the root domain (email + password) and is granted admin rights to every
 // salon they are linked to via OwnerSalon, WITHOUT needing a per-salon User row.
 model Owner {
-  id           String   @id @default(cuid())
-  email        String   @unique // stored lowercased
-  passwordHash String   // scrypt (salt$hash) — NOT the SHA-256 used for staff PINs
-  name         String
+  id                String   @id @default(cuid())
+  email             String   @unique // stored lowercased
+  passwordHash      String // scrypt (salt$hash) — NOT the SHA-256 used for staff PINs
+  name              String
   // true = a temp/placeholder password that should be reset on first login.
   // Set by the backfill script; ENFORCEMENT is a deferred follow-up (the flag is
   // currently an unenforced marker — login still works with the temp password).
-  mustResetPassword Boolean @default(false)
+  mustResetPassword Boolean  @default(false)
   // Per-user personal settings (UserSettings JSON) — read via parseUserSettings()
-  settings  Json?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  settings          Json?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   salons OwnerSalon[]
 }
@@ -273,7 +275,7 @@ model StaffInvite {
   lockedUntil DateTime?
   createdAt   DateTime  @default(now())
 
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 // Append-only "who did what, when" feed for owner transparency (Phase 2). Written
@@ -285,19 +287,19 @@ model StaffInvite {
 // feed renders with no joins and stays correct after a target record is deleted.
 model ActivityLog {
   id         String   @id @default(cuid())
-  actorType  String   // 'staff' | 'owner'
-  actorId    String   // User.id or Owner.id — intentionally NOT a foreign key
-  actorName  String   // snapshot at write-time
-  actorRole  String   // snapshot: admin | receptionist | stylist | owner
-  action     String   // e.g. 'appointment.confirmed' — see ACTIVITY_ACTIONS
-  targetType String?  // 'appointment' | 'payment' | 'user' | 'staff'
+  actorType  String // 'staff' | 'owner'
+  actorId    String // User.id or Owner.id — intentionally NOT a foreign key
+  actorName  String // snapshot at write-time
+  actorRole  String // snapshot: admin | receptionist | stylist | owner
+  action     String // e.g. 'appointment.confirmed' — see ACTIVITY_ACTIONS
+  targetType String? // 'appointment' | 'payment' | 'user' | 'staff'
   targetId   String?
-  summary    String   // human-readable sentence, built at write-time
-  metadata   Json?    // optional details: { from, to } | { amount, method } | ...
+  summary    String // human-readable sentence, built at write-time
+  metadata   Json? // optional details: { from, to } | { amount, method } | ...
   createdAt  DateTime @default(now())
 
   salonId String
-  salon   Salon @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  salon   Salon  @relation(fields: [salonId], references: [id], onDelete: Cascade)
 
   @@index([salonId, createdAt])
 }
@@ -318,13 +320,104 @@ enum OperatorAction {
 
 model OperatorAuditLog {
   id            String         @id @default(cuid())
-  operatorEmail String         // SSO actor; snapshot, intentionally NOT a foreign key
+  operatorEmail String // SSO actor; snapshot, intentionally NOT a foreign key
   action        OperatorAction
-  targetSalonId String         // the salon acted on; plain string, NOT a foreign key
-  reason        String?        // required (enforced in the writer) for state changes; optional for reveals/views
-  metadata      Json?          // before/after where relevant
+  targetSalonId String // the salon acted on; plain string, NOT a foreign key
+  reason        String? // required (enforced in the writer) for state changes; optional for reveals/views
+  metadata      Json? // before/after where relevant
   createdAt     DateTime       @default(now())
 
   @@index([targetSalonId, createdAt])
   @@index([createdAt])
+}
+
+// ============================================================================
+//  SUBSCRIPTION MANAGEMENT (integrated from context/subscription-models.prisma)
+// ============================================================================
+/// Reference data. Changes rarely. NEVER edit a live row's price/limits/features
+/// in place — clone to a new id (e.g. "pro_v2"), set the old one isActive=false,
+/// and migrate deliberately. IDs are stable strings (not cuid) on purpose so code
+/// and seeds can reference them and existing Salon.plan strings map straight across.
+model Plan {
+  id       String @id // "free" / "pro" / (later) "basic" / "enterprise"
+  name     String
+  price    Float  @default(0) // RWF (whole numbers — Float is exact for these)
+  currency String @default("RWF")
+  interval String @default("monthly") // "monthly" | "annual"
+
+  // Quantitative limits. null = UNLIMITED (one convention, never 0 or -1).
+  // These are the only fields that cause "overflow" on downgrade.
+  maxStaff     Int?
+  maxCustomers Int?
+  maxLocations Int?
+  maxSms       Int? // per month
+
+  // On/off features. JSON so new flags don't need a migration each time.
+  // e.g. { "online_booking": true, "advanced_reports": false }
+  features Json @default("{}")
+
+  isActive  Boolean @default(true) // can NEW salons still subscribe? (grandfathering)
+  sortOrder Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  subscriptions Subscription[] @relation("PlanSubscriptions")
+  pendingFor    Subscription[] @relation("PendingPlan")
+}
+
+/// The heart. One per salon. Changes constantly.
+model Subscription {
+  id      String @id @default(cuid())
+  salonId String @unique // one subscription per salon
+  salon   Salon  @relation(fields: [salonId], references: [id], onDelete: Cascade)
+
+  planId String
+  plan   Plan   @relation("PlanSubscriptions", fields: [planId], references: [id])
+
+  status    SubscriptionStatus @default(TRIALING)
+  periodEnd DateTime? // when paid time runs out (null = no expiry, e.g. free)
+
+  // Plan scheduled to take effect at periodEnd (downgrades wait; upgrades apply now).
+  pendingPlanId String?
+  pendingPlan   Plan?   @relation("PendingPlan", fields: [pendingPlanId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  payments BillingPayment[]
+
+  @@index([salonId])
+  @@index([status])
+}
+
+/// Append-only log of SaaS payments (manual MoMo refs now, gateway rows later).
+/// NOTE: separate from your per-appointment `Payment` model — different concern.
+model BillingPayment {
+  id             String        @id @default(cuid())
+  salonId        String
+  salon          Salon         @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  subscriptionId String?
+  subscription   Subscription? @relation(fields: [subscriptionId], references: [id])
+
+  amount    Float    @default(0) // RWF
+  currency  String   @default("RWF")
+  method    String // "MTN MoMo" | "Airtel" | "card" | "bank"
+  reference String // transaction id (typed manually now, from gateway later)
+  paidAt    DateTime @default(now())
+
+  createdAt DateTime @default(now())
+
+  // Idempotency guard: the same payment reference can't be inserted twice for a
+  // salon — protects against double-typed refs now and double-fired webhooks later.
+  @@unique([salonId, reference])
+  @@index([salonId])
+}
+
+enum SubscriptionStatus {
+  TRIALING // trial, no payment yet           -> full access
+  ACTIVE // paid, current                      -> full access
+  PAST_DUE // payment unconfirmed, in grace    -> full access (don't cut!)
+  SUSPENDED // grace ran out                    -> restricted
+  CANCELED // ended                             -> none / read-only
 }
