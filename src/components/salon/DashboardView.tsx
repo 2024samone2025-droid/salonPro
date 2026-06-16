@@ -13,8 +13,7 @@ import { Progress } from '@/components/ui/progress'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Skeleton } from '@/components/ui/skeleton'
 import StatCard from '@/components/salon/StatCard'
-import DayScheduleTimeline from '@/components/salon/DayScheduleTimeline'
-import UpcomingAppointments from '@/components/salon/UpcomingAppointments'
+import StatusBadge from '@/components/salon/StatusBadge'
 import EmptyState from '@/components/salon/EmptyState'
 import ErrorState from '@/components/salon/ErrorState'
 import {
@@ -35,17 +34,6 @@ import { cn } from '@/lib/utils'
 import { STATUS_CONFIG, type AppointmentStatus } from '@/lib/constants'
 
 interface DashboardData {
-  today: string
-  upcomingAppointments: Array<{
-    id: string
-    date: string
-    startTime: string
-    endTime: string
-    status: string
-    customer: { name: string }
-    staff: { name: string }
-    service: { name: string; price: number }
-  }>
   todayAppointments: Array<{
     id: string
     date: string
@@ -53,7 +41,7 @@ interface DashboardData {
     endTime: string
     status: string
     customer: { name: string }
-    staff: { id: string; name: string }
+    staff: { name: string }
     service: { name: string; price: number; duration: number }
     payment?: { status: string; amount: number } | null
   }>
@@ -77,14 +65,6 @@ interface DashboardData {
     totalMinutes: number
   }>
   totalAppointmentsToday: number
-  priorRevenue: number
-  priorAppointmentCount: number
-}
-
-/** Signed percent change vs a prior period; null when there's no baseline to divide by. */
-function deltaPct(current: number, prior: number): number | null {
-  if (prior <= 0) return null
-  return ((current - prior) / prior) * 100
 }
 
 export default function DashboardView() {
@@ -235,8 +215,6 @@ export default function DashboardView() {
           value={data.totalAppointmentsToday}
           context={breakdownSummary || 'Nothing scheduled yet'}
           tone="accent"
-          delta={deltaPct(data.totalAppointmentsToday, data.priorAppointmentCount)}
-          deltaLabel="vs last week"
           onClick={() => router.push('/appointments')}
         />
         {!isStylist && (
@@ -244,10 +222,7 @@ export default function DashboardView() {
             icon={Banknote}
             label="Revenue today"
             value={formatRWF(data.todayRevenue)}
-            context="vs last week"
             tone="success"
-            delta={deltaPct(data.todayRevenue, data.priorRevenue)}
-            deltaLabel="vs last week"
             onClick={() => router.push('/reports')}
           />
         )}
@@ -263,8 +238,8 @@ export default function DashboardView() {
         )}
       </div>
 
-      {/* Today's schedule (timeline) + upcoming-appointments rail */}
-      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] gap-3">
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] gap-3">
+        {/* Today's schedule */}
         <Card>
           <CardHeader>
             <CardTitle className="text-[15px] font-medium">
@@ -284,16 +259,37 @@ export default function DashboardView() {
                 className="border-0 bg-transparent p-4"
               />
             ) : (
-              <DayScheduleTimeline appointments={data.todayAppointments} />
+              <ScrollArea className="max-h-96">
+                <div>
+                  {data.todayAppointments.map((apt, i) => (
+                    <div
+                      key={apt.id}
+                      className={cn(
+                        'flex items-center gap-2.5 py-2.5',
+                        i < data.todayAppointments.length - 1 &&
+                          'border-b-hairline border-border/80'
+                      )}
+                    >
+                      <span className="min-w-[88px] text-xs text-muted-foreground tabular-nums">
+                        {apt.startTime} – {apt.endTime}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-[13px] text-foreground">{apt.customer.name}</p>
+                        <p className="truncate text-xs text-muted-foreground">
+                          {apt.service.name} · {apt.staff.name}
+                        </p>
+                      </div>
+                      <StatusBadge status={apt.status} className="shrink-0" />
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
             )}
           </CardContent>
         </Card>
 
-        <UpcomingAppointments today={data.today} appointments={data.upcomingAppointments} />
-      </div>
-
-      {/* Workload + status breakdown */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        {/* Right column: workload + status breakdown */}
+        <div className="flex flex-col gap-3">
           <Card>
             <CardHeader>
               <CardTitle className="text-[15px] font-medium">
@@ -369,6 +365,7 @@ export default function DashboardView() {
               )}
             </CardContent>
           </Card>
+        </div>
       </div>
 
       {/* Pending payments — admin/receptionist only */}
