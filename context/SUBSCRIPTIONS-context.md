@@ -36,13 +36,13 @@ Files are used **verbatim** — not "improved".
 - [x] 1. Branch `feat/subscriptions` off main + this tracker file
 - [x] 2. Schema: paste Plan/Subscription/BillingPayment/SubscriptionStatus + 2 Salon relations
 - [x] 3. Migrate — see "Migration result" below (used `db push`, not `migrate dev`)
-- [ ] 4. Place logic files: entitlements.ts + billing.ts → src/lib/
-- [ ] 5. Seed: prisma/seed.subscriptions.ts + run `npx tsx` (free+pro plans, backfill subs)
-- [ ] 6. Seam — checkout route → `applyPlanChange(salonId, 'pro')`
-- [ ] 7. Seam — webhook route → activate: applyPlanChange + recordPayment; cancel: setStatus CANCELED
-- [ ] 8. Entitlements — customers route → `isAtLimit(salonId, 'maxCustomers', count)`
-- [ ] 9. Verify: `tsc --noEmit`; grep remaining plan checks
-- [ ] 10. Report: migration result, files changed, remaining scattered plan checks
+- [x] 4. Place logic files: entitlements.ts + billing.ts → src/lib/
+- [x] 5. Seed: prisma/seed.subscriptions.ts + run `npx tsx` (free+pro plans, backfill subs)
+- [x] 6. Seam — checkout route → `applyPlanChange(salonId, 'pro')`
+- [x] 7. Seam — webhook route → activate: applyPlanChange + recordPayment; cancel: setStatus CANCELED
+- [x] 8. Entitlements — customers route → `isAtLimit(salonId, 'maxCustomers', count)`
+- [x] 9. Verify: `tsc --noEmit` (0 errors); grep remaining plan checks (below)
+- [x] 10. Report: migration result, files changed, remaining scattered plan checks
 
 ## Explicitly NOT in scope (do not implement)
 
@@ -73,8 +73,32 @@ free/pro · Stripe signature verification · UI redesign.
 
 ## Remaining scattered plan checks (step 9 — report only, do NOT change)
 
-_(filled in at step 9)_
+Found via grep. **Left unchanged** for us to decide together. Three real
+plan-string comparisons remain:
+
+1. **`src/app/(app)/billing/page.tsx`** — `const isPro = salon?.plan === 'pro'`
+   (lines 43, 66, 70, 100, 101, 105). The customer-facing billing UI; drives the
+   upgrade button / "Subscribed" state. Candidate to move to `getAccess`/plan data,
+   but it reads the synced cache so it's correct today.
+2. **`src/app/api/billing/checkout/route.ts:18`** — `if (salon.plan === 'pro')`
+   the "already subscribed" guard. In a file I edited; left intact intentionally
+   (reads the synced cache; harmless). Could become a subscription/status check later.
+3. **`src/app/operator/page.tsx:41`** — `rows.filter((r) => r.plan === 'pro').length`
+   the operator console "on pro" metric card.
+
+Benign **display reads** of `salon.plan` (NOT comparisons — just surface the cached
+string, fine to leave): `api/auth/me:35`, `api/auth/login:64`,
+`api/salon/settings:26,102`, `api/salons:20`, `operator/page.tsx:33`,
+`operator/[salonId]/page.tsx:113`, `components/operator/DirectoryList.tsx:84`.
 
 ## Files changed
 
-_(running list, filled per commit)_
+- `prisma/schema.prisma` — Plan/Subscription/BillingPayment + SubscriptionStatus + 2 Salon relations
+- `src/lib/entitlements.ts` (new) · `src/lib/billing.ts` (new; one type-fix vs source)
+- `prisma/seed.subscriptions.ts` (new)
+- `src/app/api/billing/checkout/route.ts` — applyPlanChange
+- `src/app/api/billing/webhook/route.ts` — applyPlanChange + recordPayment / setStatus
+- `src/app/api/customers/route.ts` — isAtLimit (removed FREE_PLAN_LIMITS)
+- `context/SUBSCRIPTIONS-context.md` (this tracker) · `context/billing.ts` (same type-fix)
+
+## Status: ALL 10 STEPS COMPLETE. tsc 0 errors, eslint clean. DB additive (no data lost).
