@@ -62,7 +62,7 @@ export async function GET(
   ])
 
   return NextResponse.json({
-    salon: { name: salon.name, subdomain: salon.subdomain },
+    salon: { name: salon.name, subdomain: salon.subdomain, logoUrl: settings.profile.logoUrl },
     currency: settings.currency,
     services,
     staff,
