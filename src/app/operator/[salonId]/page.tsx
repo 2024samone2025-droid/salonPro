@@ -9,6 +9,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import OwnerContact from '@/components/operator/OwnerContact'
 import StatusActions from '@/components/operator/StatusActions'
 import BillingActions from '@/components/operator/BillingActions'
+import PaymentHistory from '@/components/operator/PaymentHistory'
 
 export const dynamic = 'force-dynamic'
 
@@ -43,7 +44,7 @@ export default async function OperatorTenantDetailPage({
   const today = daysAgoISO(0)
 
   // Cross-tenant reads, scoped here to this one salonId by us, not by requireAuth.
-  const [staffCount, clientCount, appts30d, ownerLink, auditRows, subscription, payments] =
+  const [staffCount, clientCount, appts30d, ownerLink, auditRows, subscription, payments, proPlan] =
     await Promise.all([
       db.staff.count({ where: { salonId } }),
       db.customer.count({ where: { salonId } }),
@@ -65,9 +66,12 @@ export default async function OperatorTenantDetailPage({
       db.billingPayment.findMany({
         where: { salonId },
         orderBy: { paidAt: 'desc' },
-        take: 10,
+        take: 20, // payment + its reversal are two rows
       }),
+      db.plan.findUnique({ where: { id: 'pro' }, select: { price: true } }),
     ])
+
+  const expectedAmount = proPlan?.price ?? 15000
 
   return (
     <div className="space-y-6">
@@ -153,36 +157,26 @@ export default async function OperatorTenantDetailPage({
               salonId={salon.id}
               currentPlan={subscription.plan.id}
               currentStatus={subscription.status}
+              expectedAmount={expectedAmount}
             />
 
-            {/* Payment history */}
+            {/* Payment history (append-only ledger; rows can be reversed, not deleted) */}
             <div>
               <h3 className="mb-2 text-xs font-medium text-muted-foreground">Recent payments</h3>
-              {payments.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No payments recorded yet.</p>
-              ) : (
-                <ul className="divide-y divide-border">
-                  {payments.map((p) => (
-                    <li key={p.id} className="flex items-center justify-between gap-4 py-2 text-sm">
-                      <div className="min-w-0">
-                        <span className="font-medium tabular-nums">
-                          {formatMoney(p.amount, p.currency)}
-                        </span>
-                        <span className="text-muted-foreground"> · {p.method}</span>
-                        <div className="truncate text-xs text-muted-foreground">
-                          ref {p.reference}
-                        </div>
-                      </div>
-                      <time
-                        className="shrink-0 text-xs text-muted-foreground"
-                        dateTime={p.paidAt.toISOString()}
-                      >
-                        {p.paidAt.toLocaleDateString()}
-                      </time>
-                    </li>
-                  ))}
-                </ul>
-              )}
+              <PaymentHistory
+                salonId={salon.id}
+                payments={payments.map((p) => ({
+                  id: p.id,
+                  amount: p.amount,
+                  currency: p.currency,
+                  method: p.method,
+                  reference: p.reference,
+                  paidAt: p.paidAt.toISOString(),
+                  kind: p.kind,
+                  reversesId: p.reversesId,
+                  voidReason: p.voidReason,
+                }))}
+              />
             </div>
           </div>
         ) : (
