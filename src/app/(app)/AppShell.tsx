@@ -107,7 +107,9 @@ function AppFrame({ children }: { children: React.ReactNode }) {
         <div className="flex-1 p-4 sm:p-6 md:p-8 overflow-y-auto overflow-x-hidden min-w-0">
           <div className="mx-auto w-full max-w-7xl">{children}</div>
         </div>
-        <footer className="border-t py-2 px-4 text-center mt-auto">
+        {/* Desktop-only: a web-style footer reads as "website chrome" on phones,
+            where the bottom is owned by MobileTabBar (native-app feel). */}
+        <footer className="hidden md:block border-t py-2 px-4 text-center mt-auto">
           <p className="text-[11px] text-muted-foreground font-mono">
             © {new Date().getFullYear()} {salon?.name || 'SalonPro'}
           </p>
