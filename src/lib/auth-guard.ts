@@ -94,6 +94,7 @@ export async function requireAuth(req?: NextRequest, requiredPermission?: keyof 
     console.error('applyDuePlanChange failed (non-blocking):', err)
   }
 
+
   // 2. Identify the subject from the session cookie.
   const subject = req ? getSessionFromRequest(req) : await getSession()
   if (!subject) return unauthorized()
