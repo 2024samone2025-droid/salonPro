@@ -162,7 +162,7 @@ reversal iff `reversesId != null`.
       `applyPlanChange(salonId, pendingPlanId, client)` in-tx; else don't touch period and
       return `{ periodAdjusted: false }`. Return `{ periodAdjusted: boolean }`.
 
-- [ ] **4. Operator action — `reversePayment(salonId, paymentId, reason)`**
+- [x] **4. Operator action — `reversePayment(salonId, paymentId, reason)`**
       (`src/app/operator/[salonId]/actions.ts`). `requireOperator()` + required reason;
       one `$transaction` { `reverseManualPayment` + `writeOperatorAuditTx` action
       `REVERSE_PAYMENT`, metadata `{ paymentId, reversalId, periodAdjusted }` }.
