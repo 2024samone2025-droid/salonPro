@@ -579,6 +579,7 @@ export default function AppointmentsView() {
             size="sm"
             onClick={() => setSelectedDate(format(new Date(), 'yyyy-MM-dd'))}
             className="shrink-0"
+            aria-label="Today"
           >
             <CalendarDays className="size-3.5 sm:mr-1" />
             <span className="hidden sm:inline">Today</span>
@@ -591,6 +592,7 @@ export default function AppointmentsView() {
             className="shrink-0"
             onClick={handleShareBookingLink}
             data-tour="share-booking"
+            aria-label="Share booking link"
           >
             <Share2 className="size-3.5 sm:mr-1" />
             <span className="hidden sm:inline">Share booking link</span>
