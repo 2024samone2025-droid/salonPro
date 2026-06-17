@@ -1,0 +1,110 @@
+// ============================================================================
+//  SUBSCRIPTION MANAGEMENT — paste these models into prisma/schema.prisma
+//  Stack: Next.js 15 + Prisma 6 + Postgres (Neon). Conventions matched to yours:
+//  singular PascalCase models, camelCase fields, cuid() PKs, createdAt/updatedAt,
+//  Float-RWF money. Append-only tables carry createdAt only (like OperatorAuditLog).
+// ============================================================================
+
+// ---------------------------------------------------------------------------
+//  1) EDIT your existing Salon model: add these three relation lines.
+//     Keep the existing `plan String @default("free")` column — it stays as a
+//     denormalized cache that applyPlanChange keeps in sync, so all your current
+//     reads (operator console, billing page) keep working unchanged.
+// ---------------------------------------------------------------------------
+//
+//   model Salon {
+//     ... existing fields ...
+//     subscription    Subscription?        // <-- add
+//     billingPayments BillingPayment[]     // <-- add (distinct from your appointment `payments`)
+//   }
+//
+// ---------------------------------------------------------------------------
+
+
+/// Reference data. Changes rarely. NEVER edit a live row's price/limits/features
+/// in place — clone to a new id (e.g. "pro_v2"), set the old one isActive=false,
+/// and migrate deliberately. IDs are stable strings (not cuid) on purpose so code
+/// and seeds can reference them and existing Salon.plan strings map straight across.
+model Plan {
+  id        String  @id // "free" / "pro" / (later) "basic" / "enterprise"
+  name      String
+  price     Float   @default(0) // RWF (whole numbers — Float is exact for these)
+  currency  String  @default("RWF")
+  interval  String  @default("monthly") // "monthly" | "annual"
+
+  // Quantitative limits. null = UNLIMITED (one convention, never 0 or -1).
+  // These are the only fields that cause "overflow" on downgrade.
+  maxStaff     Int?
+  maxCustomers Int?
+  maxLocations Int?
+  maxSms       Int? // per month
+
+  // On/off features. JSON so new flags don't need a migration each time.
+  // e.g. { "online_booking": true, "advanced_reports": false }
+  features Json @default("{}")
+
+  isActive  Boolean @default(true) // can NEW salons still subscribe? (grandfathering)
+  sortOrder Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  subscriptions Subscription[] @relation("PlanSubscriptions")
+  pendingFor    Subscription[] @relation("PendingPlan")
+}
+
+/// The heart. One per salon. Changes constantly.
+model Subscription {
+  id      String @id @default(cuid())
+  salonId String @unique // one subscription per salon
+  salon   Salon  @relation(fields: [salonId], references: [id], onDelete: Cascade)
+
+  planId String
+  plan   Plan   @relation("PlanSubscriptions", fields: [planId], references: [id])
+
+  status    SubscriptionStatus @default(TRIALING)
+  periodEnd DateTime? // when paid time runs out (null = no expiry, e.g. free)
+
+  // Plan scheduled to take effect at periodEnd (downgrades wait; upgrades apply now).
+  pendingPlanId String?
+  pendingPlan   Plan?   @relation("PendingPlan", fields: [pendingPlanId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  payments BillingPayment[]
+
+  @@index([salonId])
+  @@index([status])
+}
+
+/// Append-only log of SaaS payments (manual MoMo refs now, gateway rows later).
+/// NOTE: separate from your per-appointment `Payment` model — different concern.
+model BillingPayment {
+  id             String        @id @default(cuid())
+  salonId        String
+  salon          Salon         @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  subscriptionId String?
+  subscription   Subscription? @relation(fields: [subscriptionId], references: [id])
+
+  amount    Float    @default(0) // RWF
+  currency  String   @default("RWF")
+  method    String // "MTN MoMo" | "Airtel" | "card" | "bank"
+  reference String // transaction id (typed manually now, from gateway later)
+  paidAt    DateTime @default(now())
+
+  createdAt DateTime @default(now())
+
+  // Idempotency guard: the same payment reference can't be inserted twice for a
+  // salon — protects against double-typed refs now and double-fired webhooks later.
+  @@unique([salonId, reference])
+  @@index([salonId])
+}
+
+enum SubscriptionStatus {
+  TRIALING // trial, no payment yet           -> full access
+  ACTIVE // paid, current                      -> full access
+  PAST_DUE // payment unconfirmed, in grace    -> full access (don't cut!)
+  SUSPENDED // grace ran out                    -> restricted
+  CANCELED // ended                             -> none / read-only
+}
