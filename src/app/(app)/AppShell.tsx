@@ -21,7 +21,7 @@ import ChangePasswordForm from '@/components/salon/ChangePasswordForm'
 // clears mustResetPassword, so a successful change drops straight into the app.
 function ForcePasswordReset() {
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-background p-4">
+    <div className="min-h-screen w-full flex items-start sm:items-center justify-center overflow-y-auto bg-background p-4 py-8">
       <div className="w-full max-w-sm space-y-6">
         <div className="space-y-1.5 text-center">
           <Triangle className="size-6 mx-auto fill-foreground text-foreground" />

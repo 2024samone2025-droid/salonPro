@@ -13,7 +13,7 @@ const MIN_PASSWORD_LENGTH = 12
 
 function Shell({ title, description, children }: { title: string; description: string; children: React.ReactNode }) {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-3 sm:p-4 md:p-6">
+    <div className="min-h-screen flex items-start sm:items-center justify-center overflow-y-auto bg-background p-3 sm:p-4 md:p-6 py-8">
       <div className="w-full sm:w-[400px] lg:w-[480px]">
         <div className="text-center mb-6 sm:mb-8">
           <div className="inline-flex items-center justify-center size-10 sm:size-12 rounded-md bg-foreground mb-3 sm:mb-4">
