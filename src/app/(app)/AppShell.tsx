@@ -8,6 +8,7 @@ import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/s
 import { Toaster } from '@/components/ui/sonner'
 import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import Sidebar from '@/components/salon/Sidebar'
 import CommandPalette from '@/components/salon/CommandPalette'
 import MobileTabBar from '@/components/salon/MobileTabBar'
@@ -21,7 +22,7 @@ import ChangePasswordForm from '@/components/salon/ChangePasswordForm'
 // clears mustResetPassword, so a successful change drops straight into the app.
 function ForcePasswordReset() {
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-background p-4">
+    <div className="min-h-screen w-full flex items-start sm:items-center justify-center overflow-y-auto bg-background p-4 py-8">
       <div className="w-full max-w-sm space-y-6">
         <div className="space-y-1.5 text-center">
           <Triangle className="size-6 mx-auto fill-foreground text-foreground" />
@@ -85,8 +86,21 @@ function AppFrame({ children }: { children: React.ReactNode }) {
         <header className="sticky top-0 z-10 flex h-11 shrink-0 items-center gap-2 border-b border-sidebar-border bg-sidebar px-2 sm:px-4">
           <SidebarTrigger className="-ml-1 size-7 hidden md:flex" />
           <Separator orientation="vertical" className="h-4 hidden md:block" />
-          <div className="flex items-center gap-1">
-            <Triangle className="size-3 fill-foreground text-foreground" />
+          <div className="flex items-center gap-1.5">
+            {salon?.settings?.profile?.logoUrl ? (
+              <Avatar className="size-5 rounded-sm">
+                <AvatarImage
+                  src={salon.settings.profile.logoUrl}
+                  alt=""
+                  className="object-cover"
+                />
+                <AvatarFallback className="rounded-sm bg-transparent">
+                  <Triangle className="size-3 fill-foreground text-foreground" />
+                </AvatarFallback>
+              </Avatar>
+            ) : (
+              <Triangle className="size-3 fill-foreground text-foreground" />
+            )}
             <span className="text-[13px] font-medium text-muted-foreground">
               {salon?.name || 'SalonPro'}
             </span>
@@ -104,10 +118,12 @@ function AppFrame({ children }: { children: React.ReactNode }) {
             <ThemeToggle />
           </div>
         </header>
-        <div className="flex-1 p-4 sm:p-6 md:p-8 overflow-auto min-w-0">
+        <div className="flex-1 p-4 sm:p-6 md:p-8 overflow-y-auto overflow-x-hidden min-w-0">
           <div className="mx-auto w-full max-w-7xl">{children}</div>
         </div>
-        <footer className="border-t py-2 px-4 text-center mt-auto">
+        {/* Desktop-only: a web-style footer reads as "website chrome" on phones,
+            where the bottom is owned by MobileTabBar (native-app feel). */}
+        <footer className="hidden md:block border-t py-2 px-4 text-center mt-auto">
           <p className="text-[11px] text-muted-foreground font-mono">
             © {new Date().getFullYear()} {salon?.name || 'SalonPro'}
           </p>

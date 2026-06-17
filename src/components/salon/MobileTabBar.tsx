@@ -6,10 +6,10 @@ import { usePathname } from 'next/navigation'
 import { useAuth, type UserRole } from '@/lib/auth-context'
 import { allNavItems, billingNavItem, settingsNavItem, accountNavItem, navItemsForRole } from '@/components/salon/nav-items'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
-import { cn } from '@/lib/utils'
+import { cn, getInitials } from '@/lib/utils'
 import { Menu, LogOut } from 'lucide-react'
 
 const roleLabels: Record<UserRole, string> = {
@@ -17,14 +17,6 @@ const roleLabels: Record<UserRole, string> = {
   receptionist: 'Receptionist',
   stylist: 'Stylist',
 }
-
-const getInitials = (name: string) =>
-  name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2)
 
 export default function MobileTabBar() {
   const { user, logout } = useAuth()
@@ -55,12 +47,18 @@ export default function MobileTabBar() {
                 aria-current={isActive ? 'page' : undefined}
                 data-tour={`m-nav${item.href.replace('/', '-')}`}
                 className={cn(
-                  'flex flex-col items-center justify-center gap-0.5 h-14 text-[10px] font-medium transition-colors',
+                  'relative flex flex-col items-center justify-center gap-0.5 h-14 text-[11px] font-medium transition-colors',
                   isActive
                     ? 'text-primary'
-                    : 'text-sidebar-foreground/50 hover:text-sidebar-foreground/80'
+                    : 'text-sidebar-foreground/70 hover:text-sidebar-foreground'
                 )}
               >
+                {isActive && (
+                  <span
+                    className="absolute inset-x-0 top-0 h-0.5 bg-primary"
+                    aria-hidden="true"
+                  />
+                )}
                 <Icon className={cn('size-5', isActive && 'fill-primary/15')} aria-hidden="true" />
                 <span>{item.label === 'Appointments' ? 'Appts' : item.label}</span>
               </Link>
@@ -72,12 +70,18 @@ export default function MobileTabBar() {
             aria-expanded={moreOpen}
             data-tour="nav-more"
             className={cn(
-              'flex h-14 flex-col items-center justify-center gap-0.5 rounded-none px-0 text-[10px] font-medium hover:bg-transparent',
+              'relative flex h-14 flex-col items-center justify-center gap-0.5 rounded-none px-0 text-[11px] font-medium hover:bg-transparent',
               moreActive
                 ? 'text-primary hover:text-primary'
-                : 'text-sidebar-foreground/50 hover:text-sidebar-foreground/80'
+                : 'text-sidebar-foreground/70 hover:text-sidebar-foreground'
             )}
           >
+            {moreActive && (
+              <span
+                className="absolute inset-x-0 top-0 h-0.5 bg-primary"
+                aria-hidden="true"
+              />
+            )}
             <Menu className="size-5" aria-hidden="true" />
             <span>More</span>
           </Button>
@@ -117,6 +121,7 @@ export default function MobileTabBar() {
           <Separator />
           <div className="px-4 flex items-center gap-3">
             <Avatar className="size-8 border border-border">
+              <AvatarImage src={user.settings?.profile?.photoUrl} alt="" className="object-cover" />
               <AvatarFallback className="bg-muted text-foreground/70 text-[11px] font-medium">
                 {user.name ? getInitials(user.name) : '??'}
               </AvatarFallback>
