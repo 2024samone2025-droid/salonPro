@@ -5,7 +5,7 @@ import type { SubscriptionStatus } from '@prisma/client'
 import { db } from '@/lib/db'
 import { requireOperator } from '@/lib/operator-guard'
 import { recordOperatorAudit, writeOperatorAuditTx } from '@/lib/operator-audit'
-import { recordManualPayment, applyPlanChange, setStatus } from '@/lib/billing'
+import { recordManualPayment, reverseManualPayment, applyPlanChange, setStatus } from '@/lib/billing'
 
 export interface RevealedContact {
   name: string
@@ -225,4 +225,46 @@ export async function setSubscriptionStatus(
   revalidatePath(`/operator/${salonId}`)
   revalidatePath('/operator')
   return { ok: true }
+}
+
+/**
+ * Reverse a recorded payment — the append-only correction. reverseManualPayment
+ * appends a REVERSAL row and rolls the period back when this payment is still the
+ * one driving it; the audit row (REVERSE_PAYMENT) commits in the same tx. When a
+ * later payment superseded this one, periodAdjusted=false comes back so the UI can
+ * warn the operator to check the period by hand.
+ */
+export async function reversePayment(
+  salonId: string,
+  paymentId: string,
+  reason: string,
+): Promise<StatusActionResult & { periodAdjusted?: boolean }> {
+  const { operatorEmail } = await requireOperator()
+
+  const trimmed = reason.trim()
+  if (!trimmed) return { ok: false, error: 'A reason is required.' }
+  if (!paymentId) return { ok: false, error: 'Missing payment.' }
+
+  try {
+    let periodAdjusted = false
+    await db.$transaction(async (tx) => {
+      const res = await reverseManualPayment(tx, salonId, paymentId, trimmed)
+      periodAdjusted = res.periodAdjusted
+      await writeOperatorAuditTx(tx, {
+        operatorEmail,
+        action: 'REVERSE_PAYMENT',
+        targetSalonId: salonId,
+        reason: trimmed,
+        metadata: { paymentId, reversalId: res.reversalId, periodAdjusted: res.periodAdjusted },
+      })
+    })
+
+    revalidatePath(`/operator/${salonId}`)
+    revalidatePath('/operator')
+    return { ok: true, periodAdjusted }
+  } catch (err) {
+    console.error('reversePayment failed:', err)
+    const already = err instanceof Error && err.message.includes('already reversed')
+    return { ok: false, error: already ? 'This payment was already reversed.' : 'Could not reverse the payment.' }
+  }
 }
