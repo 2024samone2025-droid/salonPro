@@ -16,3 +16,13 @@ export function formatMoney(amount: number, currency: string = 'RWF') {
 export function formatRWF(amount: number) {
   return formatMoney(amount, 'RWF')
 }
+
+// Up-to-two-letter initials for avatar fallbacks (e.g. "Aline Niyonsaba" -> "AN").
+export function getInitials(name: string): string {
+  return name
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2)
+}
