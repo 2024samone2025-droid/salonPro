@@ -1,4 +1,5 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import { Poppins, Geist_Mono } from "next/font/google";
 // Order matters: driver.css first so the tour overrides in globals.css win
 import "driver.js/dist/driver.css";
@@ -20,6 +21,23 @@ export const metadata: Metadata = {
   title: "SalonPro Rwanda - Salon Management System",
   description: "Professional salon management system for Rwanda. Manage appointments, customers, staff, and services.",
   keywords: ["salon", "management", "Rwanda", "appointments", "booking"],
+  // Installable PWA. manifest.ts is auto-linked by Next; these add the iOS
+  // "add to home screen" affordances Android gets from the manifest.
+  appleWebApp: {
+    capable: true,
+    title: "SalonPro",
+    statusBarStyle: "black-translucent",
+  },
+  icons: {
+    icon: "/icon.svg",
+    apple: "/icons/apple-icon-180.png",
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#17151f",
 };
 
 export default function RootLayout({
@@ -30,7 +48,6 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${sans.variable} ${mono.variable}`} suppressHydrationWarning>
       <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1" key="viewport" />
         <script
           // Apply the stored (or OS-preferred) theme before first paint to avoid a flash
           dangerouslySetInnerHTML={{
@@ -48,6 +65,7 @@ export default function RootLayout({
           </div>
         </noscript>
         {children}
+        <ServiceWorkerRegister />
       </body>
     </html>
   );
