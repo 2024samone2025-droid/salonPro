@@ -15,8 +15,9 @@ import {
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PhoneInput } from '@/components/ui/phone-input'
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import ErrorState from '@/components/salon/ErrorState'
-import { Loader2, Route, Copy, Check } from 'lucide-react'
+import { Loader2, Route, Copy, Check, Image as ImageIcon } from 'lucide-react'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
@@ -256,13 +257,29 @@ export default function SalonSettingsTab() {
 
           <div className="space-y-1.5">
             <Label htmlFor="salon-logo">Logo URL</Label>
-            <Input
-              id="salon-logo"
-              value={data.settings.profile.logoUrl}
-              onChange={(e) => updateProfile({ logoUrl: e.target.value })}
-              placeholder="https://.../logo.png"
-              maxLength={300}
-            />
+            <div className="flex items-center gap-3">
+              <Avatar className="size-10 rounded-md border border-border">
+                <AvatarImage
+                  src={data.settings.profile.logoUrl}
+                  alt=""
+                  className="object-cover"
+                />
+                <AvatarFallback className="rounded-md bg-muted text-muted-foreground">
+                  <ImageIcon className="size-4" />
+                </AvatarFallback>
+              </Avatar>
+              <Input
+                id="salon-logo"
+                value={data.settings.profile.logoUrl}
+                onChange={(e) => updateProfile({ logoUrl: e.target.value })}
+                placeholder="https://.../logo.png"
+                maxLength={300}
+                className="flex-1"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Shown on your booking page and in the app header.
+            </p>
           </div>
 
           <div className="space-y-1.5">

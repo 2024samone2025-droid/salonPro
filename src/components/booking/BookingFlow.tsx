@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { PhoneInput } from '@/components/ui/phone-input'
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -43,7 +44,7 @@ interface Staff {
   name: string
 }
 interface SalonInfo {
-  salon: { name: string; subdomain: string }
+  salon: { name: string; subdomain: string; logoUrl?: string }
   currency?: string
   services: Service[]
   staff: Staff[]
@@ -252,7 +253,7 @@ export default function BookingFlow({ subdomain }: { subdomain: string }) {
 
   if (step === 'done' && confirmation) {
     return (
-      <Shell salonName={info.salon.name}>
+      <Shell salonName={info.salon.name} logoUrl={info.salon.logoUrl}>
         <Card>
           <CardHeader className="text-center">
             <div className="mx-auto mb-2 inline-flex size-12 items-center justify-center rounded-full bg-success/10">
@@ -305,7 +306,7 @@ export default function BookingFlow({ subdomain }: { subdomain: string }) {
   const currentStepIndex = STEPS.findIndex((s) => s.key === step)
 
   return (
-    <Shell salonName={info.salon.name}>
+    <Shell salonName={info.salon.name} logoUrl={info.salon.logoUrl}>
       <Card>
         <CardHeader>
           <div className="flex items-center gap-1.5 mb-3">
@@ -536,15 +537,32 @@ export default function BookingFlow({ subdomain }: { subdomain: string }) {
   )
 }
 
-function Shell({ children, salonName }: { children: React.ReactNode; salonName?: string }) {
+function Shell({
+  children,
+  salonName,
+  logoUrl,
+}: {
+  children: React.ReactNode
+  salonName?: string
+  logoUrl?: string
+}) {
   return (
     <div className="min-h-screen bg-background p-4 sm:p-6">
       <Toaster />
       <div className="mx-auto w-full max-w-md">
         <div className="mb-6 text-center">
-          <div className="mb-3 inline-flex size-11 items-center justify-center rounded-xl bg-primary/10">
-            <Scissors className="size-5 text-primary" />
-          </div>
+          {logoUrl ? (
+            <Avatar className="mb-3 inline-flex size-11 rounded-xl">
+              <AvatarImage src={logoUrl} alt="" className="object-cover" />
+              <AvatarFallback className="rounded-xl bg-primary/10">
+                <Scissors className="size-5 text-primary" />
+              </AvatarFallback>
+            </Avatar>
+          ) : (
+            <div className="mb-3 inline-flex size-11 items-center justify-center rounded-xl bg-primary/10">
+              <Scissors className="size-5 text-primary" />
+            </div>
+          )}
           <h1 className="text-xl font-semibold tracking-tight">
             {salonName || 'Book an appointment'}
           </h1>
