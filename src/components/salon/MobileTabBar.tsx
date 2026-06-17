@@ -6,10 +6,10 @@ import { usePathname } from 'next/navigation'
 import { useAuth, type UserRole } from '@/lib/auth-context'
 import { allNavItems, billingNavItem, settingsNavItem, accountNavItem, navItemsForRole } from '@/components/salon/nav-items'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
-import { cn } from '@/lib/utils'
+import { cn, getInitials } from '@/lib/utils'
 import { Menu, LogOut } from 'lucide-react'
 
 const roleLabels: Record<UserRole, string> = {
@@ -17,14 +17,6 @@ const roleLabels: Record<UserRole, string> = {
   receptionist: 'Receptionist',
   stylist: 'Stylist',
 }
-
-const getInitials = (name: string) =>
-  name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2)
 
 export default function MobileTabBar() {
   const { user, logout } = useAuth()
@@ -129,6 +121,7 @@ export default function MobileTabBar() {
           <Separator />
           <div className="px-4 flex items-center gap-3">
             <Avatar className="size-8 border border-border">
+              <AvatarImage src={user.settings?.profile?.photoUrl} alt="" className="object-cover" />
               <AvatarFallback className="bg-muted text-foreground/70 text-[11px] font-medium">
                 {user.name ? getInitials(user.name) : '??'}
               </AvatarFallback>
