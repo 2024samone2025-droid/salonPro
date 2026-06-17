@@ -178,7 +178,7 @@ reversal iff `reversesId != null`.
       button → confirm dialog requiring a reason; surface the "period unchanged — check
       manually" note when the action returns `periodAdjusted: false`.
 
-- [ ] **6. Tenant summary API — `GET /api/billing/summary`** (`src/app/api/billing/
+- [x] **6. Tenant summary API — `GET /api/billing/summary`** (`src/app/api/billing/
       summary/route.ts`). `requireAuth(req)`; **scope strictly to `auth.salonId`**. Return
       `{ plan, status, periodEnd, pendingPlan, payments[] }` (payments = the salon's own
       recent rows: amount, currency, method, paidAt, kind) **plus** `payInstructions:
