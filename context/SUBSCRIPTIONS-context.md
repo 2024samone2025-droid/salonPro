@@ -33,9 +33,9 @@ Files are used **verbatim** — not "improved".
 
 ## Progress checklist
 
-- [ ] 1. Branch `feat/subscriptions` off main + this tracker file
-- [ ] 2. Schema: paste Plan/Subscription/BillingPayment/SubscriptionStatus + 2 Salon relations
-- [ ] 3. Migrate: `prisma migrate dev --name add_subscriptions` (report verbatim on any prompt)
+- [x] 1. Branch `feat/subscriptions` off main + this tracker file
+- [x] 2. Schema: paste Plan/Subscription/BillingPayment/SubscriptionStatus + 2 Salon relations
+- [x] 3. Migrate — see "Migration result" below (used `db push`, not `migrate dev`)
 - [ ] 4. Place logic files: entitlements.ts + billing.ts → src/lib/
 - [ ] 5. Seed: prisma/seed.subscriptions.ts + run `npx tsx` (free+pro plans, backfill subs)
 - [ ] 6. Seam — checkout route → `applyPlanChange(salonId, 'pro')`
@@ -52,7 +52,24 @@ free/pro · Stripe signature verification · UI redesign.
 
 ## Migration result
 
-_(filled in at step 3)_
+**`prisma migrate dev` FAILED — used `prisma db push` instead (Option A, user-approved).**
+
+- `migrate dev` aborted with **P3006 / P1014**: migration `20260615000000_staff_invite`
+  failed on the **shadow database** ("The underlying table for model `User` does not
+  exist"). Root cause: the `_init` migration is a **baseline stub** (`-- Baseline:
+  database already contains the expected schema`) that creates nothing, so the history
+  isn't replayable from zero on the shadow DB. Pre-existing condition, unrelated to
+  subscriptions. The **real Neon DB was never touched** by this (shadow DB only).
+- A first `db push` warned about dropping operator/settings columns+tables — that was a
+  **stale working tree** (a parallel branch-switch had swapped schema.prisma to a
+  pre-operator version). It **refused** (no `--accept-data-loss`), so nothing happened.
+- After returning to the correct `feat/subscriptions` schema, **`prisma db push`
+  succeeded cleanly**: "Your database is now in sync" — additive only, NO drops, NO
+  data-loss prompt. Verified post-push: Plan=0/Subscription=0/BillingPayment=0 (new,
+  empty) and existing data intact (Salon=5, DayOff=2, OperatorAuditLog=5).
+- **Note:** `db push` creates NO migration file. The migration-history baseline is
+  broken and should be repaired separately (out of scope here) before `migrate dev`
+  works again.
 
 ## Remaining scattered plan checks (step 9 — report only, do NOT change)
 
