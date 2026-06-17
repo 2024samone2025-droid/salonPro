@@ -21,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { formatMoney } from '@/lib/utils'
 import {
   recordBillingPayment,
   changeSalonPlan,
@@ -34,6 +35,7 @@ interface Props {
   salonId: string
   currentPlan: string
   currentStatus: string
+  expectedAmount: number // the Pro price — pre-fills the form + soft-warns on mismatch
 }
 
 type Which = 'payment' | 'plan' | 'status' | null
@@ -41,17 +43,21 @@ type Which = 'payment' | 'plan' | 'status' | null
 // Operator manual billing actions. Each opens a shadcn Dialog and calls the
 // matching server action (which runs the change + audit row in one transaction).
 // Billing here never touches access — that's the separate Suspend control.
-export default function BillingActions({ salonId, currentPlan, currentStatus }: Props) {
+export default function BillingActions({ salonId, currentPlan, currentStatus, expectedAmount }: Props) {
   const router = useRouter()
   const [open, setOpen] = useState<Which>(null)
   const [error, setError] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
 
-  // Record-payment fields
-  const [amount, setAmount] = useState('')
+  // Record-payment fields. Amount pre-fills with the Pro price.
+  const [amount, setAmount] = useState(String(expectedAmount))
   const [method, setMethod] = useState(METHODS[0])
   const [reference, setReference] = useState('')
   const [paidAt, setPaidAt] = useState('')
+
+  // Soft-warn (not block) when the typed amount isn't the expected Pro price —
+  // discounts / multi-month / partials are real, so we only flag it.
+  const amountMismatch = amount.trim() !== '' && Number(amount) !== expectedAmount
 
   // Change-plan / set-status fields
   const [plan, setPlan] = useState(currentPlan === 'pro' ? 'free' : 'pro')
@@ -109,8 +115,14 @@ export default function BillingActions({ salonId, currentPlan, currentStatus }: 
                 min={1}
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                placeholder="15000"
+                placeholder={String(expectedAmount)}
               />
+              {amountMismatch && (
+                <p className="text-xs font-medium text-muted-foreground">
+                  ⚠ Differs from the {formatMoney(expectedAmount)} Pro price — record only if this is
+                  intentional (discount / partial / multi-month).
+                </p>
+              )}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="pay-method">Method</Label>
@@ -165,7 +177,7 @@ export default function BillingActions({ salonId, currentPlan, currentStatus }: 
                 )
               }
             >
-              {pending ? 'Recording…' : 'Record payment'}
+              {pending ? 'Recording…' : amountMismatch ? 'Record anyway' : 'Record payment'}
             </Button>
           </DialogFooter>
         </DialogContent>
