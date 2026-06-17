@@ -169,7 +169,7 @@ reversal iff `reversesId != null`.
       `revalidatePath`. Return `{ ok, error?, periodAdjusted? }` so the UI can surface the
       "check the period manually" warning when `periodAdjusted` is false.
 
-- [ ] **5. Operator UI — reversal + amount-check.** In `BillingActions.tsx`: pre-fill the
+- [x] **5. Operator UI — reversal + amount-check.** In `BillingActions.tsx`: pre-fill the
       amount with a new `expectedAmount` prop and **soft-warn + confirm** when it differs
       from expected. In the payment-history list on the detail page
       (`src/app/operator/[salonId]/page.tsx`): pass `expectedAmount` (the Pro plan price —
