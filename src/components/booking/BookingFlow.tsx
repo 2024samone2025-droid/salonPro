@@ -469,6 +469,8 @@ export default function BookingFlow({ subdomain }: { subdomain: string }) {
                   }}
                   placeholder="Jane Doe"
                   required
+                  autoComplete="name"
+                  autoCapitalize="words"
                   aria-invalid={!!nameError}
                   aria-describedby={nameError ? 'book-name-error' : undefined}
                 />
@@ -491,7 +493,9 @@ export default function BookingFlow({ subdomain }: { subdomain: string }) {
                       if (phoneError) setPhoneError('')
                     }}
                     placeholder="07XX XXX XXX"
+                    type="tel"
                     inputMode="tel"
+                    autoComplete="tel"
                     required
                     aria-invalid={!!phoneError}
                     aria-describedby={phoneError ? 'book-phone-error' : undefined}
