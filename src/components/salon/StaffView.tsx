@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { Skeleton } from '@/components/ui/skeleton'
+import ErrorState from '@/components/salon/ErrorState'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Separator } from '@/components/ui/separator'
 import {
@@ -89,6 +90,7 @@ function getInitials(name: string) {
 export default function StaffView() {
   const [staff, setStaff] = useState<StaffMember[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
   const [showDialog, setShowDialog] = useState(false)
   const [editing, setEditing] = useState<StaffMember | null>(null)
   const [saving, setSaving] = useState(false)
@@ -109,6 +111,7 @@ export default function StaffView() {
       setLoading(true)
     }
     isInitialMount.current = false
+    setLoadError(false)
     try {
       const res = await authFetch('/api/staff')
       if (!res.ok) throw new Error('Failed to fetch')
@@ -116,7 +119,7 @@ export default function StaffView() {
       setStaff(Array.isArray(data) ? data : [])
     } catch (err) {
       console.error(err)
-      toast.error('Failed to load staff')
+      setLoadError(true)
     } finally {
       setLoading(false)
     }
@@ -211,6 +214,15 @@ export default function StaffView() {
 
   const activeStaff = staff.filter((s) => s.active)
   const inactiveStaff = staff.filter((s) => !s.active)
+
+  if (loadError) {
+    return (
+      <ErrorState
+        message="We couldn't load your staff. Please try again."
+        onRetry={fetchStaff}
+      />
+    )
+  }
 
   return (
     <div className="space-y-6">

@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
+import ErrorState from '@/components/salon/ErrorState'
 import { Loader2, TriangleAlert, Route } from 'lucide-react'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
@@ -38,15 +39,17 @@ export default function SalonSettingsTab() {
   const router = useRouter()
   const [data, setData] = useState<SalonData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
   const [saving, setSaving] = useState(false)
 
   const load = useCallback(async () => {
+    setLoadError(false)
     try {
       const res = await authFetch('/api/salon/settings')
       if (!res.ok) throw new Error()
       setData(await res.json())
     } catch {
-      toast.error('Failed to load salon settings')
+      setLoadError(true)
     } finally {
       setLoading(false)
     }
@@ -138,6 +141,15 @@ export default function SalonSettingsTab() {
     } finally {
       setSaving(false)
     }
+  }
+
+  if (loadError) {
+    return (
+      <ErrorState
+        message="We couldn't load your salon settings. Please try again."
+        onRetry={load}
+      />
+    )
   }
 
   if (loading || !data) {
