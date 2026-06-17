@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { Skeleton } from '@/components/ui/skeleton'
+import ErrorState from '@/components/salon/ErrorState'
 import {
   Dialog,
   DialogContent,
@@ -89,17 +90,19 @@ export default function UsersTab() {
   const { authFetch, user: currentUser } = useAuth()
   const [users, setUsers] = useState<UserRow[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
 
   const load = useCallback(async () => {
+    setLoadError(false)
     try {
       const usersRes = await authFetch('/api/users')
       if (!usersRes.ok) throw new Error()
       setUsers(await usersRes.json())
     } catch {
-      toast.error('Failed to load users')
+      setLoadError(true)
     } finally {
       setLoading(false)
     }
@@ -177,6 +180,15 @@ export default function UsersTab() {
     } finally {
       setSaving(false)
     }
+  }
+
+  if (loadError) {
+    return (
+      <ErrorState
+        message="We couldn't load your team. Please try again."
+        onRetry={load}
+      />
+    )
   }
 
   if (loading) {

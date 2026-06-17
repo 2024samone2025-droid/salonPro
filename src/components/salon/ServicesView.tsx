@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { Skeleton } from '@/components/ui/skeleton'
+import ErrorState from '@/components/salon/ErrorState'
 import { Separator } from '@/components/ui/separator'
 import {
   Dialog,
@@ -46,6 +47,7 @@ export default function ServicesView() {
   const formatRWF = useMoney()
   const [services, setServices] = useState<Service[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
   const [showDialog, setShowDialog] = useState(false)
   const [editing, setEditing] = useState<Service | null>(null)
   const [saving, setSaving] = useState(false)
@@ -66,6 +68,7 @@ export default function ServicesView() {
       setLoading(true)
     }
     isInitialMount.current = false
+    setLoadError(false)
     try {
       const res = await authFetch('/api/services')
       if (!res.ok) throw new Error('Failed to fetch')
@@ -73,7 +76,7 @@ export default function ServicesView() {
       setServices(Array.isArray(data) ? data : [])
     } catch (err) {
       console.error(err)
-      toast.error('Failed to load services')
+      setLoadError(true)
     } finally {
       setLoading(false)
     }
@@ -172,6 +175,15 @@ export default function ServicesView() {
 
   const activeServices = services.filter((s) => s.active)
   const inactiveServices = services.filter((s) => !s.active)
+
+  if (loadError) {
+    return (
+      <ErrorState
+        message="We couldn't load your services. Please try again."
+        onRetry={fetchServices}
+      />
+    )
+  }
 
   return (
     <div className="space-y-6">

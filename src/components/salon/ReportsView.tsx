@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
+import ErrorState from '@/components/salon/ErrorState'
 import { Separator } from '@/components/ui/separator'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import {
@@ -118,6 +119,7 @@ export default function ReportsView() {
 
   const [data, setData] = useState<ReportData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
   const [period, setPeriod] = useState('daily')
 
   const [customFrom, setCustomFrom] = useState('')
@@ -149,6 +151,7 @@ export default function ReportsView() {
       setLoading(true)
     }
     isInitialMount.current = false
+    setLoadError(false)
     const params = new URLSearchParams()
     if (from && to) {
       params.set('from', from)
@@ -163,6 +166,7 @@ export default function ReportsView() {
       setData(d)
     } catch (err) {
       console.error(err)
+      setLoadError(true)
     } finally {
       setLoading(false)
     }
@@ -232,6 +236,15 @@ export default function ReportsView() {
     value: count,
     color: STATUS_CONFIG[status as AppointmentStatus]?.chartColor || fallbackChartColor,
   }))
+
+  if (loadError) {
+    return (
+      <ErrorState
+        message="We couldn't load your reports. Please try again."
+        onRetry={fetchReports}
+      />
+    )
+  }
 
   // Sparkline data: last 7 data points
   const sparklineData = data.revenueChart.slice(-7).map((d) => d.revenue)

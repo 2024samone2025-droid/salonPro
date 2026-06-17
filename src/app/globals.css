@@ -26,7 +26,7 @@
     /* Text */
     --ink: 240 3% 11%; /* #1c1c1e primary text */
     --ink-muted: 220 9% 46%; /* #6b7280 secondary text */
-    --ink-faint: 218 11% 65%; /* #9ca3af hints — the contrast floor */
+    --ink-faint: 218 11% 65%; /* #9ca3af — decoration/disabled glyphs only, NOT text (fails AA on surface; use --ink-muted for any text) */
 
     /* Accent (the ONE brand color — primary actions, active nav, links) */
     --accent: 340 60% 58%; /* #D4537E */
@@ -105,7 +105,7 @@
     /* Text */
     --ink: 240 5% 96%; /* #f4f4f5 primary text */
     --ink-muted: 240 5% 65%; /* #a1a1aa secondary text */
-    --ink-faint: 240 4% 46%; /* #71717a hints — the contrast floor */
+    --ink-faint: 240 4% 46%; /* #71717a — decoration/disabled glyphs only, NOT text (use --ink-muted for any text) */
 
     /* Accent */
     --accent: 340 71% 75%; /* #ED93B1 */
@@ -161,7 +161,7 @@
   @apply mt-1 font-sans text-[13px] leading-relaxed text-muted-foreground;
 }
 .driver-popover-progress-text {
-  @apply font-sans text-xs text-ink-faint;
+  @apply font-sans text-xs text-muted-foreground;
 }
 .driver-popover-footer {
   @apply mt-3.5 gap-2;
@@ -183,7 +183,7 @@
 }
 /* Close (×) — generous tap target */
 .driver-popover-close-btn {
-  @apply size-8 text-base text-ink-faint hover:bg-transparent hover:text-foreground;
+  @apply size-8 text-base text-muted-foreground hover:bg-transparent hover:text-foreground;
 }
 /* Arrows must match the popover surface */
 .driver-popover-arrow-side-left {
