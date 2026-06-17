@@ -208,7 +208,7 @@ function DayView({
 
   const grid = (
     <div className="relative">
-      <div className="grid grid-cols-[44px_sm:52px_1fr]">
+      <div className="grid grid-cols-[44px_1fr] sm:grid-cols-[52px_1fr]">
         <div className="space-y-0">
           {timeSlots.map((time) => (
             <div key={time} className="h-14 flex items-start justify-end pr-2 pt-0">
