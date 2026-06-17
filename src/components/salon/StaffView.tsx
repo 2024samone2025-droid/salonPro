@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { PhoneInput } from '@/components/ui/phone-input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
@@ -418,11 +419,10 @@ export default function StaffView() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="staff-phone">Phone</Label>
-              <Input
+              <PhoneInput
                 id="staff-phone"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="+250788XXXXXX"
+                onChange={setPhone}
               />
             </div>
             <div className="space-y-2">
