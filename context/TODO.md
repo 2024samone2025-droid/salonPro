@@ -6,7 +6,7 @@ Template — fill in the product/roadmap sections. The cleanup backlog at the bo
 - **Owner accounts + subdomain tenancy** — see the dedicated section below.
 
 ## Next (this milestone)
-- **UI adoption (GLOWBOARD inspiration)** — dashboard day-schedule timeline, KPI trend deltas, upcoming-appointments rail, services-by-category, richer staff cards. Proposed list + file targets in [UI-ADOPTION-context.md](./UI-ADOPTION-context.md).
+- _…_
 
 ## Later / backlog
 - _…_
