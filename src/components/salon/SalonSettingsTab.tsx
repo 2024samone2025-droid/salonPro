@@ -385,12 +385,13 @@ export default function SalonSettingsTab() {
           {DAY_LABELS.map((label, day) => {
             const hours = data.settings.businessHours[String(day)]
             return (
-              <div key={label} className="flex items-center gap-3 py-1">
-                <div className="w-24 text-sm">{label}</div>
+              <div key={label} className="flex flex-wrap items-center gap-x-3 gap-y-2 py-1">
+                <div className="w-24 shrink-0 text-sm">{label}</div>
                 <Switch
                   checked={!hours.closed}
                   onCheckedChange={(open) => updateDay(day, { closed: !open })}
                   aria-label={`${label} open`}
+                  className="shrink-0"
                 />
                 {hours.closed ? (
                   <span className="text-sm text-muted-foreground">Closed</span>
@@ -400,7 +401,7 @@ export default function SalonSettingsTab() {
                       type="time"
                       value={hours.open}
                       onChange={(e) => updateDay(day, { open: e.target.value })}
-                      className="w-28 h-9"
+                      className="w-32 h-9 shrink-0"
                       aria-label={`${label} opening time`}
                     />
                     <span className="text-sm text-muted-foreground">to</span>
@@ -408,7 +409,7 @@ export default function SalonSettingsTab() {
                       type="time"
                       value={hours.close}
                       onChange={(e) => updateDay(day, { close: e.target.value })}
-                      className="w-28 h-9"
+                      className="w-32 h-9 shrink-0"
                       aria-label={`${label} closing time`}
                     />
                   </div>
