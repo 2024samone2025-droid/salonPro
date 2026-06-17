@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import ErrorState from '@/components/salon/ErrorState'
-import { Loader2, TriangleAlert, Route } from 'lucide-react'
+import { Loader2, Route, Copy, Check } from 'lucide-react'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
@@ -41,6 +41,7 @@ export default function SalonSettingsTab() {
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [copied, setCopied] = useState(false)
 
   const load = useCallback(async () => {
     setLoadError(false)
@@ -114,6 +115,18 @@ export default function SalonSettingsTab() {
     })
   }
 
+  const copyBookingUrl = async () => {
+    if (!data) return
+    const url = `${window.location.origin}/book/${data.subdomain}`
+    try {
+      await navigator.clipboard.writeText(url)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      toast.error('Could not copy the link')
+    }
+  }
+
   const handleSave = async () => {
     if (!data) return
     setSaving(true)
@@ -122,8 +135,8 @@ export default function SalonSettingsTab() {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          // subdomain is managed by the operator console, not editable here.
           name: data.name,
-          subdomain: data.subdomain,
           settings: data.settings,
         }),
       })
@@ -183,21 +196,28 @@ export default function SalonSettingsTab() {
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="salon-subdomain">Subdomain</Label>
-            <Input
-              id="salon-subdomain"
-              value={data.subdomain}
-              onChange={(e) =>
-                setData({ ...data, subdomain: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') })
-              }
-              maxLength={30}
-            />
+            <Label htmlFor="salon-booking-url">Booking link</Label>
+            <div className="flex gap-2">
+              <Input
+                id="salon-booking-url"
+                value={bookingUrl}
+                readOnly
+                className="font-mono text-xs"
+                onFocus={(e) => e.currentTarget.select()}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={copyBookingUrl}
+                aria-label="Copy booking link"
+                className="shrink-0"
+              >
+                {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
+              </Button>
+            </div>
             <p className="text-xs text-muted-foreground">
-              Booking link: <span className="font-mono">{bookingUrl}</span>
-            </p>
-            <p className="text-xs text-warning flex items-center gap-1">
-              <TriangleAlert className="size-3.5 shrink-0" />
-              Changing the subdomain breaks booking links you have already shared.
+              Your salon address is managed by SalonPro. Contact support if you need it changed.
             </p>
           </div>
         </CardContent>
