@@ -185,22 +185,30 @@ reversal iff `reversesId != null`.
       { momo, airtel, whatsapp, amount }` read from the env vars (server-side). Exclude
       every other tenant's data; do not accept a `salonId` from the request.
 
-- [ ] **7. Owner `/billing` page** (`src/app/(app)/billing/page.tsx`). Fetch the summary.
+- [x] **7. Owner `/billing` page** (`src/app/(app)/billing/page.tsx`). Fetch the summary.
       Free → pay-instructions block (MoMo/Airtel number, exact amount, "put your salon
       name as reference, then send your transaction ID to WhatsApp …"). Pro → "Pro · active
       until <date>", pending-downgrade note, and the payment-history list. Keep the
       checkout 403 untouched (self-upgrade stays disabled). Honor the ≤10% accent rule —
       one primary emphasis max.
 
-- [ ] **8. Env + docs.** Add `BILLING_MOMO_NUMBER`, `BILLING_AIRTEL_NUMBER`,
+- [x] **8. Env + docs.** Add `BILLING_MOMO_NUMBER`, `BILLING_AIRTEL_NUMBER`,
       `BILLING_CONTACT_WHATSAPP` to `.env` (real values) and document them in
       `.env.example` if present. Note them here.
 
-- [ ] **9. Verify** — `npm run verify` (typecheck + lint + build into `.next-verify`).
+- [x] **9. Verify** — `npm run verify` (typecheck + lint + build into `.next-verify`).
       Manual sanity (in the user's browser, no automation): record a payment (correct +
       mismatched amount → confirm); reverse it → ledger shows the negative row, period
       rolls back, audit `REVERSE_PAYMENT` written; owner `/billing` shows instructions on
-      free and status + history on pro. Tick steps off as they land.
+      free and status + history on pro. Tick steps off as they land. ✅ `npm run verify`
+      clean (tsc + eslint + build); vitest 5/5 pass. **Browser sanity still pending — do
+      it locally (no automation per repo rule).**
+
+---
+
+## STATUS: ALL 9 STEPS BUILT. `npm run verify` clean, tests green. Local-only on
+`feat/operator-billing` (unpushed). Still TODO before push: (1) set REAL MoMo/Airtel/
+WhatsApp values in `.env`; (2) browser sanity pass on operator reverse + owner /billing.
 
 ---
 
