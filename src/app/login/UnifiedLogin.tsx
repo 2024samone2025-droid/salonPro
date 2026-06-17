@@ -32,7 +32,7 @@ type Mode = 'login' | 'salon-redirect'
 
 function Shell({ title, description, children }: { title: string; description: string; children: React.ReactNode }) {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-3 sm:p-4 md:p-6">
+    <div className="min-h-screen flex items-start sm:items-center justify-center overflow-y-auto bg-background p-3 sm:p-4 md:p-6 py-8">
       <div className="w-full sm:w-[400px] lg:w-[480px]">
         <div className="text-center mb-6 sm:mb-8">
           <div className="inline-flex items-center justify-center size-10 sm:size-12 rounded-md bg-foreground mb-3 sm:mb-4">
@@ -271,7 +271,7 @@ export default function UnifiedLogin({ subdomain }: { subdomain: string | null }
                 onChange={(e) => setSalonInput(e.target.value)}
                 autoFocus
                 required
-                className="h-9 sm:h-10 text-[13px] sm:text-sm"
+                className="h-9 sm:h-10 sm:text-sm"
               />
               <span className="text-[13px] text-muted-foreground font-mono whitespace-nowrap">
                 .{typeof window !== 'undefined' ? window.location.host : ''}
@@ -309,7 +309,7 @@ export default function UnifiedLogin({ subdomain }: { subdomain: string | null }
             autoComplete="username"
             autoFocus
             required
-            className="h-9 sm:h-10 text-[13px] sm:text-sm"
+            className="h-9 sm:h-10 sm:text-sm"
           />
         </div>
 
@@ -322,7 +322,7 @@ export default function UnifiedLogin({ subdomain }: { subdomain: string | null }
               placeholder="Enter your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="pr-9 h-9 sm:h-10 text-[13px] sm:text-sm"
+              className="pr-11 md:pr-9 h-9 sm:h-10 sm:text-sm"
               autoComplete="current-password"
               required
             />

@@ -14,7 +14,10 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Loader2, TriangleAlert, Route } from 'lucide-react'
+import { PhoneInput } from '@/components/ui/phone-input'
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
+import ErrorState from '@/components/salon/ErrorState'
+import { Loader2, Route, Copy, Check, Image as ImageIcon } from 'lucide-react'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
@@ -38,15 +41,18 @@ export default function SalonSettingsTab() {
   const router = useRouter()
   const [data, setData] = useState<SalonData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [copied, setCopied] = useState(false)
 
   const load = useCallback(async () => {
+    setLoadError(false)
     try {
       const res = await authFetch('/api/salon/settings')
       if (!res.ok) throw new Error()
       setData(await res.json())
     } catch {
-      toast.error('Failed to load salon settings')
+      setLoadError(true)
     } finally {
       setLoading(false)
     }
@@ -111,6 +117,18 @@ export default function SalonSettingsTab() {
     })
   }
 
+  const copyBookingUrl = async () => {
+    if (!data) return
+    const url = `${window.location.origin}/book/${data.subdomain}`
+    try {
+      await navigator.clipboard.writeText(url)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      toast.error('Could not copy the link')
+    }
+  }
+
   const handleSave = async () => {
     if (!data) return
     setSaving(true)
@@ -119,8 +137,8 @@ export default function SalonSettingsTab() {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          // subdomain is managed by the operator console, not editable here.
           name: data.name,
-          subdomain: data.subdomain,
           settings: data.settings,
         }),
       })
@@ -138,6 +156,15 @@ export default function SalonSettingsTab() {
     } finally {
       setSaving(false)
     }
+  }
+
+  if (loadError) {
+    return (
+      <ErrorState
+        message="We couldn't load your salon settings. Please try again."
+        onRetry={load}
+      />
+    )
   }
 
   if (loading || !data) {
@@ -171,21 +198,28 @@ export default function SalonSettingsTab() {
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="salon-subdomain">Subdomain</Label>
-            <Input
-              id="salon-subdomain"
-              value={data.subdomain}
-              onChange={(e) =>
-                setData({ ...data, subdomain: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') })
-              }
-              maxLength={30}
-            />
+            <Label htmlFor="salon-booking-url">Booking link</Label>
+            <div className="flex gap-2">
+              <Input
+                id="salon-booking-url"
+                value={bookingUrl}
+                readOnly
+                className="font-mono text-xs"
+                onFocus={(e) => e.currentTarget.select()}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={copyBookingUrl}
+                aria-label="Copy booking link"
+                className="shrink-0"
+              >
+                {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
+              </Button>
+            </div>
             <p className="text-xs text-muted-foreground">
-              Booking link: <span className="font-mono">{bookingUrl}</span>
-            </p>
-            <p className="text-xs text-warning flex items-center gap-1">
-              <TriangleAlert className="size-3.5 shrink-0" />
-              Changing the subdomain breaks booking links you have already shared.
+              Your salon address is managed by SalonPro. Contact support if you need it changed.
             </p>
           </div>
         </CardContent>
@@ -203,12 +237,10 @@ export default function SalonSettingsTab() {
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label htmlFor="salon-phone">Phone</Label>
-              <Input
+              <PhoneInput
                 id="salon-phone"
                 value={data.settings.profile.phone}
-                onChange={(e) => updateProfile({ phone: e.target.value })}
-                placeholder="+250 7.. ... ..."
-                maxLength={120}
+                onChange={(phone) => updateProfile({ phone })}
               />
             </div>
             <div className="space-y-1.5">
@@ -225,13 +257,29 @@ export default function SalonSettingsTab() {
 
           <div className="space-y-1.5">
             <Label htmlFor="salon-logo">Logo URL</Label>
-            <Input
-              id="salon-logo"
-              value={data.settings.profile.logoUrl}
-              onChange={(e) => updateProfile({ logoUrl: e.target.value })}
-              placeholder="https://.../logo.png"
-              maxLength={300}
-            />
+            <div className="flex items-center gap-3">
+              <Avatar className="size-10 rounded-md border border-border">
+                <AvatarImage
+                  src={data.settings.profile.logoUrl}
+                  alt=""
+                  className="object-cover"
+                />
+                <AvatarFallback className="rounded-md bg-muted text-muted-foreground">
+                  <ImageIcon className="size-4" />
+                </AvatarFallback>
+              </Avatar>
+              <Input
+                id="salon-logo"
+                value={data.settings.profile.logoUrl}
+                onChange={(e) => updateProfile({ logoUrl: e.target.value })}
+                placeholder="https://.../logo.png"
+                maxLength={300}
+                className="flex-1"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Shown on your booking page and in the app header.
+            </p>
           </div>
 
           <div className="space-y-1.5">
@@ -337,12 +385,13 @@ export default function SalonSettingsTab() {
           {DAY_LABELS.map((label, day) => {
             const hours = data.settings.businessHours[String(day)]
             return (
-              <div key={label} className="flex items-center gap-3 py-1">
-                <div className="w-24 text-sm">{label}</div>
+              <div key={label} className="flex flex-wrap items-center gap-x-3 gap-y-2 py-1">
+                <div className="w-24 shrink-0 text-sm">{label}</div>
                 <Switch
                   checked={!hours.closed}
                   onCheckedChange={(open) => updateDay(day, { closed: !open })}
                   aria-label={`${label} open`}
+                  className="shrink-0"
                 />
                 {hours.closed ? (
                   <span className="text-sm text-muted-foreground">Closed</span>
@@ -352,7 +401,7 @@ export default function SalonSettingsTab() {
                       type="time"
                       value={hours.open}
                       onChange={(e) => updateDay(day, { open: e.target.value })}
-                      className="w-28 h-9"
+                      className="w-32 h-9 shrink-0"
                       aria-label={`${label} opening time`}
                     />
                     <span className="text-sm text-muted-foreground">to</span>
@@ -360,7 +409,7 @@ export default function SalonSettingsTab() {
                       type="time"
                       value={hours.close}
                       onChange={(e) => updateDay(day, { close: e.target.value })}
-                      className="w-28 h-9"
+                      className="w-32 h-9 shrink-0"
                       aria-label={`${label} closing time`}
                     />
                   </div>
