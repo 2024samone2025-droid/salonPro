@@ -271,7 +271,7 @@ export default function UnifiedLogin({ subdomain }: { subdomain: string | null }
                 onChange={(e) => setSalonInput(e.target.value)}
                 autoFocus
                 required
-                className="h-9 sm:h-10 text-[13px] sm:text-sm"
+                className="h-9 sm:h-10 sm:text-sm"
               />
               <span className="text-[13px] text-muted-foreground font-mono whitespace-nowrap">
                 .{typeof window !== 'undefined' ? window.location.host : ''}
@@ -309,7 +309,7 @@ export default function UnifiedLogin({ subdomain }: { subdomain: string | null }
             autoComplete="username"
             autoFocus
             required
-            className="h-9 sm:h-10 text-[13px] sm:text-sm"
+            className="h-9 sm:h-10 sm:text-sm"
           />
         </div>
 
@@ -322,7 +322,7 @@ export default function UnifiedLogin({ subdomain }: { subdomain: string | null }
               placeholder="Enter your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="pr-9 h-9 sm:h-10 text-[13px] sm:text-sm"
+              className="pr-9 h-9 sm:h-10 sm:text-sm"
               autoComplete="current-password"
               required
             />
