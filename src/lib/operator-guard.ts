@@ -23,6 +23,14 @@ export interface OperatorSession {
  * Returns the operator's email (the audit-log actor) or never returns.
  */
 export async function requireOperator(): Promise<OperatorSession> {
+  // 0. DEV-ONLY bypass. Outside production, if OPERATOR_DEV_EMAIL is set, treat it
+  //    as the signed-in operator — so the console can be run locally without the
+  //    full Google OIDC round-trip. HARD-GATED to non-production: in production
+  //    this branch is dead code and Google sign-in is the only way in.
+  if (process.env.NODE_ENV !== 'production' && process.env.OPERATOR_DEV_EMAIL) {
+    return { operatorEmail: process.env.OPERATOR_DEV_EMAIL }
+  }
+
   // 1. Host.
   if (process.env.NODE_ENV === 'production') {
     const host = (await headers()).get('host')?.split(':')[0].toLowerCase()
