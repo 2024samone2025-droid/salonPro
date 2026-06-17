@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
+import ErrorState from '@/components/salon/ErrorState'
 import {
   Table,
   TableBody,
@@ -76,6 +77,7 @@ export default function CustomersView() {
   const formatRWF = useMoney()
   const [customers, setCustomers] = useState<Customer[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [showAddDialog, setShowAddDialog] = useState(false)
   const [showDetailDialog, setShowDetailDialog] = useState(false)
@@ -103,6 +105,7 @@ export default function CustomersView() {
       setLoading(true)
     }
     isInitialMount.current = false
+    setLoadError(false)
     try {
       const url = searchQuery ? `/api/customers?q=${encodeURIComponent(searchQuery)}` : '/api/customers'
       const res = await authFetch(url)
@@ -111,7 +114,7 @@ export default function CustomersView() {
       setCustomers(Array.isArray(data) ? data : [])
     } catch (err) {
       console.error(err)
-      toast.error('Failed to load customers')
+      setLoadError(true)
     } finally {
       setLoading(false)
     }
@@ -204,6 +207,15 @@ export default function CustomersView() {
     return customer.appointments
       .filter((a) => a.status === 'completed')
       .reduce((sum, a) => sum + a.service.price, 0)
+  }
+
+  if (loadError) {
+    return (
+      <ErrorState
+        message="We couldn't load your customers. Please try again."
+        onRetry={fetchCustomers}
+      />
+    )
   }
 
   return (
