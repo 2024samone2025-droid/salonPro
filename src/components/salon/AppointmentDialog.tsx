@@ -9,6 +9,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { Sheet, SheetContent } from '@/components/ui/sheet'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
@@ -105,6 +107,7 @@ export default function AppointmentDialog({ appointment, open, onClose, onUpdate
   const [savingNotes, setSavingNotes] = useState(false)
 
   const { permissions, authFetch } = useAuth()
+  const isMobile = useIsMobile()
   const canUpdateStatus = permissions?.canUpdateAppointmentStatus ?? false
   const canManagePayments = permissions?.canManagePayments ?? false
   const canDelete = permissions?.canDeleteRecords ?? false
@@ -232,20 +235,22 @@ export default function AppointmentDialog({ appointment, open, onClose, onUpdate
 
   const nextStatuses = statusFlow[appointment.status] || []
 
-  return (
-    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            Appointment details
-          </DialogTitle>
-          <DialogDescription className="flex items-center gap-2 pt-1">
-            <StatusBadge status={appointment.status} />
-            <span>{appointment.service.name}</span>
-          </DialogDescription>
-        </DialogHeader>
+  // Shared header + body. Sheet and Dialog are the same Radix primitive, so
+  // DialogHeader/Title/Description render correctly inside either container —
+  // only the shell differs (bottom sheet on phones, centred dialog on desktop).
+  const inner = (
+    <>
+      <DialogHeader>
+        <DialogTitle className="flex items-center gap-2">
+          Appointment details
+        </DialogTitle>
+        <DialogDescription className="flex items-center gap-2 pt-1">
+          <StatusBadge status={appointment.status} />
+          <span>{appointment.service.name}</span>
+        </DialogDescription>
+      </DialogHeader>
 
-        <div className="space-y-5">
+      <div className="space-y-5">
           {/* Customer & Stylist Info */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="flex items-start gap-3">
@@ -496,7 +501,29 @@ export default function AppointmentDialog({ appointment, open, onClose, onUpdate
               </DialogFooter>
             </>
           )}
-        </div>
+      </div>
+    </>
+  )
+
+  // Mobile: bottom sheet — rides above the soft keyboard and matches the rest
+  // of the app's create/edit-in-context surfaces. Desktop: centred dialog.
+  if (isMobile) {
+    return (
+      <Sheet open={open} onOpenChange={(o) => !o && onClose()}>
+        <SheetContent
+          side="bottom"
+          className="max-h-[90vh] overflow-y-auto rounded-t-xl p-6 pb-[max(env(safe-area-inset-bottom),1.5rem)]"
+        >
+          {inner}
+        </SheetContent>
+      </Sheet>
+    )
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+        {inner}
       </DialogContent>
     </Dialog>
   )
