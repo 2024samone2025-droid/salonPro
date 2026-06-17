@@ -142,9 +142,10 @@ reversal iff `reversesId != null`.
 
 ## How to build it (ordered, one commit per step)
 
-- [ ] **1. Schema** — add `BillingEntryKind` enum, the 5 new `BillingPayment` columns +
+- [x] **1. Schema** — add `BillingEntryKind` enum, the 5 new `BillingPayment` columns +
       self-relation, and `REVERSE_PAYMENT` to `OperatorAction`. `prisma db push`. Confirm
-      additive (no drop / no data-loss prompt); regenerate client.
+      additive (no drop / no data-loss prompt); regenerate client. ✅ db in sync, no
+      data-loss prompt; client regenerated.
 
 - [ ] **2. Seam — record now stamps the period snapshot.** In `recordManualPayment`
       (`src/lib/billing.ts`), persist `kind: 'PAYMENT'`, `periodEndBefore: sub.periodEnd`,
