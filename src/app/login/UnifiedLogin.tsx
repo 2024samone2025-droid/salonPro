@@ -322,7 +322,7 @@ export default function UnifiedLogin({ subdomain }: { subdomain: string | null }
               placeholder="Enter your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="pr-9 h-9 sm:h-10 sm:text-sm"
+              className="pr-11 md:pr-9 h-9 sm:h-10 sm:text-sm"
               autoComplete="current-password"
               required
             />
