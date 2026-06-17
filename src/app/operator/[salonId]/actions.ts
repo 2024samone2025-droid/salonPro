@@ -7,6 +7,13 @@ import { requireOperator } from '@/lib/operator-guard'
 import { recordOperatorAudit, writeOperatorAuditTx } from '@/lib/operator-audit'
 import { recordManualPayment, reverseManualPayment, applyPlanChange, setStatus } from '@/lib/billing'
 
+// Prisma's default interactive-transaction window is 5s; our serverless Postgres
+// (Neon) can add several seconds of latency on a cold compute, which intermittently
+// trips P2028 ("transaction already closed") on these short multi-step writes. Give
+// them comfortable headroom so a billing action never fails just because the DB was
+// cold. maxWait = time to acquire a pooled connection; timeout = total tx budget.
+const TX_OPTS = { maxWait: 10000, timeout: 20000 } as const
+
 export interface RevealedContact {
   name: string
   email: string
@@ -77,7 +84,7 @@ export async function setSalonStatus(
       reason: trimmed,
       metadata: { from: salon.status, to: target },
     })
-  })
+  }, TX_OPTS)
 
   revalidatePath(`/operator/${salonId}`)
   revalidatePath('/operator')
@@ -134,7 +141,7 @@ export async function recordBillingPayment(
         reason: `${amount} RWF via ${method} (ref ${reference})`,
         metadata: { amount, method, reference, planId, periodEnd: newPeriodEnd.toISOString() },
       })
-    })
+    }, TX_OPTS)
   } catch (err) {
     console.error('recordBillingPayment failed:', err)
     return { ok: false, error: 'Could not record the payment.' }
@@ -175,7 +182,7 @@ export async function changeSalonPlan(
         reason: trimmed,
         metadata: { from: salon.plan, to: planId },
       })
-    })
+    }, TX_OPTS)
   } catch (err) {
     console.error('changeSalonPlan failed:', err)
     return { ok: false, error: 'Could not change the plan.' }
@@ -216,7 +223,7 @@ export async function setSubscriptionStatus(
         reason: trimmed,
         metadata: { from: sub.status, to: status },
       })
-    })
+    }, TX_OPTS)
   } catch (err) {
     console.error('setSubscriptionStatus failed:', err)
     return { ok: false, error: 'Could not update the status.' }
@@ -257,7 +264,7 @@ export async function reversePayment(
         reason: trimmed,
         metadata: { paymentId, reversalId: res.reversalId, periodAdjusted: res.periodAdjusted },
       })
-    })
+    }, TX_OPTS)
 
     revalidatePath(`/operator/${salonId}`)
     revalidatePath('/operator')
