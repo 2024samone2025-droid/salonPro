@@ -54,7 +54,7 @@ export default function StatCard({
       </div>
       <p className="text-[26px] font-medium leading-none text-foreground tabular-nums">{value}</p>
       {context !== undefined && (
-        <p className="mt-1.5 text-xs text-ink-faint">{context}</p>
+        <p className="mt-1.5 text-xs text-muted-foreground">{context}</p>
       )}
     </Comp>
   )
