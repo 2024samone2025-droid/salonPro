@@ -212,6 +212,23 @@ WhatsApp values in `.env`; (2) browser sanity pass on operator reverse + owner /
 
 ---
 
+## Post-build fix — "Could not record the payment" (Neon tx timeout)
+
+Symptom: recording a payment in the console returned "Could not record the payment."
+Diagnosed by running the real `recordManualPayment` against the live DB inside a
+rolled-back transaction:
+- The write path + new columns are CORRECT (the INSERT with `kind`/`periodEndBefore`/
+  `periodEndAfter` succeeded; full run returned `{ newPeriodEnd, planId: 'pro' }`).
+- Two real causes: **(1)** the running dev server had a **stale Prisma client** (started
+  before `prisma generate`/`db push`) → it can't write the new fields until restarted;
+  **(2)** Prisma's default **5s interactive-transaction timeout** is too tight for Neon's
+  cold-start latency (a cold run took 5328ms → P2028 "transaction already closed").
+- Fix: added `TX_OPTS = { maxWait: 10000, timeout: 20000 }` to every `db.$transaction`
+  in the operator actions (record / reverse / change-plan / set-status / suspend). Plus:
+  **restart the dev server** after any `prisma generate` / schema change.
+
+---
+
 ## Security invariants (must hold — "secure")
 
 - **Append-only:** no code path `UPDATE`s or `DELETE`s a `BillingPayment`'s financial

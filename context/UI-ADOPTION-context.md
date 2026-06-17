@@ -21,15 +21,19 @@ color/style decisions.
     past ~3 stylists. Mounted full-width in `DashboardView` (replaced the flat list);
     workload + status breakdown moved to a 2-col row below.
 
-- [ ] **Trend deltas on KPI cards**
-  - Where: `StatCard` (add an optional delta chip) → `DashboardView`.
-  - `↑ 12%` (`--success`) / `↓ 12%` (`--destructive`) vs prior period, in the existing
-    `context` slot.
+- [x] **Trend deltas on KPI cards** — done
+  - `StatCard` gained `delta`/`deltaLabel` props rendering an arrow + percent chip
+    (up = `status-completed` green, down = `status-noshow` red, flat = muted).
+  - Dashboard API returns same-weekday-last-week figures (`priorRevenue`,
+    `priorAppointmentCount`) — a like-for-like baseline; chip hidden when no prior data.
+    Wired onto the Appointments + Revenue cards, labelled "vs last week".
 
-- [ ] **"Upcoming appointments" side rail + week date-strip**
-  - Where: `DashboardView` right column.
-  - `MON 09 … SUN 15` strip (selected day = accent) + scrollable list:
-    customer · service · time · `formatRWF()` amount.
+- [x] **"Upcoming appointments" side rail + week date-strip** — done
+  - `UpcomingAppointments.tsx`: 7-day strip from today (selected day = filled accent),
+    per-day appointment list (status dot · customer · service · staff · time ·
+    `formatRWF` amount). API returns `today` + `upcomingAppointments` (today + 6 days).
+  - Layout: timeline + rail now share a 2-col row (`1.5fr / 1fr`), replacing the
+    full-width timeline — closer to the reference and frees the right column.
 
 ## Tier 2 — IA / layout upgrades
 
