@@ -9,6 +9,17 @@ import { applyPlanChange, recordPayment, setStatus } from '@/lib/billing'
 export async function POST(req: Request) {
   try {
     const url = new URL(req.url)
+
+    // This endpoint mutates billing for ANY salon, so it must never be open.
+    // Fail-closed: require BILLING_WEBHOOK_SECRET (via ?secret= or the
+    // x-webhook-secret header). If the env var is unset, every call is rejected.
+    // A real gateway later replaces this with signature verification.
+    const expected = process.env.BILLING_WEBHOOK_SECRET
+    const provided = url.searchParams.get('secret') ?? req.headers.get('x-webhook-secret')
+    if (!expected || provided !== expected) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const salonId = url.searchParams.get('salonId')
     const action = url.searchParams.get('action')
 
