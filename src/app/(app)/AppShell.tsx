@@ -104,7 +104,7 @@ function AppFrame({ children }: { children: React.ReactNode }) {
             <ThemeToggle />
           </div>
         </header>
-        <div className="flex-1 p-4 sm:p-6 md:p-8 overflow-auto min-w-0">
+        <div className="flex-1 p-4 sm:p-6 md:p-8 overflow-y-auto overflow-x-hidden min-w-0">
           <div className="mx-auto w-full max-w-7xl">{children}</div>
         </div>
         <footer className="border-t py-2 px-4 text-center mt-auto">

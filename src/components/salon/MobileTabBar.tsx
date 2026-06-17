@@ -55,12 +55,18 @@ export default function MobileTabBar() {
                 aria-current={isActive ? 'page' : undefined}
                 data-tour={`m-nav${item.href.replace('/', '-')}`}
                 className={cn(
-                  'flex flex-col items-center justify-center gap-0.5 h-14 text-[10px] font-medium transition-colors',
+                  'relative flex flex-col items-center justify-center gap-0.5 h-14 text-[11px] font-medium transition-colors',
                   isActive
                     ? 'text-primary'
-                    : 'text-sidebar-foreground/50 hover:text-sidebar-foreground/80'
+                    : 'text-sidebar-foreground/70 hover:text-sidebar-foreground'
                 )}
               >
+                {isActive && (
+                  <span
+                    className="absolute inset-x-0 top-0 h-0.5 bg-primary"
+                    aria-hidden="true"
+                  />
+                )}
                 <Icon className={cn('size-5', isActive && 'fill-primary/15')} aria-hidden="true" />
                 <span>{item.label === 'Appointments' ? 'Appts' : item.label}</span>
               </Link>
@@ -72,12 +78,18 @@ export default function MobileTabBar() {
             aria-expanded={moreOpen}
             data-tour="nav-more"
             className={cn(
-              'flex h-14 flex-col items-center justify-center gap-0.5 rounded-none px-0 text-[10px] font-medium hover:bg-transparent',
+              'relative flex h-14 flex-col items-center justify-center gap-0.5 rounded-none px-0 text-[11px] font-medium hover:bg-transparent',
               moreActive
                 ? 'text-primary hover:text-primary'
-                : 'text-sidebar-foreground/50 hover:text-sidebar-foreground/80'
+                : 'text-sidebar-foreground/70 hover:text-sidebar-foreground'
             )}
           >
+            {moreActive && (
+              <span
+                className="absolute inset-x-0 top-0 h-0.5 bg-primary"
+                aria-hidden="true"
+              />
+            )}
             <Menu className="size-5" aria-hidden="true" />
             <span>More</span>
           </Button>
