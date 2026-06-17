@@ -102,3 +102,28 @@ string, fine to leave): `api/auth/me:35`, `api/auth/login:64`,
 - `context/SUBSCRIPTIONS-context.md` (this tracker) · `context/billing.ts` (same type-fix)
 
 ## Status: ALL 10 STEPS COMPLETE. tsc 0 errors, eslint clean. DB additive (no data lost).
+
+---
+
+## Review fixes (post-merge, branch `fix/subscription-invariant`)
+
+A `/review` pass found issues; fixed here:
+
+- **🔴 CRITICAL — new salons had no Subscription → locked out.** Nothing created a
+  Subscription at salon creation, so any salon made after the one-time seed had none.
+  Effect: `entitlements.getLimit` returns 0 (no sub) → customers POST 403'd on the
+  FIRST customer; `applyPlanChange` threw P2025 (500) so they couldn't self-upgrade.
+  Fix: `createDefaultSubscription(client, salonId, planId)` (idempotent upsert, accepts
+  a tx client) now runs in every salon-creation tx — `api/salons` (both flows, free) and
+  `api/seed` (pro). **Backfill caught 1 real straggler** (6th salon); now 6/6 subs 1:1.
+- **🟠 IMPORTANT — webhook was unauthenticated.** Anyone could activate/cancel any salon.
+  Added a fail-closed `BILLING_WEBHOOK_SECRET` guard (?secret= or x-webhook-secret header;
+  unset env → all calls 401). **New env var to set: `BILLING_WEBHOOK_SECRET`.**
+- **🟡 checkout ignored auth** → now `if (!auth.authorized) return auth.error` (401 not 404).
+- **🟡 BillingPayment.subscriptionId** was never set → `recordPayment` now auto-resolves it
+  from salonId.
+- **Deliberately left:** webhook activate isn't transactional (recordPayment is idempotent
+  upsert, low risk); entitlements only enforced for maxCustomers so far (per brief).
+
+Still-open follow-ups (unchanged): broken migration baseline (`migrate dev`), and the
+3 remaining `plan === 'pro'` display/guard checks.
