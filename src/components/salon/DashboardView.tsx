@@ -15,10 +15,10 @@ import { Skeleton } from '@/components/ui/skeleton'
 import StatCard from '@/components/salon/StatCard'
 import StatusBadge from '@/components/salon/StatusBadge'
 import EmptyState from '@/components/salon/EmptyState'
+import ErrorState from '@/components/salon/ErrorState'
 import {
   CalendarDays,
   Banknote,
-  AlertCircle,
   Clock,
   Plus,
   UserPlus,
@@ -84,26 +84,41 @@ export default function DashboardView() {
     setError(null)
 
     const controller = new AbortController()
+    let timedOut = false
+    const timer = setTimeout(() => {
+      timedOut = true
+      controller.abort()
+    }, 10_000)
 
     authFetch('/api/dashboard', { signal: controller.signal })
       .then((r) => {
-        if (!r.ok) throw new Error(`Failed to fetch (${r.status})`)
+        if (!r.ok) throw new Error('request-failed')
         return r.json()
       })
       .then((d) => {
+        clearTimeout(timer)
         setData(d)
         setLoading(false)
         setError(null)
       })
       .catch((err) => {
-        if (err.name === 'AbortError') return
+        clearTimeout(timer)
+        // A bare abort (navigation / unmount) is expected — stay quiet.
+        if (err.name === 'AbortError' && !timedOut) return
         console.error('Dashboard fetch error:', err)
-        setError(err.message || 'Failed to load dashboard data')
+        setError(
+          timedOut
+            ? "This is taking longer than usual. Check your connection and try again."
+            : "We couldn't load your dashboard. Please try again."
+        )
         setData(null)
         setLoading(false)
       })
 
-    return () => controller.abort()
+    return () => {
+      clearTimeout(timer)
+      controller.abort()
+    }
   }, [authFetch])
 
   useEffect(() => {
@@ -137,13 +152,10 @@ export default function DashboardView() {
   }
 
   if (!data) return (
-    <div className="flex flex-col items-center justify-center py-16">
-      <AlertCircle className="size-10 text-ink-faint mb-3" />
-      <p className="text-muted-foreground text-sm mb-3">{error || 'Failed to load dashboard data.'}</p>
-      <Button variant="ghost" size="sm" onClick={() => fetchDashboard()}>
-        Retry
-      </Button>
-    </div>
+    <ErrorState
+      message={error || "We couldn't load your dashboard. Please try again."}
+      onRetry={() => fetchDashboard()}
+    />
   )
 
   const today = format(new Date(), 'EEEE, MMMM d, yyyy')
