@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
+import { PhoneInput } from '@/components/ui/phone-input'
 import ErrorState from '@/components/salon/ErrorState'
 import { Loader2, Route, Copy, Check } from 'lucide-react'
 import { toast } from 'sonner'
@@ -235,12 +236,10 @@ export default function SalonSettingsTab() {
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label htmlFor="salon-phone">Phone</Label>
-              <Input
+              <PhoneInput
                 id="salon-phone"
                 value={data.settings.profile.phone}
-                onChange={(e) => updateProfile({ phone: e.target.value })}
-                placeholder="+250 7.. ... ..."
-                maxLength={120}
+                onChange={(phone) => updateProfile({ phone })}
               />
             </div>
             <div className="space-y-1.5">
