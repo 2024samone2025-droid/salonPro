@@ -1,45 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Check, Loader2, CheckCircle, AlertCircle } from 'lucide-react'
+import { Check } from 'lucide-react'
 
 export default function BillingPage() {
-  const { salon, refreshSession } = useAuth()
-  const [loading, setLoading] = useState(false)
-  const [success, setSuccess] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search)
-      if (params.get('success') === '1') {
-        setSuccess(true)
-        refreshSession()
-      }
-    }
-  }, [refreshSession])
-
-  const handleUpgrade = async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      const res = await fetch('/api/billing/checkout', { method: 'POST' })
-      const data = await res.json()
-      if (data.url) {
-        window.location.href = data.url
-      } else {
-        setError(data.error || 'Failed to create checkout session')
-      }
-    } catch {
-      setError('Failed to create checkout session')
-    } finally {
-      setLoading(false)
-    }
-  }
-
+  const { salon } = useAuth()
   const isPro = salon?.plan === 'pro'
 
   return (
@@ -48,20 +15,6 @@ export default function BillingPage() {
         <h1 className="text-2xl font-semibold mb-2">{salon?.name} Billing</h1>
         <p className="text-muted-foreground">Manage your subscription</p>
       </div>
-
-      {success && (
-        <div className="mb-4 p-4 bg-success/10 border border-success/20 rounded-lg flex items-center gap-2">
-          <CheckCircle className="size-5 text-success" />
-          <span className="text-success">Your salon has been upgraded to Pro!</span>
-        </div>
-      )}
-
-      {error && (
-        <div className="mb-4 p-4 bg-destructive/10 border border-destructive/20 rounded-lg flex items-center gap-2">
-          <AlertCircle className="size-5 text-destructive" />
-          <span className="text-destructive">{error}</span>
-        </div>
-      )}
 
       <Card className={isPro ? 'border-primary' : ''}>
         <CardHeader>
@@ -95,15 +48,14 @@ export default function BillingPage() {
               <span>Priority support</span>
             </li>
           </ul>
-          <Button
-            className="w-full"
-            variant={isPro ? 'outline' : 'default'}
-            disabled={isPro || loading}
-            onClick={handleUpgrade}
-          >
-            {loading ? <Loader2 className="size-4 animate-spin mr-2" /> : null}
-            {isPro ? 'Subscribed' : 'Upgrade Now'}
+          <Button className="w-full" variant="outline" disabled>
+            {isPro ? 'Subscribed' : 'Contact us to upgrade'}
           </Button>
+          {!isPro && (
+            <p className="mt-2 text-center text-xs text-muted-foreground">
+              Upgrades are handled by SalonPro — contact us to move to Pro.
+            </p>
+          )}
         </CardContent>
       </Card>
     </div>
