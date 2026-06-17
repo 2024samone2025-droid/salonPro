@@ -8,6 +8,7 @@ import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/s
 import { Toaster } from '@/components/ui/sonner'
 import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import Sidebar from '@/components/salon/Sidebar'
 import CommandPalette from '@/components/salon/CommandPalette'
 import MobileTabBar from '@/components/salon/MobileTabBar'
@@ -85,8 +86,21 @@ function AppFrame({ children }: { children: React.ReactNode }) {
         <header className="sticky top-0 z-10 flex h-11 shrink-0 items-center gap-2 border-b border-sidebar-border bg-sidebar px-2 sm:px-4">
           <SidebarTrigger className="-ml-1 size-7 hidden md:flex" />
           <Separator orientation="vertical" className="h-4 hidden md:block" />
-          <div className="flex items-center gap-1">
-            <Triangle className="size-3 fill-foreground text-foreground" />
+          <div className="flex items-center gap-1.5">
+            {salon?.settings?.profile?.logoUrl ? (
+              <Avatar className="size-5 rounded-sm">
+                <AvatarImage
+                  src={salon.settings.profile.logoUrl}
+                  alt=""
+                  className="object-cover"
+                />
+                <AvatarFallback className="rounded-sm bg-transparent">
+                  <Triangle className="size-3 fill-foreground text-foreground" />
+                </AvatarFallback>
+              </Avatar>
+            ) : (
+              <Triangle className="size-3 fill-foreground text-foreground" />
+            )}
             <span className="text-[13px] font-medium text-muted-foreground">
               {salon?.name || 'SalonPro'}
             </span>
