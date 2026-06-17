@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import ErrorState from '@/components/salon/ErrorState'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -376,6 +377,11 @@ export default function AppointmentsView() {
   const [viewMode, setViewMode] = useState<'day' | 'week'>(
     user?.settings?.appPreferences?.calendarDefaultView ?? 'day'
   )
+  // Week view is a 7-column grid that can't fit a phone without sideways
+  // scrolling, so on <md we force Day (and hide the toggle). The saved
+  // preference is kept intact and resumes on a larger screen.
+  const isMobile = useIsMobile()
+  const effectiveViewMode = isMobile ? 'day' : viewMode
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [currentTime, setCurrentTime] = useState(new Date())
@@ -389,7 +395,7 @@ export default function AppointmentsView() {
     setLoadError(false)
     try {
       let url: string
-      if (viewMode === 'week') {
+      if (effectiveViewMode === 'week') {
         const ws = startOfWeek(new Date(selectedDate + 'T00:00:00'), { weekStartsOn: 1 })
         const we = addDays(ws, 6)
         url = `/api/appointments?from=${format(ws, 'yyyy-MM-dd')}&to=${format(we, 'yyyy-MM-dd')}`
@@ -406,7 +412,7 @@ export default function AppointmentsView() {
     } finally {
       setLoading(false)
     }
-  }, [selectedDate, viewMode, authFetch])
+  }, [selectedDate, effectiveViewMode, authFetch])
 
   useEffect(() => {
     fetchAppointments()
@@ -597,7 +603,11 @@ export default function AppointmentsView() {
             <Share2 className="size-3.5 sm:mr-1" />
             <span className="hidden sm:inline">Share booking link</span>
           </Button>
-          <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'day' | 'week')}>
+          <Tabs
+            value={viewMode}
+            onValueChange={(v) => setViewMode(v as 'day' | 'week')}
+            className="hidden md:block"
+          >
             <TabsList>
               <TabsTrigger value="day">Day</TabsTrigger>
               <TabsTrigger value="week">Week</TabsTrigger>
@@ -641,7 +651,7 @@ export default function AppointmentsView() {
                 </div>
               ))}
             </div>
-          ) : appointments.length === 0 && viewMode === 'day' ? (
+          ) : appointments.length === 0 && effectiveViewMode === 'day' ? (
             <EmptyState
               icon={CalendarDays}
               message="No appointments for this day"
@@ -656,7 +666,7 @@ export default function AppointmentsView() {
               }
               className="border-0 bg-transparent py-12"
             />
-          ) : viewMode === 'day' ? (
+          ) : effectiveViewMode === 'day' ? (
             <>
               {dayClosed && (
                 <p className="text-xs text-muted-foreground mb-2 px-1">
