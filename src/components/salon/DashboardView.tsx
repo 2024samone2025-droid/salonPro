@@ -275,7 +275,7 @@ export default function DashboardView() {
                       </span>
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-[13px] text-foreground">{apt.customer.name}</p>
-                        <p className="truncate text-xs text-ink-faint">
+                        <p className="truncate text-xs text-muted-foreground">
                           {apt.service.name} · {apt.staff.name}
                         </p>
                       </div>
@@ -402,7 +402,7 @@ export default function DashboardView() {
                     >
                       <div className="flex-1 min-w-0">
                         <p className="truncate text-[13px] text-foreground">{p.appointment.customer.name}</p>
-                        <p className="truncate text-xs text-ink-faint">{p.appointment.service.name}</p>
+                        <p className="truncate text-xs text-muted-foreground">{p.appointment.service.name}</p>
                         {p.amount > 0 && (
                           <div className="mt-1.5 max-w-44">
                             <Progress value={paidPercent} className="h-1" />
@@ -411,7 +411,7 @@ export default function DashboardView() {
                       </div>
                       <div className="ml-3 shrink-0 text-right">
                         <p className="text-[13px] font-medium text-foreground tabular-nums">{formatRWF(remaining)}</p>
-                        <p className="text-xs text-ink-faint tabular-nums">of {formatRWF(p.appointment.service.price)}</p>
+                        <p className="text-xs text-muted-foreground tabular-nums">of {formatRWF(p.appointment.service.price)}</p>
                       </div>
                     </div>
                   )
