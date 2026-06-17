@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
+import ErrorState from '@/components/salon/ErrorState'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -208,7 +210,7 @@ function DayView({
 
   const grid = (
     <div className="relative">
-      <div className="grid grid-cols-[44px_sm:52px_1fr]">
+      <div className="grid grid-cols-[44px_1fr] sm:grid-cols-[52px_1fr]">
         <div className="space-y-0">
           {timeSlots.map((time) => (
             <div key={time} className="h-14 flex items-start justify-end pr-2 pt-0">
@@ -330,7 +332,7 @@ function WeekView({ weekDays, selectedDate, appointments, onDaySelect, onAppoint
             return (
               <div key={dayStr} className="min-h-48 space-y-1 p-1.5 border rounded-lg bg-card/50">
                 {dayApts.length === 0 ? (
-                  <p className="text-xs text-ink-faint text-center pt-8">No appointments</p>
+                  <p className="text-xs text-muted-foreground text-center pt-8">No appointments</p>
                 ) : (
                   dayApts.map((apt) => {
                     const config = STATUS_CONFIG[apt.status as AppointmentStatus]
@@ -369,11 +371,17 @@ export default function AppointmentsView() {
   const { permissions, authFetch, salon, user } = useAuth()
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
   // Initial view follows the user's saved preference (AppShell guarantees the
   // session — and thus settings — is resolved before this view mounts).
   const [viewMode, setViewMode] = useState<'day' | 'week'>(
     user?.settings?.appPreferences?.calendarDefaultView ?? 'day'
   )
+  // Week view is a 7-column grid that can't fit a phone without sideways
+  // scrolling, so on <md we force Day (and hide the toggle). The saved
+  // preference is kept intact and resumes on a larger screen.
+  const isMobile = useIsMobile()
+  const effectiveViewMode = isMobile ? 'day' : viewMode
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [currentTime, setCurrentTime] = useState(new Date())
@@ -384,9 +392,10 @@ export default function AppointmentsView() {
       setLoading(true)
     }
     isInitialMount.current = false;
+    setLoadError(false)
     try {
       let url: string
-      if (viewMode === 'week') {
+      if (effectiveViewMode === 'week') {
         const ws = startOfWeek(new Date(selectedDate + 'T00:00:00'), { weekStartsOn: 1 })
         const we = addDays(ws, 6)
         url = `/api/appointments?from=${format(ws, 'yyyy-MM-dd')}&to=${format(we, 'yyyy-MM-dd')}`
@@ -399,10 +408,11 @@ export default function AppointmentsView() {
       setAppointments(data)
     } catch (error) {
       console.error('Fetch error:', error)
+      setLoadError(true)
     } finally {
       setLoading(false)
     }
-  }, [selectedDate, viewMode, authFetch])
+  }, [selectedDate, effectiveViewMode, authFetch])
 
   useEffect(() => {
     fetchAppointments()
@@ -543,6 +553,15 @@ export default function AppointmentsView() {
     }
   }, [selectedDate])
 
+  if (loadError) {
+    return (
+      <ErrorState
+        message="We couldn't load your appointments. Please try again."
+        onRetry={fetchAppointments}
+      />
+    )
+  }
+
   return (
     <div className="space-y-4">
       <QuickBookingForm selectedDate={selectedDate} onBookingCreated={fetchAppointments} />
@@ -566,6 +585,7 @@ export default function AppointmentsView() {
             size="sm"
             onClick={() => setSelectedDate(format(new Date(), 'yyyy-MM-dd'))}
             className="shrink-0"
+            aria-label="Today"
           >
             <CalendarDays className="size-3.5 sm:mr-1" />
             <span className="hidden sm:inline">Today</span>
@@ -578,11 +598,16 @@ export default function AppointmentsView() {
             className="shrink-0"
             onClick={handleShareBookingLink}
             data-tour="share-booking"
+            aria-label="Share booking link"
           >
             <Share2 className="size-3.5 sm:mr-1" />
             <span className="hidden sm:inline">Share booking link</span>
           </Button>
-          <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'day' | 'week')}>
+          <Tabs
+            value={viewMode}
+            onValueChange={(v) => setViewMode(v as 'day' | 'week')}
+            className="hidden md:block"
+          >
             <TabsList>
               <TabsTrigger value="day">Day</TabsTrigger>
               <TabsTrigger value="week">Week</TabsTrigger>
@@ -626,7 +651,7 @@ export default function AppointmentsView() {
                 </div>
               ))}
             </div>
-          ) : appointments.length === 0 && viewMode === 'day' ? (
+          ) : appointments.length === 0 && effectiveViewMode === 'day' ? (
             <EmptyState
               icon={CalendarDays}
               message="No appointments for this day"
@@ -641,7 +666,7 @@ export default function AppointmentsView() {
               }
               className="border-0 bg-transparent py-12"
             />
-          ) : viewMode === 'day' ? (
+          ) : effectiveViewMode === 'day' ? (
             <>
               {dayClosed && (
                 <p className="text-xs text-muted-foreground mb-2 px-1">

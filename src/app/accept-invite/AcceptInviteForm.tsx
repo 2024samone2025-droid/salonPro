@@ -13,7 +13,7 @@ const MIN_PASSWORD_LENGTH = 12
 
 function Shell({ title, description, children }: { title: string; description: string; children: React.ReactNode }) {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-3 sm:p-4 md:p-6">
+    <div className="min-h-screen flex items-start sm:items-center justify-center overflow-y-auto bg-background p-3 sm:p-4 md:p-6 py-8">
       <div className="w-full sm:w-[400px] lg:w-[480px]">
         <div className="text-center mb-6 sm:mb-8">
           <div className="inline-flex items-center justify-center size-10 sm:size-12 rounded-md bg-foreground mb-3 sm:mb-4">
@@ -112,13 +112,13 @@ export default function AcceptInviteForm({ token }: { token: string }) {
         <div className="space-y-1.5">
           <Label htmlFor="name" className="text-[13px] sm:text-sm">Full name</Label>
           <Input id="name" value={name} onChange={(e) => setName(e.target.value)}
-                 autoComplete="name" autoFocus required className="h-9 sm:h-10 text-[13px] sm:text-sm" />
+                 autoComplete="name" autoFocus required className="h-9 sm:h-10 sm:text-sm" />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="phone" className="text-[13px] sm:text-sm">Phone number</Label>
           <Input id="phone" type="tel" placeholder="0788 123 456" value={phone}
                  onChange={(e) => setPhone(e.target.value)} autoComplete="tel" required
-                 className="h-9 sm:h-10 text-[13px] sm:text-sm" />
+                 className="h-9 sm:h-10 sm:text-sm" />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="password" className="text-[13px] sm:text-sm">New password</Label>
@@ -126,7 +126,7 @@ export default function AcceptInviteForm({ token }: { token: string }) {
             <Input id="password" type={showPassword ? 'text' : 'password'}
                    placeholder="At least 12 characters" value={password}
                    onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" required
-                   className="pr-9 h-9 sm:h-10 text-[13px] sm:text-sm" />
+                   className="pr-11 md:pr-9 h-9 sm:h-10 sm:text-sm" />
             <Button type="button" variant="ghost" size="icon"
                     className="absolute right-0.5 top-1/2 -translate-y-1/2 size-7 sm:size-8 text-muted-foreground hover:text-foreground"
                     onClick={() => setShowPassword(!showPassword)} tabIndex={-1}>
@@ -139,7 +139,7 @@ export default function AcceptInviteForm({ token }: { token: string }) {
           <Label htmlFor="confirm" className="text-[13px] sm:text-sm">Confirm password</Label>
           <Input id="confirm" type={showPassword ? 'text' : 'password'} value={confirm}
                  onChange={(e) => setConfirm(e.target.value)} autoComplete="new-password" required
-                 className="h-9 sm:h-10 text-[13px] sm:text-sm" />
+                 className="h-9 sm:h-10 sm:text-sm" />
         </div>
         {error && (
           <Alert variant="destructive" className="py-2">
