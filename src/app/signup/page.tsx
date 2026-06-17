@@ -104,7 +104,7 @@ export default function SalonSignupPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <div className="min-h-screen flex items-start sm:items-center justify-center overflow-y-auto bg-background p-4 py-8">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center size-12 rounded-md bg-foreground mb-4">
