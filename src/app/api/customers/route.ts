@@ -1,11 +1,7 @@
 import { db } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth-guard'
-
-const FREE_PLAN_LIMITS = {
-  maxCustomers: 100,
-  maxStaff: 5,
-}
+import { isAtLimit } from '@/lib/entitlements'
 
 export async function GET(req: NextRequest) {
   const auth = await requireAuth(req)
@@ -48,14 +44,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
   }
 
-  // Check subscription limits
+  // Enforce the plan's customer limit via the entitlements layer (no plan-string
+  // checks here; the limit lives on the Plan row).
   const salonId = auth.salonId // Now non-null after successful auth
-  const salon = await db.salon.findUnique({ where: { id: salonId } })
-  if (salon?.plan === 'free') {
-    const customerCount = await db.customer.count({ where: { salonId } })
-    if (customerCount >= FREE_PLAN_LIMITS.maxCustomers) {
-      return NextResponse.json({ error: `Free plan limited to ${FREE_PLAN_LIMITS.maxCustomers} customers. Upgrade to Pro.` }, { status: 403 })
-    }
+  const count = await db.customer.count({ where: { salonId } })
+  if (await isAtLimit(salonId, 'maxCustomers', count)) {
+    return Response.json({ error: 'Upgrade to add more customers' }, { status: 403 })
   }
 
   const body = await req.json()
