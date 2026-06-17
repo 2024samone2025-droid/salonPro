@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { PhoneInput } from '@/components/ui/phone-input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
@@ -447,11 +448,10 @@ export default function CustomersView() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="new-phone">Phone *</Label>
-              <Input
+              <PhoneInput
                 id="new-phone"
                 value={newPhone}
-                onChange={(e) => setNewPhone(e.target.value)}
-                placeholder="+250788XXXXXX"
+                onChange={setNewPhone}
               />
             </div>
             <div className="space-y-2">
@@ -506,10 +506,10 @@ export default function CustomersView() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="edit-phone">Phone</Label>
-                  <Input
+                  <PhoneInput
                     id="edit-phone"
                     value={editPhone}
-                    onChange={(e) => canEdit && setEditPhone(e.target.value)}
+                    onChange={(v) => canEdit && setEditPhone(v)}
                     readOnly={!canEdit}
                     className={!canEdit ? 'bg-muted' : ''}
                   />
