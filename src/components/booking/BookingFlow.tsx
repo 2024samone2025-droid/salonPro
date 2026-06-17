@@ -28,6 +28,8 @@ import {
   ArrowRight,
 } from 'lucide-react'
 import { cn, formatMoney } from '@/lib/utils'
+import { fetchWithTimeout, TimeoutError } from '@/lib/fetch-timeout'
+import ErrorState from '@/components/salon/ErrorState'
 
 interface Service {
   id: string
@@ -88,6 +90,7 @@ export default function BookingFlow({ subdomain }: { subdomain: string }) {
   const [info, setInfo] = useState<SalonInfo | null>(null)
   const [loadingInfo, setLoadingInfo] = useState(true)
   const [notFound, setNotFound] = useState(false)
+  const [loadError, setLoadError] = useState(false)
 
   const [step, setStep] = useState<Step>('service')
   const [serviceId, setServiceId] = useState('')
@@ -100,30 +103,38 @@ export default function BookingFlow({ subdomain }: { subdomain: string }) {
 
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
+  const [nameError, setNameError] = useState('')
+  const [phoneError, setPhoneError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [confirmation, setConfirmation] = useState<Confirmation | null>(null)
 
-  useEffect(() => {
-    let active = true
-    ;(async () => {
-      try {
-        const res = await fetch(`/api/public/booking/${subdomain}`)
-        if (!res.ok) {
-          if (active) setNotFound(true)
-          return
-        }
-        const data = await res.json()
-        if (active) setInfo(data)
-      } catch {
-        if (active) setNotFound(true)
-      } finally {
-        if (active) setLoadingInfo(false)
+  const loadInfo = useCallback(async () => {
+    setLoadingInfo(true)
+    setLoadError(false)
+    setNotFound(false)
+    try {
+      const res = await fetchWithTimeout(`/api/public/booking/${subdomain}`)
+      if (res.status === 404) {
+        setNotFound(true)
+        return
       }
-    })()
-    return () => {
-      active = false
+      if (!res.ok) {
+        setLoadError(true)
+        return
+      }
+      const data = await res.json()
+      setInfo(data)
+    } catch {
+      // Network failure or timeout — distinct from "salon not found".
+      setLoadError(true)
+    } finally {
+      setLoadingInfo(false)
     }
   }, [subdomain])
+
+  useEffect(() => {
+    loadInfo()
+  }, [loadInfo])
 
   const selectedService = useMemo(
     () => info?.services.find((s) => s.id === serviceId) || null,
@@ -141,7 +152,7 @@ export default function BookingFlow({ subdomain }: { subdomain: string }) {
     setLoadingSlots(true)
     setStartTime('')
     try {
-      const res = await fetch(
+      const res = await fetchWithTimeout(
         `/api/public/booking/${subdomain}/slots?date=${date}&staffId=${staffId}&serviceId=${serviceId}`
       )
       const data = await res.json()
@@ -158,17 +169,14 @@ export default function BookingFlow({ subdomain }: { subdomain: string }) {
   }, [step, loadSlots])
 
   const handleSubmit = async () => {
-    if (!name.trim()) {
-      toast.error('Please enter your name')
-      return
-    }
-    if (!phone.trim()) {
-      toast.error('Please enter your phone number')
-      return
-    }
+    const nErr = name.trim() ? '' : 'Please enter your name.'
+    const pErr = phone.trim() ? '' : 'Please enter your phone number.'
+    setNameError(nErr)
+    setPhoneError(pErr)
+    if (nErr || pErr) return
     setSubmitting(true)
     try {
-      const res = await fetch(`/api/public/booking/${subdomain}`, {
+      const res = await fetchWithTimeout(`/api/public/booking/${subdomain}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, phone, date, startTime, staffId, serviceId }),
@@ -186,8 +194,12 @@ export default function BookingFlow({ subdomain }: { subdomain: string }) {
       } else {
         toast.error(data?.error || 'Could not complete booking')
       }
-    } catch {
-      toast.error('Something went wrong. Please try again.')
+    } catch (err) {
+      toast.error(
+        err instanceof TimeoutError
+          ? 'This is taking too long. Check your connection and try again.'
+          : 'Something went wrong. Please try again.'
+      )
     } finally {
       setSubmitting(false)
     }
@@ -207,6 +219,17 @@ export default function BookingFlow({ subdomain }: { subdomain: string }) {
             ))}
           </CardContent>
         </Card>
+      </Shell>
+    )
+  }
+
+  if (loadError) {
+    return (
+      <Shell>
+        <ErrorState
+          message="We couldn't load this salon's booking page. Please try again."
+          onRetry={loadInfo}
+        />
       </Shell>
     )
   }
@@ -440,9 +463,22 @@ export default function BookingFlow({ subdomain }: { subdomain: string }) {
                 <Input
                   id="book-name"
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={(e) => {
+                    setName(e.target.value)
+                    if (nameError) setNameError('')
+                  }}
                   placeholder="Jane Doe"
+                  required
+                  autoComplete="name"
+                  autoCapitalize="words"
+                  aria-invalid={!!nameError}
+                  aria-describedby={nameError ? 'book-name-error' : undefined}
                 />
+                {nameError && (
+                  <p id="book-name-error" role="alert" className="text-xs text-destructive">
+                    {nameError}
+                  </p>
+                )}
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="book-phone">Phone number</Label>
@@ -452,11 +488,24 @@ export default function BookingFlow({ subdomain }: { subdomain: string }) {
                     id="book-phone"
                     className="pl-9"
                     value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
+                    onChange={(e) => {
+                      setPhone(e.target.value)
+                      if (phoneError) setPhoneError('')
+                    }}
                     placeholder="07XX XXX XXX"
+                    type="tel"
                     inputMode="tel"
+                    autoComplete="tel"
+                    required
+                    aria-invalid={!!phoneError}
+                    aria-describedby={phoneError ? 'book-phone-error' : undefined}
                   />
                 </div>
+                {phoneError && (
+                  <p id="book-phone-error" role="alert" className="text-xs text-destructive">
+                    {phoneError}
+                  </p>
+                )}
               </div>
               <Button className="w-full" disabled={submitting} onClick={handleSubmit}>
                 {submitting ? (

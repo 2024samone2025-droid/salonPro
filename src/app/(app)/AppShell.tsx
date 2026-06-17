@@ -21,7 +21,7 @@ import ChangePasswordForm from '@/components/salon/ChangePasswordForm'
 // clears mustResetPassword, so a successful change drops straight into the app.
 function ForcePasswordReset() {
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-background p-4">
+    <div className="min-h-screen w-full flex items-start sm:items-center justify-center overflow-y-auto bg-background p-4 py-8">
       <div className="w-full max-w-sm space-y-6">
         <div className="space-y-1.5 text-center">
           <Triangle className="size-6 mx-auto fill-foreground text-foreground" />
@@ -104,10 +104,12 @@ function AppFrame({ children }: { children: React.ReactNode }) {
             <ThemeToggle />
           </div>
         </header>
-        <div className="flex-1 p-4 sm:p-6 md:p-8 overflow-auto min-w-0">
+        <div className="flex-1 p-4 sm:p-6 md:p-8 overflow-y-auto overflow-x-hidden min-w-0">
           <div className="mx-auto w-full max-w-7xl">{children}</div>
         </div>
-        <footer className="border-t py-2 px-4 text-center mt-auto">
+        {/* Desktop-only: a web-style footer reads as "website chrome" on phones,
+            where the bottom is owned by MobileTabBar (native-app feel). */}
+        <footer className="hidden md:block border-t py-2 px-4 text-center mt-auto">
           <p className="text-[11px] text-muted-foreground font-mono">
             © {new Date().getFullYear()} {salon?.name || 'SalonPro'}
           </p>
