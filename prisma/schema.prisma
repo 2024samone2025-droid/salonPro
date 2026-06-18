@@ -316,6 +316,10 @@ enum OperatorAction {
   REACTIVATE
   REVEAL_PII
   VIEW_TENANT
+  RECORD_PAYMENT
+  CHANGE_PLAN
+  SET_SUB_STATUS
+  REVERSE_PAYMENT
 }
 
 model OperatorAuditLog {
@@ -391,8 +395,17 @@ model Subscription {
   @@index([status])
 }
 
+/// Two kinds of ledger row. A PAYMENT is money in; a REVERSAL cancels a prior
+/// PAYMENT (negative amount, points back via reversesId). The ledger is append-only:
+/// to undo a mistake you ADD a REVERSAL, never edit or delete the original.
+enum BillingEntryKind {
+  PAYMENT
+  REVERSAL
+}
+
 /// Append-only log of SaaS payments (manual MoMo refs now, gateway rows later).
 /// NOTE: separate from your per-appointment `Payment` model — different concern.
+/// IMMUTABLE: never UPDATE/DELETE a row's money fields — corrections are REVERSAL rows.
 model BillingPayment {
   id             String        @id @default(cuid())
   salonId        String
@@ -400,11 +413,29 @@ model BillingPayment {
   subscriptionId String?
   subscription   Subscription? @relation(fields: [subscriptionId], references: [id])
 
-  amount    Float    @default(0) // RWF
+  amount    Float    @default(0) // RWF (negative on a REVERSAL row)
   currency  String   @default("RWF")
   method    String // "MTN MoMo" | "Airtel" | "card" | "bank"
   reference String // transaction id (typed manually now, from gateway later)
   paidAt    DateTime @default(now())
+
+  kind BillingEntryKind @default(PAYMENT)
+
+  // Reversal linkage (self-relation). Null on a normal PAYMENT; on a REVERSAL row it
+  // points at the PAYMENT being cancelled. A payment is "reversed" iff some row's
+  // reversesId == its id.
+  reversesId String?
+  reverses   BillingPayment?  @relation("Reversal", fields: [reversesId], references: [id])
+  reversedBy BillingPayment[] @relation("Reversal")
+
+  // Snapshot of the paid period this PAYMENT moved — lets a REVERSAL roll it back
+  // deterministically (only when nothing later superseded it).
+  periodEndBefore DateTime?
+  periodEndAfter  DateTime?
+
+  // Why a payment was reversed — set on the REVERSAL row; the original stays untouched.
+  voidReason String?
+
 
   createdAt DateTime @default(now())
 
@@ -412,6 +443,7 @@ model BillingPayment {
   // salon — protects against double-typed refs now and double-fired webhooks later.
   @@unique([salonId, reference])
   @@index([salonId])
+  @@index([reversesId])
 }
 
 enum SubscriptionStatus {
