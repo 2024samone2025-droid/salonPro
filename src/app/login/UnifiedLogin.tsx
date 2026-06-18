@@ -15,8 +15,6 @@ import {
   Triangle,
   Building2,
   ChevronRight,
-  ChevronLeft,
-  Users,
 } from 'lucide-react'
 
 interface SalonOption {
@@ -25,10 +23,7 @@ interface SalonOption {
   subdomain: string
 }
 
-// 'login' is the single combined email+password form (shared on every host).
-// 'salon-redirect' is the apex-only helper that sends a team member to their
-// salon's login.
-type Mode = 'login' | 'salon-redirect'
+// Single login form (shared on every host).
 
 function Shell({ title, description, children }: { title: string; description: string; children: React.ReactNode }) {
   return (
@@ -56,24 +51,20 @@ function Shell({ title, description, children }: { title: string; description: s
   )
 }
 
-// Single login, email + password for everyone (PINs retired). One screen on every
-// host; role-based access applies after sign-in.
-//  - Tenant host (subdomain present): STAFF login, scoped to that salon via
-//    /api/auth/login (auth-context). On success the gate redirects to /dashboard.
-//  - Apex (no subdomain): OWNER login → salon picker → cross-subdomain handoff.
-//    A "Team member?" link sends staff to their salon's own login.
-// The email step makes NO backend call — credentials are only verified on submit,
-// with a generic failure, so the screen never reveals whether an email exists.
+// Single login, email + password for everyone. Tenant host (subdomain present):
+// STAFF login, scoped to that salon via /api/auth/login. On success the gate
+// redirects to /dashboard. Apex (no subdomain): OWNER login → salon picker →
+// cross-subdomain handoff. The email step makes NO backend call — credentials
+// are only verified on submit, with a generic failure, so the screen never
+// reveals whether an email exists.
 export default function UnifiedLogin({ subdomain }: { subdomain: string | null }) {
   const { user, loading: authLoading, login } = useAuth()
   const router = useRouter()
   const onTenantHost = !!subdomain
 
-  const [mode, setMode] = useState<Mode>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [salonInput, setSalonInput] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [salons, setSalons] = useState<SalonOption[] | null>(null) // non-null = authenticated (apex picker)
@@ -193,15 +184,6 @@ export default function UnifiedLogin({ subdomain }: { subdomain: string | null }
     setLoading(false)
   }
 
-  const handleStaffRedirect = (e: React.FormEvent) => {
-    e.preventDefault()
-    const sub = salonInput.trim().toLowerCase()
-    if (!sub) return
-    // The apex has no salon context; send the team member to their salon's host.
-    // window.location.host is the apex here.
-    window.location.href = `${window.location.protocol}//${sub}.${window.location.host}/login`
-  }
-
   // ── Redirecting into a salon (apex owner picker) ───────────────────────────
   if (redirecting) {
     return (
@@ -251,45 +233,6 @@ export default function UnifiedLogin({ subdomain }: { subdomain: string | null }
             ))}
           </div>
         )}
-      </Shell>
-    )
-  }
-
-  // ── Apex helper: "Team member?" → go to your salon's login ─────────────────
-  if (mode === 'salon-redirect') {
-    return (
-      <Shell title="Sign in to your salon" description="Team members sign in from their salon's web address">
-        <form onSubmit={handleStaffRedirect} className="space-y-3">
-          <div className="space-y-1.5">
-            <Label htmlFor="salon" className="text-[13px] sm:text-sm">Your salon&apos;s address</Label>
-            <div className="flex items-center gap-1.5">
-              <Input
-                id="salon"
-                type="text"
-                placeholder="yoursalon"
-                value={salonInput}
-                onChange={(e) => setSalonInput(e.target.value)}
-                autoFocus
-                required
-                className="h-9 sm:h-10 sm:text-sm"
-              />
-              <span className="text-[13px] text-muted-foreground font-mono whitespace-nowrap">
-                .{typeof window !== 'undefined' ? window.location.host : ''}
-              </span>
-            </div>
-          </div>
-          <Button type="submit" className="w-full h-9 sm:h-10 text-[13px] sm:text-sm font-medium" disabled={!salonInput.trim()}>
-            Continue
-          </Button>
-        </form>
-        <Button
-          type="button"
-          variant="ghost"
-          className="mt-2 w-full h-8 text-[13px] text-muted-foreground hover:text-foreground font-normal"
-          onClick={() => { setMode('login'); setError('') }}
-        >
-          <ChevronLeft className="size-3.5 mr-1" /> Back to owner sign in
-        </Button>
       </Shell>
     )
   }
@@ -355,18 +298,6 @@ export default function UnifiedLogin({ subdomain }: { subdomain: string | null }
           {loading ? 'Signing in…' : 'Sign In'}
         </Button>
       </form>
-
-      {/* Apex only: staff don't authenticate here — point them to their salon. */}
-      {!onTenantHost && (
-        <Button
-          type="button"
-          variant="ghost"
-          className="mt-3 w-full h-9 text-[13px] sm:text-sm text-muted-foreground hover:text-foreground font-normal"
-          onClick={() => { setError(''); setMode('salon-redirect') }}
-        >
-          <Users className="size-3.5 mr-1.5" /> Team member? Go to your salon
-        </Button>
-      )}
     </Shell>
   )
 }
