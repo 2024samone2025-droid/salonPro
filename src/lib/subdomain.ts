@@ -90,27 +90,3 @@ export function resolveApex(host: string | null | undefined, roots: string[] = g
   }
   return null
 }
-
-/**
- * The cookie `Domain` for the cross-subdomain ROOT picker cookies (salonpro_owner /
- * salonpro_staff). These are set at the apex during login, but logout happens on a
- * TENANT subdomain — a host-only cookie set on the apex can't be cleared from a
- * subdomain, which is the "auto re-login after logout" bug. Scoping them to the
- * registrable apex (e.g. `salonpro.me`) makes them visible to — and clearable from —
- * the apex and every subdomain under it.
- *
- * Returns the apex hostname for real domains, or `undefined` when no Domain attribute
- * is usable (localhost, a bare single label, or an IP — browsers reject Domain= for
- * these; host-only scoping is the only option and already works since dev shares one
- * host). The SET and the CLEAR of these cookies MUST pass the same value.
- */
-export function rootCookieDomain(
-  host: string | null | undefined,
-  roots: string[] = getRootDomains(),
-): string | undefined {
-  const apex = resolveApex(host, roots)
-  if (!apex) return undefined
-  const name = apex.split(':')[0].toLowerCase().replace(/\.$/, '')
-  if (name === 'localhost' || !name.includes('.') || /^[0-9.]+$/.test(name)) return undefined
-  return name
-}

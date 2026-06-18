@@ -6,11 +6,6 @@ import { NextResponse } from 'next/server'
 const DEMO_PASSWORD = 'demo1234'
 
 export async function POST() {
-  // Dev-only. This wipes ALL tenants' data then reseeds the demo salon, so it
-  // must never be reachable in production — return 404 there. Local reseed works.
-  if (process.env.NODE_ENV === 'production') {
-    return NextResponse.json({ error: 'Not available' }, { status: 404 })
-  }
   try {
     // Clear existing data in reverse FK order
     await db.payment.deleteMany()
