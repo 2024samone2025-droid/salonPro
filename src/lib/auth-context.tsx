@@ -198,6 +198,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
+      // Flag prevents the apex login restore effect from silently re-authenticating
+      // after logout — a workaround for localhost where root picker cookies can't
+      // be cleared cross-host (browsers reject Domain= on localhost). SessionStorage
+      // so a new tab/close clears it naturally. Stale (non-login) page refreshes
+      // beyond the window need the restore; we let the flag age out there.
+      sessionStorage.setItem('salonpro_logged_out', String(Date.now()))
       await fetch('/api/auth/logout', { method: 'POST' })
     } catch {
       // ignore
