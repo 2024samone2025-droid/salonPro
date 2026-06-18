@@ -91,6 +91,7 @@ export async function applyPlanChange(salonId: string, newPlanId: string, client
   })
 }
 
+
 /** Add one billing interval to a date (monthly = +1 month, annual = +1 year). */
 function addInterval(from: Date, interval: string): Date {
   const d = new Date(from)

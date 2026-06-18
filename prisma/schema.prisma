@@ -436,6 +436,7 @@ model BillingPayment {
   // Why a payment was reversed — set on the REVERSAL row; the original stays untouched.
   voidReason String?
 
+
   createdAt DateTime @default(now())
 
   // Idempotency guard: the same payment reference can't be inserted twice for a
