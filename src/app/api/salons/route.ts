@@ -10,7 +10,6 @@ import {
 } from '@/lib/auth'
 import { validateSubdomain } from '@/lib/constants'
 import { buildExchangeUrl } from '@/lib/handoff'
-import { rootCookieDomain } from '@/lib/subdomain'
 import { createDefaultSubscription } from '@/lib/billing'
 import { Prisma } from '@prisma/client'
 import { NextRequest, NextResponse } from 'next/server'
@@ -143,9 +142,7 @@ export async function POST(req: NextRequest) {
       const response = NextResponse.json({ salon: salonView(result.salon), redirect })
 
       // Log the new owner in at the root host too, so they can return to switch
-      // salons without re-auth within the window. Apex-scoped so a tenant-subdomain
-      // logout can clear it (see rootCookieDomain); host-only on localhost.
-      const host = (req.headers.get('x-forwarded-host') || req.headers.get('host') || '').split(',')[0].trim()
+      // salons without re-auth within the window.
       response.cookies.set(
         ROOT_OWNER_COOKIE,
         createRootOwnerToken({ id: result.owner.id, name: result.owner.name, email: result.owner.email }),
@@ -155,7 +152,6 @@ export async function POST(req: NextRequest) {
           sameSite: 'lax',
           maxAge: ROOT_OWNER_MAX_AGE,
           path: '/',
-          domain: rootCookieDomain(host),
         }
       )
       return response

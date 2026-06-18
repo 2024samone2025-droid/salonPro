@@ -3,16 +3,10 @@ import { notFound } from 'next/navigation'
 import { requireOperator } from '@/lib/operator-guard'
 import { db } from '@/lib/db'
 import { maskEmail, maskName } from '@/lib/operator-mask'
-import { formatMoney } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import OwnerContact from '@/components/operator/OwnerContact'
 import StatusActions from '@/components/operator/StatusActions'
-<<<<<<< HEAD
-import BillingActions from '@/components/operator/BillingActions'
-import PaymentHistory from '@/components/operator/PaymentHistory'
-=======
->>>>>>> origin/main
 
 export const dynamic = 'force-dynamic'
 
@@ -39,7 +33,7 @@ export default async function OperatorTenantDetailPage({
       plan: true,
       status: true,
       createdAt: true,
-
+      stripeCustomerId: true,
     },
   })
   if (!salon) notFound()
@@ -48,34 +42,25 @@ export default async function OperatorTenantDetailPage({
   const today = daysAgoISO(0)
 
   // Cross-tenant reads, scoped here to this one salonId by us, not by requireAuth.
-  const [staffCount, clientCount, appts30d, ownerLink, auditRows, subscription, payments, proPlan] =
-    await Promise.all([
-      db.staff.count({ where: { salonId } }),
-      db.customer.count({ where: { salonId } }),
-      db.appointment.count({ where: { salonId, date: { gte: since, lte: today } } }),
-      db.ownerSalon.findFirst({
-        where: { salonId },
-        orderBy: { createdAt: 'asc' },
-        select: { owner: { select: { name: true, email: true } } },
-      }),
-      db.operatorAuditLog.findMany({
-        where: { targetSalonId: salonId },
-        orderBy: { createdAt: 'desc' },
-        take: 10,
-      }),
-      db.subscription.findUnique({
-        where: { salonId },
-        include: { plan: true, pendingPlan: true },
-      }),
-      db.billingPayment.findMany({
-        where: { salonId },
-        orderBy: { paidAt: 'desc' },
-        take: 20, // payment + its reversal are two rows
-      }),
-      db.plan.findUnique({ where: { id: 'pro' }, select: { price: true } }),
-    ])
+  const [staffCount, clientCount, appts30d, ownerLink, auditRows] = await Promise.all([
+    db.staff.count({ where: { salonId } }),
+    db.customer.count({ where: { salonId } }),
+    db.appointment.count({ where: { salonId, date: { gte: since, lte: today } } }),
+    db.ownerSalon.findFirst({
+      where: { salonId },
+      orderBy: { createdAt: 'asc' },
+      select: { owner: { select: { name: true, email: true } } },
+    }),
+    db.operatorAuditLog.findMany({
+      where: { targetSalonId: salonId },
+      orderBy: { createdAt: 'desc' },
+      take: 10,
+    }),
+  ])
 
-  const expectedAmount = proPlan?.price ?? 15000
+  const stripeUrl = salon.stripeCustomerId
+    ? `https://dashboard.stripe.com/customers/${salon.stripeCustomerId}`
+    : null
 
   return (
     <div className="space-y-6">
@@ -118,76 +103,33 @@ export default async function OperatorTenantDetailPage({
         />
       </Section>
 
-      {/* Billing — managed manually by the operator */}
+      {/* Billing (stubbed) */}
       <Section title="Billing">
-        {subscription ? (
-          <div className="space-y-4">
-            <div className="grid gap-3 sm:grid-cols-3">
-              <Field label="Plan">
-                <span className="font-medium">{subscription.plan.name}</span>
-                {subscription.plan.price > 0 && (
-                  <span className="text-muted-foreground">
-                    {' '}· {formatMoney(subscription.plan.price, subscription.plan.currency)}/
-                    {subscription.plan.interval === 'annual' ? 'yr' : 'mo'}
-                  </span>
-                )}
-              </Field>
-              <Field label="Status">
-                <SubStatusBadge status={subscription.status} />
-              </Field>
-              <Field label="Period">
-                {subscription.periodEnd ? (
-                  <span>
-                    until{' '}
-                    <span className="font-medium">
-                      {subscription.periodEnd.toLocaleDateString()}
-                    </span>
-                  </span>
-                ) : (
-                  <span className="text-muted-foreground">No expiry</span>
-                )}
-              </Field>
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Plan</span>
+              <Badge variant="outline" className="capitalize">
+                {salon.plan}
+              </Badge>
             </div>
-
-            {subscription.pendingPlan && subscription.periodEnd && (
-              <p className="text-xs text-muted-foreground">
-                Auto-downgrades to{' '}
-                <span className="font-medium">{subscription.pendingPlan.name}</span> on{' '}
-                {subscription.periodEnd.toLocaleDateString()} unless renewed.
-              </p>
-            )}
-
-            <BillingActions
-              salonId={salon.id}
-              currentPlan={subscription.plan.id}
-              currentStatus={subscription.status}
-              expectedAmount={expectedAmount}
-            />
-
-            {/* Payment history (append-only ledger; rows can be reversed, not deleted) */}
-            <div>
-              <h3 className="mb-2 text-xs font-medium text-muted-foreground">Recent payments</h3>
-              <PaymentHistory
-                salonId={salon.id}
-                payments={payments.map((p) => ({
-                  id: p.id,
-                  amount: p.amount,
-                  currency: p.currency,
-                  method: p.method,
-                  reference: p.reference,
-                  paidAt: p.paidAt.toISOString(),
-                  kind: p.kind,
-                  reversesId: p.reversesId,
-                  voidReason: p.voidReason,
-                }))}
-              />
-            </div>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Billing is managed in Stripe. This console does not change subscriptions.
+            </p>
           </div>
-        ) : (
-          <p className="text-sm text-muted-foreground">
-            No subscription on record for this salon.
-          </p>
-        )}
+          {stripeUrl ? (
+            <a
+              href={stripeUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-foreground underline underline-offset-4 hover:no-underline"
+            >
+              Open in Stripe ↗
+            </a>
+          ) : (
+            <span className="text-sm text-muted-foreground">No Stripe customer</span>
+          )}
+        </div>
       </Section>
 
       {/* Recent operator actions */}
@@ -233,20 +175,4 @@ function Section({ title, children }: { title: string; children: React.ReactNode
       {children}
     </div>
   )
-}
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <div className="text-xs text-muted-foreground">{label}</div>
-      <div className="text-sm">{children}</div>
-    </div>
-  )
-}
-
-function SubStatusBadge({ status }: { status: string }) {
-  // CANCELED reads as a problem; everything else is neutral (billing never gates
-  // access here — Salon.status does — so no green/red access signalling).
-  const variant = status === 'CANCELED' ? 'destructive' : 'outline'
-  return <Badge variant={variant}>{status}</Badge>
 }

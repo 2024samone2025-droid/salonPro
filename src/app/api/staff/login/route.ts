@@ -1,7 +1,6 @@
 import { db } from '@/lib/db'
 import { verifyPassword } from '@/lib/password'
 import { createRootStaffToken, ROOT_STAFF_COOKIE, ROOT_STAFF_MAX_AGE, type StaffAccess } from '@/lib/auth'
-import { rootCookieDomain } from '@/lib/subdomain'
 import { NextRequest, NextResponse } from 'next/server'
 
 // Staff login at the ROOT host (apex). The apex has no salon context, so we
@@ -51,17 +50,13 @@ export async function POST(req: NextRequest) {
 
     const response = NextResponse.json({ salons })
 
-    // Root-staff cookie (proves the verified memberships for select). Scoped to the
-    // registrable apex so a logout on a tenant subdomain can clear it (see
-    // rootCookieDomain) — undefined domain on localhost = host-only, as before.
-    const host = (req.headers.get('x-forwarded-host') || req.headers.get('host') || '').split(',')[0].trim()
+    // Host-only root-staff cookie (proves the verified memberships for select).
     response.cookies.set(ROOT_STAFF_COOKIE, createRootStaffToken({ email: normalized, access }), {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: ROOT_STAFF_MAX_AGE,
       path: '/',
-      domain: rootCookieDomain(host),
     })
 
     return response

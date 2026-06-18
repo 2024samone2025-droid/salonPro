@@ -1,7 +1,6 @@
 import { db } from '@/lib/db'
 import { verifyPassword } from '@/lib/password'
 import { createRootOwnerToken, ROOT_OWNER_COOKIE, ROOT_OWNER_MAX_AGE } from '@/lib/auth'
-import { rootCookieDomain } from '@/lib/subdomain'
 import { NextRequest, NextResponse } from 'next/server'
 
 // Owner login at the ROOT host. Verifies email + password, sets the short-lived
@@ -35,10 +34,7 @@ export async function POST(req: NextRequest) {
       salons: links.map((l) => l.salon),
     })
 
-    // Root-owner cookie (proves identity for the picker / select step). Scoped to
-    // the registrable apex so a logout on a tenant subdomain can clear it (see
-    // rootCookieDomain) — undefined domain on localhost = host-only, as before.
-    const host = (req.headers.get('x-forwarded-host') || req.headers.get('host') || '').split(',')[0].trim()
+    // Host-only root-owner cookie (proves identity for the picker / select step).
     response.cookies.set(
       ROOT_OWNER_COOKIE,
       createRootOwnerToken({ id: owner.id, name: owner.name, email: owner.email }),
@@ -48,7 +44,6 @@ export async function POST(req: NextRequest) {
         sameSite: 'lax',
         maxAge: ROOT_OWNER_MAX_AGE,
         path: '/',
-        domain: rootCookieDomain(host),
       }
     )
 

@@ -1,7 +1,6 @@
 import { getSession, ROLE_PERMISSIONS, type UserRole, type Permissions, type SessionUser } from './auth'
 import { verifySessionToken } from './auth'
 import { db } from './db'
-import { applyDuePlanChange } from './billing'
 import { SALON_SUBDOMAIN_HEADER } from './subdomain'
 import { headers } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
@@ -83,17 +82,6 @@ export async function requireAuth(req?: NextRequest, requiredPermission?: keyof 
   //     subject is identified — the lifecycle gate is a property of the tenant, not
   //     of who is asking. Without this the status column is inert.
   if (salon.status === 'SUSPENDED') return suspended()
-
-  // 1c. Lazy billing: with no cron, a lapsed pro period is downgraded to free on
-  //     the salon's next authed request. Best-effort — a billing hiccup must
-  //     never block auth, and it's a no-op unless a pending change is actually
-  //     due (one indexed read otherwise).
-  try {
-    await applyDuePlanChange(salon.id)
-  } catch (err) {
-    console.error('applyDuePlanChange failed (non-blocking):', err)
-  }
-
 
   // 2. Identify the subject from the session cookie.
   const subject = req ? getSessionFromRequest(req) : await getSession()
