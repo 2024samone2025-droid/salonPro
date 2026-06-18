@@ -205,6 +205,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null)
     setPermissions(null)
     setSalon(null)
+
+    // Redirect the browser to the apex logout endpoint so root picker cookies
+    // (salonpro_owner / salonpro_staff) are cleared on the same origin that set
+    // them. This is the only reliable way for localhost where Domain= is rejected
+    // by browsers — a fetch from the tenant subdomain can't clear host-only
+    // cookies set on the apex. On real domains this is belt-and-suspenders with
+    // the Domain-scoped clear above.
+    const [hostname] = window.location.host.split(':')
+    const parts = hostname.split('.')
+    // Strip the tenant subdomain label to reach the apex
+    // - sub.localhost (2 parts) → localhost
+    // - sub.example.com (3 parts) → example.com
+    if (parts.length > 2 || (parts.length === 2 && parts[1] === 'localhost')) {
+      parts.shift()
+    }
+    const apex = window.location.port
+      ? `${parts.join('.')}:${window.location.port}`
+      : parts.join('.')
+    window.location.href = `${window.location.protocol}//${apex}/api/auth/logout`
   }
 
   // Cookie-only now. Kept as a thin wrapper so existing callers don't change;
