@@ -23,8 +23,8 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 import { startTour } from '@/lib/tour'
 import SalonClosures from './SalonClosures'
+import BusinessHoursEditor from './BusinessHoursEditor'
 import {
-  DAY_LABELS,
   SUPPORTED_CURRENCIES,
   type SalonSettings,
 } from '@/lib/salon-settings'
@@ -106,15 +106,6 @@ export default function SalonSettingsTab() {
         ? { ...d, settings: { ...d.settings, bookingRules: { ...d.settings.bookingRules, ...patch } } }
         : d
     )
-  }
-
-  const updateDay = (day: number, patch: Partial<SalonSettings['businessHours'][string]>) => {
-    setData((d) => {
-      if (!d) return d
-      const hours = { ...d.settings.businessHours }
-      hours[String(day)] = { ...hours[String(day)], ...patch }
-      return { ...d, settings: { ...d.settings, businessHours: hours } }
-    })
   }
 
   const copyBookingUrl = async () => {
@@ -381,42 +372,12 @@ export default function SalonSettingsTab() {
             Online booking only offers times within these hours, and the appointments grid follows them.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-2">
-          {DAY_LABELS.map((label, day) => {
-            const hours = data.settings.businessHours[String(day)]
-            return (
-              <div key={label} className="flex flex-wrap items-center gap-x-3 gap-y-2 py-1">
-                <div className="w-24 shrink-0 text-sm">{label}</div>
-                <Switch
-                  checked={!hours.closed}
-                  onCheckedChange={(open) => updateDay(day, { closed: !open })}
-                  aria-label={`${label} open`}
-                  className="shrink-0"
-                />
-                {hours.closed ? (
-                  <span className="text-sm text-muted-foreground">Closed</span>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="time"
-                      value={hours.open}
-                      onChange={(e) => updateDay(day, { open: e.target.value })}
-                      className="w-32 h-9 shrink-0"
-                      aria-label={`${label} opening time`}
-                    />
-                    <span className="text-sm text-muted-foreground">to</span>
-                    <Input
-                      type="time"
-                      value={hours.close}
-                      onChange={(e) => updateDay(day, { close: e.target.value })}
-                      className="w-32 h-9 shrink-0"
-                      aria-label={`${label} closing time`}
-                    />
-                  </div>
-                )}
-              </div>
-            )
-          })}
+        <CardContent>
+          <BusinessHoursEditor
+            value={data.settings.businessHours}
+            slotIntervalMinutes={data.settings.slotIntervalMinutes}
+            onChange={(businessHours) => updateSettings({ businessHours })}
+          />
         </CardContent>
       </Card>
 
