@@ -31,6 +31,7 @@ export async function requireOperator(): Promise<OperatorSession> {
     return { operatorEmail: process.env.OPERATOR_DEV_EMAIL }
   }
 
+
   // 1. Host.
   if (process.env.NODE_ENV === 'production') {
     const host = (await headers()).get('host')?.split(':')[0].toLowerCase()

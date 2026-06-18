@@ -1,4 +1,5 @@
 import { requireAuth } from '@/lib/auth-guard'
+
 import { NextRequest, NextResponse } from 'next/server'
 
 // Self-serve upgrade is DISABLED. Billing is managed manually by SalonPro
@@ -15,3 +16,4 @@ export async function POST(req: NextRequest) {
     { status: 403 },
   )
 }
+
