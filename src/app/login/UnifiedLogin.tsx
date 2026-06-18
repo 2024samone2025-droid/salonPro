@@ -118,24 +118,8 @@ export default function UnifiedLogin({ subdomain }: { subdomain: string | null }
 
   // Apex only: restore an existing picker session (e.g. on reload) without re-auth.
   // Check owner first, then staff (an email is never both).
-  //
-  // Skip restore if the user just logged out (sessionStorage flag set by
-  // auth-context's logout()). Without this, a stale root picker cookie on
-  // localhost (where Domain= can't be used) re-authenticates the user the
-  // moment they visit the apex /login — the "auto re-login after logout" bug.
-  // The flag is cleared after 60 s or on tab close (sessionStorage).
   useEffect(() => {
     if (onTenantHost) return
-    try {
-      const ts = sessionStorage.getItem('salonpro_logged_out')
-      if (ts) {
-        const elapsed = Date.now() - parseInt(ts, 10)
-        if (elapsed < 60_000) return // still in the guard window
-        sessionStorage.removeItem('salonpro_logged_out')
-      }
-    } catch {
-      // storage unavailable — proceed normally
-    }
     let active = true
     ;(async () => {
       try {
