@@ -8,11 +8,8 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import OwnerContact from '@/components/operator/OwnerContact'
 import StatusActions from '@/components/operator/StatusActions'
-<<<<<<< HEAD
 import BillingActions from '@/components/operator/BillingActions'
 import PaymentHistory from '@/components/operator/PaymentHistory'
-=======
->>>>>>> origin/main
 
 export const dynamic = 'force-dynamic'
 
