@@ -29,7 +29,7 @@ function extractHost(req: NextRequest): string {
 }
 
 function setClearCookieHeaders(
-  res: { cookies: { set: (name: string, value: string, opts: Record<string, unknown>) => void } },
+  res: Pick<NextResponse, 'cookies'>,
   host: string,
 ) {
   const domain = rootCookieDomain(host)
