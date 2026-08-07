@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
 // existence is the owner-provisioned onboarding flow (api/users), which creates +
 // links a Staff slot for stylists inside its transaction. This keeps the rule that
 // nobody is on the booking calendar without being a provisioned worker — no "ghost"
-// roster entries. See context/ACTIVITY-LOG-context.md / the staff onboarding model.
+// roster entries.
 
 export async function PUT(req: NextRequest) {
   const auth = await requireAuth(req, 'canManageStaff')

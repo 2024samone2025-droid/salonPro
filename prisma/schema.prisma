@@ -336,7 +336,7 @@ model OperatorAuditLog {
 }
 
 // ============================================================================
-//  SUBSCRIPTION MANAGEMENT (integrated from context/subscription-models.prisma)
+//  SUBSCRIPTION MANAGEMENT
 // ============================================================================
 /// Reference data. Changes rarely. NEVER edit a live row's price/limits/features
 /// in place — clone to a new id (e.g. "pro_v2"), set the old one isActive=false,

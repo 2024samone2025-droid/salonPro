@@ -83,7 +83,7 @@ export type PaymentStatus = keyof typeof PAYMENT_STATUS_CONFIG
  * Subdomain rules — single source of truth for signup (client + API).
  * This module is client-safe (no server imports), so the signup page, the
  * availability endpoint, and the create endpoint all share these rules and
- * can never disagree. Documented in /context/DATA_MODELS.md.
+ * can never disagree.
  * ────────────────────────────────────────────────────────────────────────── */
 
 export const SUBDOMAIN_MIN_LENGTH = 3

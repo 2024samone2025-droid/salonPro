@@ -34,6 +34,13 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# local dev / AI assistant notes — never commit
+/context/
+CLAUDE.md
+memory.md
+OPERATOR_MEMORY.md
+BUSINESS_HOURS_MEMORY.md
+
 # vercel
 .vercel
 
