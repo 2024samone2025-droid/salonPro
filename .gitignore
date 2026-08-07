@@ -36,10 +36,14 @@ yarn-error.log*
 
 # local dev / AI assistant notes — never commit
 /context/
+/docs/
+/specs/
 CLAUDE.md
 memory.md
 OPERATOR_MEMORY.md
 BUSINESS_HOURS_MEMORY.md
+CHANGELOG.md
+OPERATOR_SETUP.md
 
 # vercel
 .vercel
