@@ -25,7 +25,7 @@ const jakarta = Plus_Jakarta_Sans({
   variable: '--font-jakarta',
 })
 
-const WHATSAPP_URL = 'https://wa.me/250780000000'
+const WHATSAPP_URL = 'https://wa.me/250791845268'
 
 const features: { icon: LucideIcon; title: string; blurb: string; items: string[] }[] = [
   {
